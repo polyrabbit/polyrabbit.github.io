@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>喵叔的杂货铺</title>
+    <link>//blog.betacat.io/</link>
+    <description>Recent content on 喵叔的杂货铺</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Sat, 15 Dec 2018 23:04:52 +0800</lastBuildDate>
+    
+        <atom:link href="//blog.betacat.io/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>About</title>
+      <link>//blog.betacat.io/about/</link>
+      <pubDate>Sat, 15 Dec 2018 23:04:52 +0800</pubDate>
+      
+      <guid>//blog.betacat.io/about/</guid>
+      
+        <description>&lt;p&gt;随着年纪的增长，越来越多的小朋友开始叫我叔叔，再加上我姓&lt;code&gt;缪(miào)&lt;/code&gt;，因此得名&lt;code&gt;喵叔&lt;/code&gt;。&lt;/p&gt;
+
+&lt;p&gt;这个博客的目的就是自省，即&lt;code&gt;print dir(self)&lt;/code&gt;，希望记录下我的一些幼稚的想法，以供日后反思。&lt;/p&gt;
+</description>
+      
+    </item>
+    
+    <item>
+      <title>[Practical Guide] How to Extract Main Content From Web Pages Using Machine-Learning</title>
+      <link>//blog.betacat.io/post/how-to-extract-main-content-from-web-pages-using-machine-learning/</link>
+      <pubDate>Tue, 18 Sep 2018 01:15:57 +0800</pubDate>
+      
+      <guid>//blog.betacat.io/post/how-to-extract-main-content-from-web-pages-using-machine-learning/</guid>
+      
+        <description>&lt;p&gt;Here is a step-by-step tutorial I took when making the &lt;a href=&#34;http://hackernews.betacat.io/&#34;&gt;Hacker News Digest&lt;/a&gt;, hope you find it helpful:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://github.com/polyrabbit/hacker-news-digest/blob/master/%5Btutorial%5D%20How-to-extract-main-content-from-web-pages-using-Machine-Learning.ipynb&#34;&gt;How to extract main content from web pages using Machine-Learning&lt;/a&gt;&lt;/p&gt;
+</description>
+      
+    </item>
+    
+  </channel>
+</rss>

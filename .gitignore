@@ -1,0 +1,7 @@
+# Pycharm
+.idea/
+
+# OSX
+.DS_Store
+
+_gen/
