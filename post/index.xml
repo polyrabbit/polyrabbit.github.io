@@ -6,10 +6,19 @@
     <description>Recent content in Posts on 喵叔的杂货铺</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 18 Sep 2018 01:15:57 +0800</lastBuildDate>
+    <lastBuildDate>Tue, 16 Oct 2018 17:16:09 +0800</lastBuildDate>
     
 	<atom:link href="//blog.betacat.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>我所了解的IBM主机</title>
+      <link>//blog.betacat.io/post/introduction-to-ibm-mainframe/</link>
+      <pubDate>Tue, 16 Oct 2018 17:16:09 +0800</pubDate>
+      
+      <guid>//blog.betacat.io/post/introduction-to-ibm-mainframe/</guid>
+      <description>我目前的工作主要是跟IBM主机打交道，但每次向别人介绍主机时，总觉得对方很难get到它的价值。一方面是因为主机这个系统太古老，又相对封闭，它</description>
+    </item>
     
     <item>
       <title>[Practical Guide] How to Extract Main Content From Web Pages Using Machine-Learning</title>
@@ -17,7 +26,7 @@
       <pubDate>Tue, 18 Sep 2018 01:15:57 +0800</pubDate>
       
       <guid>//blog.betacat.io/post/how-to-extract-main-content-from-web-pages-using-machine-learning/</guid>
-      <description>Here is a step-by-step tutorial I took when making the Hacker News Digest, hope you find it helpful:
+      <description>Following Jupyter Notebook is a step-by-step tutorial I took when making the Hacker News Digest, hope you find it helpful:
 How to extract main content from web pages using Machine-Learning</description>
     </item>
     

@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-cn" itemscope itemtype="http://schema.org/WebPage">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>我所了解的IBM主机 - 喵叔的杂货铺</title>
+  
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta name="MobileOptimized" content="width"/>
+<meta name="HandheldFriendly" content="true"/>
+
+
+<meta name="applicable-device" content="pc,mobile">
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="author" content="喵叔" />
+  <meta name="description" content="我目前的工作主要是跟IBM主机打交道，但每次向别人介绍主机时，总觉得对方很难get到它的价值。一方面是因为主机这个系统太古老，又相对封闭，它" />
+
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="canonical" href="//blog.betacat.io/post/introduction-to-ibm-mainframe/" />
+
+
+
+<link rel="icon" href="/favicon.ico" />
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/sass/jane.min.28854364c052ec02eba4ee5867bc889d3a567cdf337ba3a355c33511d20bee1e.css" integrity="sha256-KIVDZMBS7ALrpO5YZ7yInTpWfN8ze6OjVcM1EdIL7h4=" media="screen">
+
+
+
+
+
+<meta property="og:title" content="我所了解的IBM主机" />
+<meta property="og:description" content="我目前的工作主要是跟IBM主机打交道，但每次向别人介绍主机时，总觉得对方很难get到它的价值。一方面是因为主机这个系统太古老，又相对封闭，它" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="//blog.betacat.io/post/introduction-to-ibm-mainframe/" /><meta property="article:published_time" content="2018-10-16T17:16:09&#43;08:00"/>
+<meta property="article:modified_time" content="2018-10-16T17:16:09&#43;08:00"/>
+<meta itemprop="name" content="我所了解的IBM主机">
+<meta itemprop="description" content="我目前的工作主要是跟IBM主机打交道，但每次向别人介绍主机时，总觉得对方很难get到它的价值。一方面是因为主机这个系统太古老，又相对封闭，它">
+
+
+<meta itemprop="datePublished" content="2018-10-16T17:16:09&#43;08:00" />
+<meta itemprop="dateModified" content="2018-10-16T17:16:09&#43;08:00" />
+<meta itemprop="wordCount" content="3259">
+
+
+
+<meta itemprop="keywords" content="" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="我所了解的IBM主机"/>
+<meta name="twitter:description" content="我目前的工作主要是跟IBM主机打交道，但每次向别人介绍主机时，总觉得对方很难get到它的价值。一方面是因为主机这个系统太古老，又相对封闭，它"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-36049801-4', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">喵叔的杂货铺</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+          
+        
+      </li>
+    
+  </ul>
+</nav>
+
+
+  
+    
+
+
+
+
+
+
+  <link rel="stylesheet" href="/lib/photoswipe/photoswipe.min.css" />
+  <link rel="stylesheet" href="/lib/photoswipe/default-skin/default-skin.min.css" />
+
+
+
+
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="pswp__bg"></div>
+
+<div class="pswp__scroll-wrap">
+    
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    
+    <div class="pswp__ui pswp__ui--hidden">
+    <div class="pswp__top-bar">
+      
+      <div class="pswp__counter"></div>
+      <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+      <button class="pswp__button pswp__button--share" title="Share"></button>
+      <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+      <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+      
+      
+      <div class="pswp__preloader">
+        <div class="pswp__preloader__icn">
+          <div class="pswp__preloader__cut">
+            <div class="pswp__preloader__donut"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+      <div class="pswp__share-tooltip"></div>
+    </div>
+    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+    </button>
+    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+    </button>
+    <div class="pswp__caption">
+      <div class="pswp__caption__center"></div>
+    </div>
+    </div>
+    </div>
+</div>
+
+  
+
+  
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">
+    
+      喵叔的杂货铺
+    
+  </a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+          
+
+        
+
+      </li>
+    
+    
+  </ul>
+</nav>
+
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">我所了解的IBM主机</h1>
+      
+      <div class="post-meta">
+        <time datetime="2018-10-16" class="post-time">
+          2018-10-16
+        </time>
+        
+        <span class="more-meta"> 约 3259 字 </span>
+          <span class="more-meta"> 预计阅读 7 分钟 </span>
+
+        
+        
+
+        
+        
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li><a href="#历史及现状">历史及现状</a></li>
+<li><a href="#硬件">硬件</a></li>
+<li><a href="#操作系统">操作系统</a>
+<ul>
+<li><a href="#文件系统">文件系统</a></li>
+<li><a href="#向后兼容性">向后兼容性</a></li>
+<li><a href="#其他组件">其他组件</a></li>
+</ul></li>
+<li><a href="#总结">总结</a></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      
+
+<p>我目前的工作主要是跟IBM主机打交道，但每次向别人介绍主机时，总觉得对方很难get到它的价值。一方面是因为主机这个系统太古老，又相对封闭，它从芯片，到存储，再到操作系统都是IBM一手包办的，外界很难接触到这个系统，另一方面一直以来主机的努力方向都是希望一台机器就能满足用户高性能，高可用的需求，这跟现在用廉价机器搭建分布式集群的哲学是相对的，所以在这样的时代背景下，主机就更显得格格不入了。
+我打算用这篇博客来介绍一下我所了解的主机，也顺带整理一下这些零零碎碎的知识。当然由于我并没有接受过系统的主机培训，掌握的技能都是由同事传授，外加查资料摸索出来的，所以这里如有疏漏或者描述不当的地方，欢迎指正。</p>
+
+<h1 id="历史及现状">历史及现状</h1>
+
+<p>IBM主机又称大型机(mainframe)，最早可以追溯到上世纪60年代IBM研发的<a href="https://zh.wikipedia.org/wiki/IBM_System/360">S/360系统</a>，经过半个多世纪的不断更新，IBM的主机产品线已经从当初的S/360、S/370、S/390，发展到后来的z9、z10系列，现在(2018)已经GA的最新版本是z14：</p>
+
+<!-- ![z14(zMidas)](/ibm-mainframe/ibm_z14-large.jpg) -->
+
+
+<link rel="stylesheet" href="/css/hugo-easy-gallery.css" />
+<div class="box">
+<figure  itemprop="associatedMedia"
+  itemscope itemtype="http://schema.org/ImageObject" >
+    <div class="img">
+      <img itemprop="thumbnail" src="/ibm-mainframe/z14.png" alt="充满科技感的 z14"/>
+    </div>
+    <a href="/ibm-mainframe/z14.png" itemprop="contentUrl"></a>
+      <figcaption>
+          <p>充满科技感的 z14</p>
+      </figcaption>
+  </figure>
+</div>
+
+
+<p>IBM主机相比于其他计算机系统，其主要特点在于它的<a href="https://zh.wikipedia.org/wiki/%E5%8F%AF%E9%9D%A0%E6%80%A7%E3%80%81%E5%8F%AF%E7%94%A8%E6%80%A7%E5%92%8C%E5%8F%AF%E7%B6%AD%E8%AD%B7%E6%80%A7">RAS</a>(Reliability, Availability, Serviceability 高可靠性、高可用性、高可维护性)。曾经有用户反馈，在使用主机的数十年时间内，从未发生过异常停机事件。正是因为这些方面的优点和强大的处理能力，到现在为止还没有其他的系统可以替代它。但由于成本巨大（根据客户需求的不同，一台主机售价约几千万到几亿人民币），使用主机系统的一般以政府、银行、保险公司和大型制造企业为主，因为这些机构对信息的稳定性和安全性要求很高。全球财富500强企业中的71%是IBM主机用户，全球企业级数据有80%驻留在IBM主机上<sup class="footnote-ref" id="fnref:market-share"><a href="#fn:market-share">1</a></sup>。在我国，从央行到工农中建四大商业银行，其核心业务平台都是跑在IBM主机上的（希望银行能给点力，早日摆脱对国外技术的依赖）。</p>
+
+<h1 id="硬件">硬件</h1>
+
+<p>我对硬件不是很了解，只能列举一些数据来说明主机的硬件性能（以最新的z14为例）<sup class="footnote-ref" id="fnref:performance"><a href="#fn:performance">2</a></sup>：</p>
+
+<ul>
+<li>14nm的处理器芯片制造工艺</li>
+<li>支持32TB内存</li>
+<li>支持8000个虚拟机</li>
+<li>可以横向扩展（Scale-out）到2百万个Docker容器</li>
+</ul>
+
+
+
+<div class="box">
+<figure  itemprop="associatedMedia"
+  itemscope itemtype="http://schema.org/ImageObject" >
+    <div class="img">
+      <img itemprop="thumbnail" src="/ibm-mainframe/z14-hardware.jpeg" alt="硬件配置的发展"/>
+    </div>
+    <a href="/ibm-mainframe/z14-hardware.jpeg" itemprop="contentUrl"></a>
+      <figcaption>
+          <p>硬件配置的发展</p>
+      </figcaption>
+  </figure>
+</div>
+
+
+<p>除此之外，IBM还将一些常用的软件模块用硬件实现了，比如硬件压缩卡(zEDC)，排序指令，加密指令，向量运算指令等。这些原本需要通过软件模拟来实现的功能，直接有了对应的硬件支持，这种霸气的设计方法，对年轻的我造成了巨大的冲击。</p>
+
+<h1 id="操作系统">操作系统</h1>
+
+<p>主机上的操作系统叫做<a href="https://en.wikipedia.org/wiki/Z/OS">z/OS</a>，<code>z</code>代表终极的意思。我们需要通过一个叫<a href="https://en.wikipedia.org/wiki/3270_emulator">3270</a>的终端来连接它，由于这个终端的配色以绿色为主，所以我们又叫它<code>小绿屏</code>。这个小绿屏实在太显眼了，有同事曾在宜家的收银台一眼认出来过，不过我很好奇，宜家的收银员难道还要懂怎么操作底层的z/OS？</p>
+
+
+
+<div class="box">
+<figure  itemprop="associatedMedia"
+  itemscope itemtype="http://schema.org/ImageObject" >
+    <div class="img">
+      <img itemprop="thumbnail" src="/ibm-mainframe/ispf.png" alt="小绿屏"/>
+    </div>
+    <a href="/ibm-mainframe/ispf.png" itemprop="contentUrl"></a>
+      <figcaption>
+          <p>小绿屏</p>
+      </figcaption>
+  </figure>
+</div>
+
+
+<p>与z/OS的交互跟现代系统很不一样，它是一个用文本画出来的界面（如上图），可以在界面的不同位置输入不同的命令来完成不同的功能。比如这里我可以在<code>Option ===&gt;</code>那一栏通过输入menu之前的数字或者字母来进入相应menu。另外的一些功能则需要通过<code>fn</code>键来完成，比如<code>F3</code>是返回，<code>F8</code>是向下滚屏，<code>F7</code>是向上滚屏。</p>
+
+<h2 id="文件系统">文件系统</h2>
+
+<p>在z/OS里，文件叫做<code>DataSet</code>，它也有好多种类，其中最常见的是这3种：</p>
+
+<ul>
+<li>Sequential - 有点类似数据结构里的<code>Array</code>，按顺序排放的数据集，顺序读写效率高，但随机读写效率就不行了。</li>
+<li>Partitioned - 有点类似文件夹的概念，它里面的数据集叫做member。</li>
+<li>VSAM - 有点类似<code>map</code>，支持通过<code>key</code>来建立访问索引。</li>
+</ul>
+
+<p>同样与现代的流式文件系统不一样，DataSet是基于record的，每次读和写都只能以record为单位，这里就有一个很容易碰到的坑，如果一次写操作的数据量超过了一个record的长度，那超过部分会被截掉，并且没有任何提示的，如果总的写入量超过了这个DataSet创建时分配的大小，那超过部分也会被无情的截掉😪。所以每次创建DataSet的时候，我们都要预先设好它的各种属性（这其中的大部分细节都被现代的文件系统用<a href="https://zh.wikipedia.org/wiki/Inode">inode</a>给隐藏起来了）。</p>
+
+
+
+<div class="box">
+<figure  itemprop="associatedMedia"
+  itemscope itemtype="http://schema.org/ImageObject" >
+    <div class="img">
+      <img itemprop="thumbnail" src="/ibm-mainframe/allocate-dataset.png" alt="创建一个DataSet时可选的参数"/>
+    </div>
+    <a href="/ibm-mainframe/allocate-dataset.png" itemprop="contentUrl"></a>
+      <figcaption>
+          <p>创建一个DataSet时可选的参数</p>
+      </figcaption>
+  </figure>
+</div>
+
+
+<p>DataSet的名字用点(<code>.</code>)作为分隔符，一般来说整个z/OS的文件系统都是扁平化的，即不会出现一个文件夹里面嵌套好几层文件夹的情况，为了方便在这种结构下组织文件，z/OS支持用<code>?</code>或者<code>*</code>来模糊匹配一部分文件路径。还有一点值得提及的是，带单引号(<code>'</code>)的DataSet是绝对路径，不带单引号的是相对路径，相对于当前用户的HOME（z里面叫HLQ），所以如果我说要访问<code>COBLOG0.JCL</code>，其实我访问的是<code>'MYUSER.COBLOG0.JCL'</code>。</p>
+
+<p><code>Migrate</code>是另一个有趣的特性。z/OS会定期<code>Migrate</code>掉长期不用的DataSet，这些DataSet会被移到一个容量比较大的Tape上，以节约当前文件系统的空间，当下次需要使用这个DataSet的时候，要先把他<code>Recall</code>回来。这就有点类似<code>Page Cache</code>和磁盘的关系，<code>Page Cache</code>总量就那么大，只能用来存热点数据，那些冷数据就让它呆在磁盘，到用的时候再加载进来好了。</p>
+
+<h2 id="向后兼容性">向后兼容性</h2>
+
+<p>z/OS的向后兼容性简直可以用典范来形容<sup class="footnote-ref" id="fnref:quote-of-john"><a href="#fn:quote-of-john">3</a></sup>，据说一个上世纪80年代编译出来的程序，在现在的主机上依然可以运行。但也正是这种严苛的向后兼容性让主机背上了沉重的历史包袱，比如主机上使用的字符集是<a href="https://zh.wikipedia.org/wiki/EBCDIC">EBCDIC</a>，它跟ASCII是不兼容的（比ASCII标准出来的要早）。用现在的眼光看，EBCDIC是一种奇怪的编码格式，它的<code>I</code>和<code>J</code>、<code>R</code>和<code>S</code>是不连续的。这个格式源自于<a href="https://zh.wikipedia.org/wiki/%E6%89%93%E5%AD%94%E5%8D%A1">打孔卡</a>时代，那个时代，IBM是计算机领域的头号玩家，所以他们制定的编码标准也希望能与自己的<code>打孔卡</code>相兼容<sup class="footnote-ref" id="fnref:quote-of-john"><a href="#fn:quote-of-john">3</a></sup>。</p>
+
+<p><img src="/ibm-mainframe/ebcdic.png" alt="EBCDIC Standard" /></p>
+
+<p>这个在当时看来无比正确的决定却给现在的我们带来无数的坑，在移植x86平台的程序到主机时，最大的麻烦就在于字符集的处理。但这种备受开发人员吐槽的向后兼容性却很受客户的欢迎，因为客户的诉求就是稳定可靠，他们希望应用程序开发完了之后，不应该因为操作系统的升级而需要重新开发，从这点也可以看出IBM<code>客户至上</code>的理念。</p>
+
+<h2 id="其他组件">其他组件</h2>
+
+<p>z/OS是一个非常庞大的系统，它里面包含了非常多的组件，其中大家比较熟知的可能有<a href="https://en.wikipedia.org/wiki/CICS">CICS</a>和<a href="https://en.wikipedia.org/wiki/IBM_Db2_Family">DB2</a>。这里，我只介绍几个我比较熟悉又非常基础的组件：</p>
+
+<ul>
+<li><p>USS - z/OS Unix System Services，这是IBM开发的一个兼容POSIX的子系统，它给其他Unix平台的程序在z/OS上的运行带来了可能性。一家叫<a href="http://www.rocketsoftware.com/ported-tools">Rocket</a>的软件公司就是通过给z/OS移植外界的应用程序而起家的。有了USS的支持后，我们就可以通过<code>ssh</code>登上z/OS，用<code>bash</code>操作一些原本需要小绿屏才能完成的操作了。</p></li>
+
+<li><p>JES - Job Entry Subsystem，在小绿屏上的操作其实是叫做前台操作，这对一些简单或者需要人机交互的任务来说很有必要。但如果一个任务需要长时间的运行，肯定不能让用户一直在前台干等，所以z/OS里有JES这个子系统，它可以让用户将需要长时间运行的程序通过Job的形式提交进来，然后在后台跑这个Job，并通知用户最终的结果。这里提交Job的形式就是写一个<code>JCL</code>（Job Control Language），它提供了类似shell脚本的功能，可以让用户使用各种循环及判断语句。这里是一个简单的批处理JCL：</p>
+
+<pre><code class="language-jcl">//MYJOB JOB ,NOTIFY=&amp;SYSUID
+//STEP1 EXEC PGM=MYPGM
+//STEP2 EXEC PGM=MYPGM2
+//STEP3 EXEC PGM=MYPGM3
+</code></pre></li>
+
+<li><p>FTP - z/OS上的FTP功能相当强大，它的操作对象不仅可以是DataSet，也可以是USS下的文件系统，甚至还可以向JES提交Job，向DB2提交SQL语句。因此，在我们的一个项目中，为了使Node.js能与z/OS交互，我们用Node.js封装了FTP的这些特性，并开源出来一个库：<a href="https://github.com/IBM/zos-node-accessor/">z/OS Node Accessor</a>，希望它能成为Node.js社区与z/OS连接的桥梁。</p></li>
+</ul>
+
+<h1 id="总结">总结</h1>
+
+<p>写了半天才发觉我还只介绍了主机的冰山一角，主机经过半个多世纪的发展，它的复杂程度远远不是一篇博客就能介绍完的。所以这只能算是一个入门级别的介绍，希望读完之后能让你对主机有个大致的了解。</p>
+<div class="footnotes">
+
+<hr />
+
+<ol>
+<li id="fn:market-share"><a href="https://servers.pconline.com.cn/gc/1202/2679853_3.html">大型机市场现状</a>
+ <a class="footnote-return" href="#fnref:market-share"><sup>[return]</sup></a></li>
+<li id="fn:performance"><a href="https://cloud.tencent.com/developer/news/268909">新一代IBM z14主机技术介绍</a>
+ <a class="footnote-return" href="#fnref:performance"><sup>[return]</sup></a></li>
+<li id="fn:quote-of-john"><a href="https://groups.google.com/d/msg/golang-dev/f6IC8Dm7weI/4Vzs9EY9CAAJ">John McKown on glang-dev mail-list</a>
+ <a class="footnote-return" href="#fnref:quote-of-john"><sup>[return]</sup></a></li>
+</ol>
+</div>
+
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">喵叔</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2018-10-16</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+
+    
+    
+
+    <footer class="post-footer">
+      
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/how-to-extract-main-content-from-web-pages-using-machine-learning/">
+            <span class="next-text nav-default">[Practical Guide] How to Extract Main Content From Web Pages Using Machine-Learning</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            
+            <i class="iconfont">
+              <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M332.091514 74.487481l-75.369571 89.491197c-10.963703 12.998035-10.285251 32.864502 1.499144 44.378743l286.278095 300.375162L266.565125 819.058374c-11.338233 12.190647-11.035334 32.285311 0.638543 44.850487l80.46666 86.564541c11.680017 12.583596 30.356378 12.893658 41.662889 0.716314l377.434212-421.426145c11.332093-12.183484 11.041474-32.266891-0.657986-44.844348l-80.46666-86.564541c-1.772366-1.910513-3.706415-3.533476-5.750981-4.877077L373.270379 71.774697C361.493148 60.273758 343.054193 61.470003 332.091514 74.487481z"></path>
+</svg>
+
+            </i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+
+  
+
+  
+  
+    
+
+
+
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+  
+  
+    <a href="/email.gif" rel="me noopener" class="iconfont"
+      title="email"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1451 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M664.781909 681.472759 0 97.881301C0 3.997201 71.046997 0 71.046997 0L474.477909 0 961.649408 0 1361.641813 0C1361.641813 0 1432.688811 3.997201 1432.688811 97.881301L771.345323 681.472759C771.345323 681.472759 764.482731 685.154773 753.594283 688.65053L753.594283 688.664858C741.602731 693.493018 729.424896 695.068979 718.077952 694.839748 706.731093 695.068979 694.553173 693.493018 682.561621 688.664858L682.561621 688.65053C671.644501 685.140446 664.781909 681.472759 664.781909 681.472759L664.781909 681.472759ZM718.063616 811.603883C693.779541 811.016482 658.879232 802.205449 619.10784 767.734955 542.989056 701.759633 0 212.052267 0 212.052267L0 942.809523C0 942.809523 0 1024 83.726336 1024L682.532949 1024 753.579947 1024 1348.948139 1024C1432.688811 1024 1432.688811 942.809523 1432.688811 942.809523L1432.688811 212.052267C1432.688811 212.052267 893.138176 701.759633 817.019477 767.734955 777.248 802.205449 742.347691 811.03081 718.063616 811.603883L718.063616 811.603883Z"></path>
+</svg>
+
+    </a>
+  
+    <a href="javascript:alert%28%27My%20tweets%20are%20protected%20now%27%29" rel="me noopener" class="iconfont"
+      title="twitter"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1264 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M1229.8616 18.043658c0 0-117.852626 63.135335-164.151872 67.344358-105.225559-164.151872-505.082682-92.598492-437.738325 223.078185C278.622548 312.675223 89.216542 47.506814 89.216542 47.506814s-117.852626 189.406006 75.762402 345.139833C127.097743 396.85567 55.544363 371.601535 55.544363 371.601535S26.081207 535.753407 253.368414 615.724832c-21.045112 29.463156-113.643603 8.418045-113.643603 8.418045s25.254134 143.10676 231.496229 180.987961c-143.10676 130.479693-387.230056 92.598492-370.393967 105.225559 206.242095 189.406006 1119.599946 231.496229 1128.01799-643.98042C1179.353331 249.539887 1263.533778 123.269217 1263.533778 123.269217s-130.479693 37.881201-138.897738 33.672179C1225.652577 98.015083 1229.8616 18.043658 1229.8616 18.043658"></path>
+</svg>
+
+    </a>
+  
+    <a href="https://www.linkedin.com/in/%E6%98%8C%E6%96%B0-%E7%BC%AA-b46b8591/" rel="me noopener" class="iconfont"
+      title="linkedin"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="33" height="33">
+  <path d="M872.405333 872.618667h-151.637333v-237.610667c0-56.661333-1.152-129.578667-79.018667-129.578667-79.061333 0-91.136 61.653333-91.136 125.397334v241.792H398.976V384h145.664v66.602667h1.962667c20.352-38.4 69.845333-78.933333 143.786666-78.933334 153.642667 0 182.058667 101.12 182.058667 232.746667v268.202667zM227.712 317.141333a87.978667 87.978667 0 0 1-88.021333-88.106666 88.064 88.064 0 1 1 88.021333 88.106666z m76.032 555.477334H151.68V384h152.064v488.618667zM948.266667 0H75.562667C33.792 0 0 33.024 0 73.770667v876.458666C0 991.018667 33.792 1024 75.562667 1024h872.576C989.866667 1024 1024 991.018667 1024 950.229333V73.770667C1024 33.024 989.866667 0 948.138667 0h0.128z"></path>
+</svg>
+
+    </a>
+  
+    <a href="https://github.com/polyrabbit" rel="me noopener" class="iconfont"
+      title="github"  target="_blank"
+      >
+      <svg class="icon" style="" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M512 12.672c-282.88 0-512 229.248-512 512 0 226.261333 146.688 418.133333 350.08 485.76 25.6 4.821333 34.986667-11.008 34.986667-24.618667 0-12.16-0.426667-44.373333-0.64-87.04-142.421333 30.890667-172.458667-68.693333-172.458667-68.693333C188.672 770.986667 155.008 755.2 155.008 755.2c-46.378667-31.744 3.584-31.104 3.584-31.104 51.413333 3.584 78.421333 52.736 78.421333 52.736 45.653333 78.293333 119.850667 55.68 149.12 42.581333 4.608-33.109333 17.792-55.68 32.426667-68.48-113.706667-12.8-233.216-56.832-233.216-253.013333 0-55.893333 19.84-101.546667 52.693333-137.386667-5.76-12.928-23.04-64.981333 4.48-135.509333 0 0 42.88-13.738667 140.8 52.48 40.96-11.392 84.48-17.024 128-17.28 43.52 0.256 87.04 5.888 128 17.28 97.28-66.218667 140.16-52.48 140.16-52.48 27.52 70.528 10.24 122.581333 5.12 135.509333 32.64 35.84 52.48 81.493333 52.48 137.386667 0 196.693333-119.68 240-233.6 252.586667 17.92 15.36 34.56 46.762667 34.56 94.72 0 68.522667-0.64 123.562667-0.64 140.202666 0 13.44 8.96 29.44 35.2 24.32C877.44 942.592 1024 750.592 1024 524.672c0-282.752-229.248-512-512-512"></path>
+</svg>
+
+    </a>
+
+
+<a href="//blog.betacat.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
+    class="iconfont" title="rss" target="_blank">
+    <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="30" height="30">
+  <path d="M819.157333 1024C819.157333 574.592 449.408 204.8 0 204.8V0c561.706667 0 1024 462.293333 1024 1024h-204.842667zM140.416 743.04a140.8 140.8 0 0 1 140.501333 140.586667A140.928 140.928 0 0 1 140.074667 1024C62.72 1024 0 961.109333 0 883.626667s62.933333-140.544 140.416-140.586667zM678.784 1024h-199.04c0-263.210667-216.533333-479.786667-479.744-479.786667V345.173333c372.352 0 678.784 306.517333 678.784 678.826667z"></path>
+</svg>
+
+  </a>
+  
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy;
+    2018
+    <span class="heart">
+      
+      <i class="iconfont">
+        <svg class="icon" viewBox="0 0 1025 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="14" height="14">
+  <path d="M1000.1 247.9c-15.5-37.3-37.6-70.6-65.7-98.9-54.4-54.8-125.8-85-201-85-85.7 0-166 39-221.4 107.4C456.6 103 376.3 64 290.6 64c-75.1 0-146.5 30.4-201.1 85.6-28.2 28.5-50.4 61.9-65.8 99.3-16 38.8-24 79.9-23.6 122.2 0.7 91.7 40.1 177.2 108.1 234.8 3.1 2.6 6 5.1 8.9 7.8 14.9 13.4 58 52.8 112.6 102.7 93.5 85.5 209.9 191.9 257.5 234.2 7 6.1 15.8 9.5 24.9 9.5 9.2 0 18.1-3.4 24.9-9.5 34.5-30.7 105.8-95.9 181.4-165 74.2-67.8 150.9-138 195.8-178.2 69.5-57.9 109.6-144.4 109.9-237.3 0.1-42.5-8-83.6-24-122.2z"
+   fill="#8a8a8a"></path>
+</svg>
+
+      </i>
+    </span><span class="author">
+        喵叔
+        
+      </span></span>
+
+  
+  
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont">
+        
+        <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="35" height="35">
+  <path d="M510.866688 227.694839 95.449397 629.218702l235.761562 0-2.057869 328.796468 362.40389 0L691.55698 628.188232l241.942331-3.089361L510.866688 227.694839zM63.840492 63.962777l894.052392 0 0 131.813095L63.840492 195.775872 63.840492 63.962777 63.840492 63.962777zM63.840492 63.962777"></path>
+</svg>
+
+      </i>
+    </div>
+  </div>
+  
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+
+
+
+
+<script type="text/javascript" src="/js/main.638251f4230630f0335d8c6748e53a96f94b72670920b60c09a56fdc8bece214.js" integrity="sha256-Y4JR9CMGMPAzXYxnSOU6lvlLcmcJILYMCaVv3Ivs4hQ="></script>
+<script id="baidu_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+    hm.src = "https://hm.baidu.com/hm.js?1d8c3618a611e95c78e0fcaf38baf230";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+  
+    <script type="text/javascript" src="/js/load-photoswipe.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe.min.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe-ui-default.min.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

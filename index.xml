@@ -26,13 +26,178 @@
     </item>
     
     <item>
+      <title>我所了解的IBM主机</title>
+      <link>//blog.betacat.io/post/introduction-to-ibm-mainframe/</link>
+      <pubDate>Tue, 16 Oct 2018 17:16:09 +0800</pubDate>
+      
+      <guid>//blog.betacat.io/post/introduction-to-ibm-mainframe/</guid>
+      
+        <description>
+
+&lt;p&gt;我目前的工作主要是跟IBM主机打交道，但每次向别人介绍主机时，总觉得对方很难get到它的价值。一方面是因为主机这个系统太古老，又相对封闭，它从芯片，到存储，再到操作系统都是IBM一手包办的，外界很难接触到这个系统，另一方面一直以来主机的努力方向都是希望一台机器就能满足用户高性能，高可用的需求，这跟现在用廉价机器搭建分布式集群的哲学是相对的，所以在这样的时代背景下，主机就更显得格格不入了。
+我打算用这篇博客来介绍一下我所了解的主机，也顺带整理一下这些零零碎碎的知识。当然由于我并没有接受过系统的主机培训，掌握的技能都是由同事传授，外加查资料摸索出来的，所以这里如有疏漏或者描述不当的地方，欢迎指正。&lt;/p&gt;
+
+&lt;h1 id=&#34;历史及现状&#34;&gt;历史及现状&lt;/h1&gt;
+
+&lt;p&gt;IBM主机又称大型机(mainframe)，最早可以追溯到上世纪60年代IBM研发的&lt;a href=&#34;https://zh.wikipedia.org/wiki/IBM_System/360&#34;&gt;S/360系统&lt;/a&gt;，经过半个多世纪的不断更新，IBM的主机产品线已经从当初的S/360、S/370、S/390，发展到后来的z9、z10系列，现在(2018)已经GA的最新版本是z14：&lt;/p&gt;
+
+&lt;!-- ![z14(zMidas)](/ibm-mainframe/ibm_z14-large.jpg) --&gt;
+
+
+&lt;link rel=&#34;stylesheet&#34; href=&#34;//blog.betacat.io/css/hugo-easy-gallery.css&#34; /&gt;
+&lt;div class=&#34;box&#34;&gt;
+&lt;figure  itemprop=&#34;associatedMedia&#34;
+  itemscope itemtype=&#34;http://schema.org/ImageObject&#34; &gt;
+    &lt;div class=&#34;img&#34;&gt;
+      &lt;img itemprop=&#34;thumbnail&#34; src=&#34;//blog.betacat.io/ibm-mainframe/z14.png&#34; alt=&#34;充满科技感的 z14&#34;/&gt;
+    &lt;/div&gt;
+    &lt;a href=&#34;//blog.betacat.io/ibm-mainframe/z14.png&#34; itemprop=&#34;contentUrl&#34;&gt;&lt;/a&gt;
+      &lt;figcaption&gt;
+          &lt;p&gt;充满科技感的 z14&lt;/p&gt;
+      &lt;/figcaption&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;
+
+
+&lt;p&gt;IBM主机相比于其他计算机系统，其主要特点在于它的&lt;a href=&#34;https://zh.wikipedia.org/wiki/%E5%8F%AF%E9%9D%A0%E6%80%A7%E3%80%81%E5%8F%AF%E7%94%A8%E6%80%A7%E5%92%8C%E5%8F%AF%E7%B6%AD%E8%AD%B7%E6%80%A7&#34;&gt;RAS&lt;/a&gt;(Reliability, Availability, Serviceability 高可靠性、高可用性、高可维护性)。曾经有用户反馈，在使用主机的数十年时间内，从未发生过异常停机事件。正是因为这些方面的优点和强大的处理能力，到现在为止还没有其他的系统可以替代它。但由于成本巨大（根据客户需求的不同，一台主机售价约几千万到几亿人民币），使用主机系统的一般以政府、银行、保险公司和大型制造企业为主，因为这些机构对信息的稳定性和安全性要求很高。全球财富500强企业中的71%是IBM主机用户，全球企业级数据有80%驻留在IBM主机上&lt;sup class=&#34;footnote-ref&#34; id=&#34;fnref:market-share&#34;&gt;&lt;a href=&#34;#fn:market-share&#34;&gt;1&lt;/a&gt;&lt;/sup&gt;。在我国，从央行到工农中建四大商业银行，其核心业务平台都是跑在IBM主机上的（希望银行能给点力，早日摆脱对国外技术的依赖）。&lt;/p&gt;
+
+&lt;h1 id=&#34;硬件&#34;&gt;硬件&lt;/h1&gt;
+
+&lt;p&gt;我对硬件不是很了解，只能列举一些数据来说明主机的硬件性能（以最新的z14为例）&lt;sup class=&#34;footnote-ref&#34; id=&#34;fnref:performance&#34;&gt;&lt;a href=&#34;#fn:performance&#34;&gt;2&lt;/a&gt;&lt;/sup&gt;：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;14nm的处理器芯片制造工艺&lt;/li&gt;
+&lt;li&gt;支持32TB内存&lt;/li&gt;
+&lt;li&gt;支持8000个虚拟机&lt;/li&gt;
+&lt;li&gt;可以横向扩展（Scale-out）到2百万个Docker容器&lt;/li&gt;
+&lt;/ul&gt;
+
+
+
+&lt;div class=&#34;box&#34;&gt;
+&lt;figure  itemprop=&#34;associatedMedia&#34;
+  itemscope itemtype=&#34;http://schema.org/ImageObject&#34; &gt;
+    &lt;div class=&#34;img&#34;&gt;
+      &lt;img itemprop=&#34;thumbnail&#34; src=&#34;//blog.betacat.io/ibm-mainframe/z14-hardware.jpeg&#34; alt=&#34;硬件配置的发展&#34;/&gt;
+    &lt;/div&gt;
+    &lt;a href=&#34;//blog.betacat.io/ibm-mainframe/z14-hardware.jpeg&#34; itemprop=&#34;contentUrl&#34;&gt;&lt;/a&gt;
+      &lt;figcaption&gt;
+          &lt;p&gt;硬件配置的发展&lt;/p&gt;
+      &lt;/figcaption&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;
+
+
+&lt;p&gt;除此之外，IBM还将一些常用的软件模块用硬件实现了，比如硬件压缩卡(zEDC)，排序指令，加密指令，向量运算指令等。这些原本需要通过软件模拟来实现的功能，直接有了对应的硬件支持，这种霸气的设计方法，对年轻的我造成了巨大的冲击。&lt;/p&gt;
+
+&lt;h1 id=&#34;操作系统&#34;&gt;操作系统&lt;/h1&gt;
+
+&lt;p&gt;主机上的操作系统叫做&lt;a href=&#34;https://en.wikipedia.org/wiki/Z/OS&#34;&gt;z/OS&lt;/a&gt;，&lt;code&gt;z&lt;/code&gt;代表终极的意思。我们需要通过一个叫&lt;a href=&#34;https://en.wikipedia.org/wiki/3270_emulator&#34;&gt;3270&lt;/a&gt;的终端来连接它，由于这个终端的配色以绿色为主，所以我们又叫它&lt;code&gt;小绿屏&lt;/code&gt;。这个小绿屏实在太显眼了，有同事曾在宜家的收银台一眼认出来过，不过我很好奇，宜家的收银员难道还要懂怎么操作底层的z/OS？&lt;/p&gt;
+
+
+
+&lt;div class=&#34;box&#34;&gt;
+&lt;figure  itemprop=&#34;associatedMedia&#34;
+  itemscope itemtype=&#34;http://schema.org/ImageObject&#34; &gt;
+    &lt;div class=&#34;img&#34;&gt;
+      &lt;img itemprop=&#34;thumbnail&#34; src=&#34;//blog.betacat.io/ibm-mainframe/ispf.png&#34; alt=&#34;小绿屏&#34;/&gt;
+    &lt;/div&gt;
+    &lt;a href=&#34;//blog.betacat.io/ibm-mainframe/ispf.png&#34; itemprop=&#34;contentUrl&#34;&gt;&lt;/a&gt;
+      &lt;figcaption&gt;
+          &lt;p&gt;小绿屏&lt;/p&gt;
+      &lt;/figcaption&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;
+
+
+&lt;p&gt;与z/OS的交互跟现代系统很不一样，它是一个用文本画出来的界面（如上图），可以在界面的不同位置输入不同的命令来完成不同的功能。比如这里我可以在&lt;code&gt;Option ===&amp;gt;&lt;/code&gt;那一栏通过输入menu之前的数字或者字母来进入相应menu。另外的一些功能则需要通过&lt;code&gt;fn&lt;/code&gt;键来完成，比如&lt;code&gt;F3&lt;/code&gt;是返回，&lt;code&gt;F8&lt;/code&gt;是向下滚屏，&lt;code&gt;F7&lt;/code&gt;是向上滚屏。&lt;/p&gt;
+
+&lt;h2 id=&#34;文件系统&#34;&gt;文件系统&lt;/h2&gt;
+
+&lt;p&gt;在z/OS里，文件叫做&lt;code&gt;DataSet&lt;/code&gt;，它也有好多种类，其中最常见的是这3种：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Sequential - 有点类似数据结构里的&lt;code&gt;Array&lt;/code&gt;，按顺序排放的数据集，顺序读写效率高，但随机读写效率就不行了。&lt;/li&gt;
+&lt;li&gt;Partitioned - 有点类似文件夹的概念，它里面的数据集叫做member。&lt;/li&gt;
+&lt;li&gt;VSAM - 有点类似&lt;code&gt;map&lt;/code&gt;，支持通过&lt;code&gt;key&lt;/code&gt;来建立访问索引。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;同样与现代的流式文件系统不一样，DataSet是基于record的，每次读和写都只能以record为单位，这里就有一个很容易碰到的坑，如果一次写操作的数据量超过了一个record的长度，那超过部分会被截掉，并且没有任何提示的，如果总的写入量超过了这个DataSet创建时分配的大小，那超过部分也会被无情的截掉😪。所以每次创建DataSet的时候，我们都要预先设好它的各种属性（这其中的大部分细节都被现代的文件系统用&lt;a href=&#34;https://zh.wikipedia.org/wiki/Inode&#34;&gt;inode&lt;/a&gt;给隐藏起来了）。&lt;/p&gt;
+
+
+
+&lt;div class=&#34;box&#34;&gt;
+&lt;figure  itemprop=&#34;associatedMedia&#34;
+  itemscope itemtype=&#34;http://schema.org/ImageObject&#34; &gt;
+    &lt;div class=&#34;img&#34;&gt;
+      &lt;img itemprop=&#34;thumbnail&#34; src=&#34;//blog.betacat.io/ibm-mainframe/allocate-dataset.png&#34; alt=&#34;创建一个DataSet时可选的参数&#34;/&gt;
+    &lt;/div&gt;
+    &lt;a href=&#34;//blog.betacat.io/ibm-mainframe/allocate-dataset.png&#34; itemprop=&#34;contentUrl&#34;&gt;&lt;/a&gt;
+      &lt;figcaption&gt;
+          &lt;p&gt;创建一个DataSet时可选的参数&lt;/p&gt;
+      &lt;/figcaption&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;
+
+
+&lt;p&gt;DataSet的名字用点(&lt;code&gt;.&lt;/code&gt;)作为分隔符，一般来说整个z/OS的文件系统都是扁平化的，即不会出现一个文件夹里面嵌套好几层文件夹的情况，为了方便在这种结构下组织文件，z/OS支持用&lt;code&gt;?&lt;/code&gt;或者&lt;code&gt;*&lt;/code&gt;来模糊匹配一部分文件路径。还有一点值得提及的是，带单引号(&lt;code&gt;&#39;&lt;/code&gt;)的DataSet是绝对路径，不带单引号的是相对路径，相对于当前用户的HOME（z里面叫HLQ），所以如果我说要访问&lt;code&gt;COBLOG0.JCL&lt;/code&gt;，其实我访问的是&lt;code&gt;&#39;MYUSER.COBLOG0.JCL&#39;&lt;/code&gt;。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Migrate&lt;/code&gt;是另一个有趣的特性。z/OS会定期&lt;code&gt;Migrate&lt;/code&gt;掉长期不用的DataSet，这些DataSet会被移到一个容量比较大的Tape上，以节约当前文件系统的空间，当下次需要使用这个DataSet的时候，要先把他&lt;code&gt;Recall&lt;/code&gt;回来。这就有点类似&lt;code&gt;Page Cache&lt;/code&gt;和磁盘的关系，&lt;code&gt;Page Cache&lt;/code&gt;总量就那么大，只能用来存热点数据，那些冷数据就让它呆在磁盘，到用的时候再加载进来好了。&lt;/p&gt;
+
+&lt;h2 id=&#34;向后兼容性&#34;&gt;向后兼容性&lt;/h2&gt;
+
+&lt;p&gt;z/OS的向后兼容性简直可以用典范来形容&lt;sup class=&#34;footnote-ref&#34; id=&#34;fnref:quote-of-john&#34;&gt;&lt;a href=&#34;#fn:quote-of-john&#34;&gt;3&lt;/a&gt;&lt;/sup&gt;，据说一个上世纪80年代编译出来的程序，在现在的主机上依然可以运行。但也正是这种严苛的向后兼容性让主机背上了沉重的历史包袱，比如主机上使用的字符集是&lt;a href=&#34;https://zh.wikipedia.org/wiki/EBCDIC&#34;&gt;EBCDIC&lt;/a&gt;，它跟ASCII是不兼容的（比ASCII标准出来的要早）。用现在的眼光看，EBCDIC是一种奇怪的编码格式，它的&lt;code&gt;I&lt;/code&gt;和&lt;code&gt;J&lt;/code&gt;、&lt;code&gt;R&lt;/code&gt;和&lt;code&gt;S&lt;/code&gt;是不连续的。这个格式源自于&lt;a href=&#34;https://zh.wikipedia.org/wiki/%E6%89%93%E5%AD%94%E5%8D%A1&#34;&gt;打孔卡&lt;/a&gt;时代，那个时代，IBM是计算机领域的头号玩家，所以他们制定的编码标准也希望能与自己的&lt;code&gt;打孔卡&lt;/code&gt;相兼容&lt;sup class=&#34;footnote-ref&#34; id=&#34;fnref:quote-of-john&#34;&gt;&lt;a href=&#34;#fn:quote-of-john&#34;&gt;3&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;//blog.betacat.io/ibm-mainframe/ebcdic.png&#34; alt=&#34;EBCDIC Standard&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;这个在当时看来无比正确的决定却给现在的我们带来无数的坑，在移植x86平台的程序到主机时，最大的麻烦就在于字符集的处理。但这种备受开发人员吐槽的向后兼容性却很受客户的欢迎，因为客户的诉求就是稳定可靠，他们希望应用程序开发完了之后，不应该因为操作系统的升级而需要重新开发，从这点也可以看出IBM&lt;code&gt;客户至上&lt;/code&gt;的理念。&lt;/p&gt;
+
+&lt;h2 id=&#34;其他组件&#34;&gt;其他组件&lt;/h2&gt;
+
+&lt;p&gt;z/OS是一个非常庞大的系统，它里面包含了非常多的组件，其中大家比较熟知的可能有&lt;a href=&#34;https://en.wikipedia.org/wiki/CICS&#34;&gt;CICS&lt;/a&gt;和&lt;a href=&#34;https://en.wikipedia.org/wiki/IBM_Db2_Family&#34;&gt;DB2&lt;/a&gt;。这里，我只介绍几个我比较熟悉又非常基础的组件：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;USS - z/OS Unix System Services，这是IBM开发的一个兼容POSIX的子系统，它给其他Unix平台的程序在z/OS上的运行带来了可能性。一家叫&lt;a href=&#34;http://www.rocketsoftware.com/ported-tools&#34;&gt;Rocket&lt;/a&gt;的软件公司就是通过给z/OS移植外界的应用程序而起家的。有了USS的支持后，我们就可以通过&lt;code&gt;ssh&lt;/code&gt;登上z/OS，用&lt;code&gt;bash&lt;/code&gt;操作一些原本需要小绿屏才能完成的操作了。&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;JES - Job Entry Subsystem，在小绿屏上的操作其实是叫做前台操作，这对一些简单或者需要人机交互的任务来说很有必要。但如果一个任务需要长时间的运行，肯定不能让用户一直在前台干等，所以z/OS里有JES这个子系统，它可以让用户将需要长时间运行的程序通过Job的形式提交进来，然后在后台跑这个Job，并通知用户最终的结果。这里提交Job的形式就是写一个&lt;code&gt;JCL&lt;/code&gt;（Job Control Language），它提供了类似shell脚本的功能，可以让用户使用各种循环及判断语句。这里是一个简单的批处理JCL：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-jcl&#34;&gt;//MYJOB JOB ,NOTIFY=&amp;amp;SYSUID
+//STEP1 EXEC PGM=MYPGM
+//STEP2 EXEC PGM=MYPGM2
+//STEP3 EXEC PGM=MYPGM3
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;FTP - z/OS上的FTP功能相当强大，它的操作对象不仅可以是DataSet，也可以是USS下的文件系统，甚至还可以向JES提交Job，向DB2提交SQL语句。因此，在我们的一个项目中，为了使Node.js能与z/OS交互，我们用Node.js封装了FTP的这些特性，并开源出来一个库：&lt;a href=&#34;https://github.com/IBM/zos-node-accessor/&#34;&gt;z/OS Node Accessor&lt;/a&gt;，希望它能成为Node.js社区与z/OS连接的桥梁。&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&#34;总结&#34;&gt;总结&lt;/h1&gt;
+
+&lt;p&gt;写了半天才发觉我还只介绍了主机的冰山一角，主机经过半个多世纪的发展，它的复杂程度远远不是一篇博客就能介绍完的。所以这只能算是一个入门级别的介绍，希望读完之后能让你对主机有个大致的了解。&lt;/p&gt;
+&lt;div class=&#34;footnotes&#34;&gt;
+
+&lt;hr /&gt;
+
+&lt;ol&gt;
+&lt;li id=&#34;fn:market-share&#34;&gt;&lt;a href=&#34;https://servers.pconline.com.cn/gc/1202/2679853_3.html&#34;&gt;大型机市场现状&lt;/a&gt;
+ &lt;a class=&#34;footnote-return&#34; href=&#34;#fnref:market-share&#34;&gt;&lt;sup&gt;[return]&lt;/sup&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;li id=&#34;fn:performance&#34;&gt;&lt;a href=&#34;https://cloud.tencent.com/developer/news/268909&#34;&gt;新一代IBM z14主机技术介绍&lt;/a&gt;
+ &lt;a class=&#34;footnote-return&#34; href=&#34;#fnref:performance&#34;&gt;&lt;sup&gt;[return]&lt;/sup&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;li id=&#34;fn:quote-of-john&#34;&gt;&lt;a href=&#34;https://groups.google.com/d/msg/golang-dev/f6IC8Dm7weI/4Vzs9EY9CAAJ&#34;&gt;John McKown on glang-dev mail-list&lt;/a&gt;
+ &lt;a class=&#34;footnote-return&#34; href=&#34;#fnref:quote-of-john&#34;&gt;&lt;sup&gt;[return]&lt;/sup&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+</description>
+      
+    </item>
+    
+    <item>
       <title>[Practical Guide] How to Extract Main Content From Web Pages Using Machine-Learning</title>
       <link>//blog.betacat.io/post/how-to-extract-main-content-from-web-pages-using-machine-learning/</link>
       <pubDate>Tue, 18 Sep 2018 01:15:57 +0800</pubDate>
       
       <guid>//blog.betacat.io/post/how-to-extract-main-content-from-web-pages-using-machine-learning/</guid>
       
-        <description>&lt;p&gt;Here is a step-by-step tutorial I took when making the &lt;a href=&#34;http://hackernews.betacat.io/&#34;&gt;Hacker News Digest&lt;/a&gt;, hope you find it helpful:&lt;/p&gt;
+        <description>&lt;p&gt;Following Jupyter Notebook is a step-by-step tutorial I took when making the &lt;a href=&#34;http://hackernews.betacat.io/&#34;&gt;Hacker News Digest&lt;/a&gt;, hope you find it helpful:&lt;/p&gt;
 
 &lt;p&gt;&lt;a href=&#34;https://github.com/polyrabbit/hacker-news-digest/blob/master/%5Btutorial%5D%20How-to-extract-main-content-from-web-pages-using-Machine-Learning.ipynb&#34;&gt;How to extract main content from web pages using Machine-Learning&lt;/a&gt;&lt;/p&gt;
 </description>
