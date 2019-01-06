@@ -1,15 +1,24 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Posts on 喵叔的杂货铺</title>
+    <title>Posts on 喵叔的博客</title>
     <link>//blog.betacat.io/post/</link>
-    <description>Recent content in Posts on 喵叔的杂货铺</description>
+    <description>Recent content in Posts on 喵叔的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 16 Oct 2018 17:16:09 +0800</lastBuildDate>
+    <lastBuildDate>Tue, 13 Nov 2018 19:47:17 +0800</lastBuildDate>
     
 	<atom:link href="//blog.betacat.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Raft在etcd中的实现</title>
+      <link>//blog.betacat.io/post/raft-implementation-in-etcd/</link>
+      <pubDate>Tue, 13 Nov 2018 19:47:17 +0800</pubDate>
+      
+      <guid>//blog.betacat.io/post/raft-implementation-in-etcd/</guid>
+      <description>Raft是近年来比较流行的一个一致性算法。它的原理比较容易理解，网上也有很多相关的介绍，因此这里我就不再啰嗦原理了，而是打算以raft在et</description>
+    </item>
     
     <item>
       <title>我所了解的IBM主机</title>
@@ -28,6 +37,15 @@
       <guid>//blog.betacat.io/post/how-to-extract-main-content-from-web-pages-using-machine-learning/</guid>
       <description>Following Jupyter Notebook is a step-by-step tutorial I took when making the Hacker News Digest, hope you find it helpful:
 How to extract main content from web pages using Machine-Learning</description>
+    </item>
+    
+    <item>
+      <title>WeCron是怎样处理定时任务的</title>
+      <link>//blog.betacat.io/post/how-wecron-schedules/</link>
+      <pubDate>Wed, 08 Aug 2018 21:11:37 +0800</pubDate>
+      
+      <guid>//blog.betacat.io/post/how-wecron-schedules/</guid>
+      <description>WeCron（微定时）是我开发的一个微信上的定时提醒机器人，它能解析用户输入的语音或者文字，提取其中的时间和事件信息，然后为用户设置提醒。这</description>
     </item>
     
   </channel>

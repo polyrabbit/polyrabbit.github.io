@@ -10,6 +10,13 @@
   </url>
   
   <url>
+    <loc>//blog.betacat.io/post/raft-implementation-in-etcd/</loc>
+    <lastmod>2018-11-13T19:47:17+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
     <loc>//blog.betacat.io/post/introduction-to-ibm-mainframe/</loc>
     <lastmod>2018-10-16T17:16:09+08:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -24,6 +31,13 @@
   </url>
   
   <url>
+    <loc>//blog.betacat.io/post/how-wecron-schedules/</loc>
+    <lastmod>2018-08-08T21:11:37+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
     <loc>//blog.betacat.io/categories/</loc>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
@@ -31,7 +45,7 @@
   
   <url>
     <loc>//blog.betacat.io/post/</loc>
-    <lastmod>2018-10-16T17:16:09+08:00</lastmod>
+    <lastmod>2018-11-13T19:47:17+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>

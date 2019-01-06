@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>[Practical Guide] How to Extract Main Content From Web Pages Using Machine-Learning - 喵叔的博客</title>
+  <title>WeCron是怎样处理定时任务的 - 喵叔的博客</title>
   
 
 <meta name="renderer" content="webkit" />
@@ -23,8 +23,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 
 <meta name="author" content="喵叔" />
-  <meta name="description" content="Following Jupyter Notebook is a step-by-step tutorial I took when making the Hacker News Digest, hope you find it helpful:
-How to extract main content from web pages using Machine-Learning" />
+  <meta name="description" content="WeCron（微定时）是我开发的一个微信上的定时提醒机器人，它能解析用户输入的语音或者文字，提取其中的时间和事件信息，然后为用户设置提醒。这" />
+<meta name="keywords" content="定时, 定时提醒, 微信, 任务队列, schedule, cron" />
 
 
 
@@ -35,7 +35,7 @@ How to extract main content from web pages using Machine-Learning" />
 <meta name="generator" content="Hugo 0.48" />
 
 
-<link rel="canonical" href="//blog.betacat.io/post/how-to-extract-main-content-from-web-pages-using-machine-learning/" />
+<link rel="canonical" href="//blog.betacat.io/post/how-wecron-schedules/" />
 
 
 
@@ -57,28 +57,25 @@ How to extract main content from web pages using Machine-Learning" />
 
 
 
-<meta property="og:title" content="[Practical Guide] How to Extract Main Content From Web Pages Using Machine-Learning" />
-<meta property="og:description" content="Following Jupyter Notebook is a step-by-step tutorial I took when making the Hacker News Digest, hope you find it helpful:
-How to extract main content from web pages using Machine-Learning" />
+<meta property="og:title" content="WeCron是怎样处理定时任务的" />
+<meta property="og:description" content="WeCron（微定时）是我开发的一个微信上的定时提醒机器人，它能解析用户输入的语音或者文字，提取其中的时间和事件信息，然后为用户设置提醒。这" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="//blog.betacat.io/post/how-to-extract-main-content-from-web-pages-using-machine-learning/" /><meta property="article:published_time" content="2018-09-18T01:15:57&#43;08:00"/>
-<meta property="article:modified_time" content="2018-09-18T01:15:57&#43;08:00"/>
-<meta itemprop="name" content="[Practical Guide] How to Extract Main Content From Web Pages Using Machine-Learning">
-<meta itemprop="description" content="Following Jupyter Notebook is a step-by-step tutorial I took when making the Hacker News Digest, hope you find it helpful:
-How to extract main content from web pages using Machine-Learning">
+<meta property="og:url" content="//blog.betacat.io/post/how-wecron-schedules/" /><meta property="article:published_time" content="2018-08-08T21:11:37&#43;08:00"/>
+<meta property="article:modified_time" content="2018-08-08T21:11:37&#43;08:00"/>
+<meta itemprop="name" content="WeCron是怎样处理定时任务的">
+<meta itemprop="description" content="WeCron（微定时）是我开发的一个微信上的定时提醒机器人，它能解析用户输入的语音或者文字，提取其中的时间和事件信息，然后为用户设置提醒。这">
 
 
-<meta itemprop="datePublished" content="2018-09-18T01:15:57&#43;08:00" />
-<meta itemprop="dateModified" content="2018-09-18T01:15:57&#43;08:00" />
-<meta itemprop="wordCount" content="30">
+<meta itemprop="datePublished" content="2018-08-08T21:11:37&#43;08:00" />
+<meta itemprop="dateModified" content="2018-08-08T21:11:37&#43;08:00" />
+<meta itemprop="wordCount" content="913">
 
 
 
 <meta itemprop="keywords" content="" />
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="[Practical Guide] How to Extract Main Content From Web Pages Using Machine-Learning"/>
-<meta name="twitter:description" content="Following Jupyter Notebook is a step-by-step tutorial I took when making the Hacker News Digest, hope you find it helpful:
-How to extract main content from web pages using Machine-Learning"/>
+<meta name="twitter:title" content="WeCron是怎样处理定时任务的"/>
+<meta name="twitter:description" content="WeCron（微定时）是我开发的一个微信上的定时提醒机器人，它能解析用户输入的语音或者文字，提取其中的时间和事件信息，然后为用户设置提醒。这"/>
 
 <!--[if lte IE 9]>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
@@ -271,15 +268,15 @@ if (!doNotTrack) {
           <article class="post bg-white">
     
     <header class="post-header">
-      <h1 class="post-title">[Practical Guide] How to Extract Main Content From Web Pages Using Machine-Learning</h1>
+      <h1 class="post-title">WeCron是怎样处理定时任务的</h1>
       
       <div class="post-meta">
-        <time datetime="2018-09-18" class="post-time">
-          2018-09-18
+        <time datetime="2018-08-08" class="post-time">
+          2018-08-08
         </time>
         
-        <span class="more-meta"> 约 30 字 </span>
-          <span class="more-meta"> 预计阅读 1 分钟 </span>
+        <span class="more-meta"> 约 913 字 </span>
+          <span class="more-meta"> 预计阅读 2 分钟 </span>
 
         
         
@@ -294,15 +291,141 @@ if (!doNotTrack) {
 <div class="post-toc" id="post-toc">
   <h2 class="post-toc-title">文章目录</h2>
   <div class="post-toc-content">
-    
+    <nav id="TableOfContents">
+<ul>
+<li><a href="#架构">架构</a></li>
+<li><a href="#定时调度器">定时调度器</a></li>
+<li><a href="#结束">结束</a></li>
+</ul>
+</nav>
   </div>
 </div>
 
     
     <div class="post-content">
-      <p>Following Jupyter Notebook is a step-by-step tutorial I took when making the <a href="http://hackernews.betacat.io/">Hacker News Digest</a>, hope you find it helpful:</p>
+      
 
-<p><a href="https://github.com/polyrabbit/hacker-news-digest/blob/master/%5Btutorial%5D%20How-to-extract-main-content-from-web-pages-using-Machine-Learning.ipynb">How to extract main content from web pages using Machine-Learning</a></p>
+<p><a href="http://wecron.betacat.io/">WeCron</a>（微定时）是我开发的一个微信上的定时提醒机器人，它能解析用户输入的语音或者文字，提取其中的时间和事件信息，然后为用户设置提醒。这个服务上线后，经常有用户问我这里定时提醒的实现，因此这篇文章我就打算来谈谈WeCron是怎么实现这个功能的，希望大家以后设计定时调度类系统时能多一个参考。</p>
+
+
+<link rel="stylesheet" href="/css/hugo-easy-gallery.css" />
+<div class="box">
+<figure  itemprop="associatedMedia"
+  itemscope itemtype="http://schema.org/ImageObject" 
+  style="max-width:200px" >
+    <div class="img">
+      <img itemprop="thumbnail" src="https://user-images.githubusercontent.com/2657334/34242455-7c9ae230-e656-11e7-8420-3da003d87ce5.jpeg" alt="通过微信设置定时提醒"/>
+    </div>
+    <a href="https://user-images.githubusercontent.com/2657334/34242455-7c9ae230-e656-11e7-8420-3da003d87ce5.jpeg" itemprop="contentUrl"></a>
+      <figcaption>
+          <p>通过微信设置定时提醒</p>
+      </figcaption>
+  </figure>
+</div>
+
+
+<h1 id="架构">架构</h1>
+
+<p>下面是定时提醒部分的架构图：</p>
+
+
+
+<div class="box">
+<figure  itemprop="associatedMedia"
+  itemscope itemtype="http://schema.org/ImageObject" >
+    <div class="img">
+      <img itemprop="thumbnail" src="/image/wecron-schedule/wecron-schedule-architecture.png" alt="WeCron定时功能架构图"/>
+    </div>
+    <a href="/image/wecron-schedule/wecron-schedule-architecture.png" itemprop="contentUrl"></a>
+      <figcaption>
+          <p>WeCron定时功能架构图</p>
+      </figcaption>
+  </figure>
+</div>
+
+
+<p>整个流程还是比较简单的：</p>
+
+<ol>
+<li>用户输入一条提醒语音后，<code>parser</code>会把其中的时间和事件信息解析出来，存到数据库中；</li>
+<li>同时，定时调度器会被触发，它到数据库中找到一个最近的提醒，计算出到当前时间的时间差，然后sleep相应的秒数；</li>
+<li>过段时间，调度器醒来，它会将最近一段时间要发送的提醒任务提交到一个队列里面，由专门发送消息的worker向用户推送消息。这里使用队列的目的，一方面是消峰，另一方面是为了让发送消息的worker能够横向扩展。</li>
+</ol>
+
+<h1 id="定时调度器">定时调度器</h1>
+
+<p>定时提醒类系统有一个特点，就是它的峰值特别明显。用户设置的提醒大多会集中在整点时间触发，尤其是早晨8、9点。面对这样一个不均衡的分布，固定时间轮训的调度法就显得有些naïïve，它很难在运行效率和提醒的及时性中找到一个平衡点。因此，WeCron中定时调度器被设计为一个事件循环，它能响应两种事件：</p>
+
+<ol>
+<li>数据库有更新或者插入操作</li>
+<li>上一次设置的休眠时间到了</li>
+</ol>
+
+<p>每当这个调度器被唤醒，它会首先检查有没有提醒要发送，然后再找到最近一个将要触发的提醒，休眠相应的时间。下面是一个简短的实现：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="n">remind_event</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">event_loop</span><span class="p">():</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">wait_seconds</span> <span class="o">=</span> <span class="n">process_jobs</span><span class="p">()</span>
+        <span class="c1"># This event wakes up on timeout or someone else sets it</span>
+        <span class="n">remind_event</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">wait_seconds</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">on_remind_update</span><span class="p">():</span>
+    <span class="c1"># This will wake up the remind_event</span>
+    <span class="n">remind_event</span><span class="o">.</span><span class="nb">set</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">process_jobs</span><span class="p">():</span>
+    <span class="c1"># Send reminds</span>
+    <span class="n">reminds</span> <span class="o">=</span> <span class="n">get_unfired_reminds_older_than_now</span><span class="p">()</span>
+    <span class="n">send_notification</span><span class="p">(</span><span class="n">reminds</span><span class="p">)</span>
+
+    <span class="c1"># And get the most recent remind</span>
+    <span class="n">next_remind</span> <span class="o">=</span> <span class="n">get_unfired_reminds_newer_than_now</span><span class="p">()</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">next_remind</span><span class="o">.</span><span class="n">notify_time</span> <span class="o">-</span> <span class="n">now</span><span class="p">)</span><span class="o">.</span><span class="n">seconds</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>另外，为了提高提醒的及时性，这里的调度器会被启动好几份。这时面临的一个问题就是同一个提醒可能会被多个调度器调度到，用户也就有可能重复收到提醒。所以WeCron在选择提醒项的时候使用了<code>select ... for update</code>语句，利用（行）锁来同步多个调度器。</p>
+
+<h1 id="结束">结束</h1>
+
+<p>好了，我就先简单的介绍到这里，希望可以帮助到有需要的人。如果想要看到具体实现，请参考WeCron的<a href="https://github.com/polyrabbit/WeCron">代码库</a>。如果想要体验这个定时功能，也欢迎扫码关注😝：
+
+
+<div class="box">
+<figure  itemprop="associatedMedia"
+  itemscope itemtype="http://schema.org/ImageObject" 
+  style="max-width:150px" >
+    <div class="img">
+      <img itemprop="thumbnail" src="https://camo.githubusercontent.com/6f87c83d4bb324babcf1fd94751cf1ead16be13e/687474703a2f2f7778332e73696e61696d672e636e2f6d773639302f61633437323334386c793166696c646438686d677a6a323037363037366467612e6a7067" />
+    </div>
+    <a href="https://camo.githubusercontent.com/6f87c83d4bb324babcf1fd94751cf1ead16be13e/687474703a2f2f7778332e73696e61696d672e636e2f6d773639302f61633437323334386c793166696c646438686d677a6a323037363037366467612e6a7067" itemprop="contentUrl"></a>
+  </figure>
+</div>
+</p>
 
     </div>
 
@@ -315,7 +438,7 @@ if (!doNotTrack) {
   </p>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
-    <span class="item-content">2018-09-18</span>
+    <span class="item-content">2018-08-08</span>
   </p>
   
   <p class="copyright-item">
@@ -334,7 +457,7 @@ if (!doNotTrack) {
       
       <nav class="post-nav">
         
-          <a class="prev" href="/post/introduction-to-ibm-mainframe/">
+          <a class="prev" href="/post/how-to-extract-main-content-from-web-pages-using-machine-learning/">
             
             <i class="iconfont">
               <svg  class="icon" viewBox="0 0 1024 1024" version="1.1"
@@ -344,23 +467,10 @@ if (!doNotTrack) {
 </svg>
 
             </i>
-            <span class="prev-text nav-default">我所了解的IBM主机</span>
+            <span class="prev-text nav-default">[Practical Guide] How to Extract Main Content From Web Pages Using Machine-Learning</span>
             <span class="prev-text nav-mobile">上一篇</span>
           </a>
         
-          <a class="next" href="/post/how-wecron-schedules/">
-            <span class="next-text nav-default">WeCron是怎样处理定时任务的</span>
-            <span class="prev-text nav-mobile">下一篇</span>
-            
-            <i class="iconfont">
-              <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
-  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-  width="18" height="18">
-  <path d="M332.091514 74.487481l-75.369571 89.491197c-10.963703 12.998035-10.285251 32.864502 1.499144 44.378743l286.278095 300.375162L266.565125 819.058374c-11.338233 12.190647-11.035334 32.285311 0.638543 44.850487l80.46666 86.564541c11.680017 12.583596 30.356378 12.893658 41.662889 0.716314l377.434212-421.426145c11.332093-12.183484 11.041474-32.266891-0.657986-44.844348l-80.46666-86.564541c-1.772366-1.910513-3.706415-3.533476-5.750981-4.877077L373.270379 71.774697C361.493148 60.273758 343.054193 61.470003 332.091514 74.487481z"></path>
-</svg>
-
-            </i>
-          </a>
       </nav>
     </footer>
   </article>
