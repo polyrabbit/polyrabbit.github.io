@@ -88,12 +88,10 @@ if (!doNotTrack) {
 </script>
 <script async src='https://www.google-analytics.com/analytics.js'></script>
 
-<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<script>
-  (adsbygoogle = window.adsbygoogle || []).push({
-    google_ad_client: "ca-pub-9393129008813908",
-    enable_page_level_ads: true
-  });
+<script type="text/javascript">
+    
+    if (window != top)
+            top.location.href = window.location.href;
 </script>
 
 </head>
@@ -264,6 +262,39 @@ if (!doNotTrack) {
   <header class="post-header">
     <h1 class="post-title">
       
+      <a class="post-link" href="/post/mvcc-implementation-in-etcd/">MVCC在etcd中的实现</a>
+    </h1>
+    
+    <div class="post-meta">
+      <time datetime="2018-12-24" class="post-time">
+        2018-12-24
+      </time>
+      
+      <span class="more-meta"> 约 3042 字 </span>
+      <span class="more-meta"> 预计阅读 7 分钟 </span>
+      
+      
+      
+    </div>
+  </header>
+  
+  <div class="post-content">
+    
+    <div class="post-summary">
+      MVCC（Multi-version Cocurrent Control）即多版本并发控制技术，多用于数据库中的事务管理，其基本思想是保存一个数据的多个历史版本
+    </div>
+    <div class="read-more">
+      <a href="/post/mvcc-implementation-in-etcd/" class="read-more-link">阅读全文</a>
+    </div>
+    
+  </div>
+</article>
+
+    
+      <article class="post bg-white">
+  <header class="post-header">
+    <h1 class="post-title">
+      
       <a class="post-link" href="/post/raft-implementation-in-etcd/">Raft在etcd中的实现</a>
     </h1>
     
@@ -272,8 +303,8 @@ if (!doNotTrack) {
         2018-11-13
       </time>
       
-      <span class="more-meta"> 约 7484 字 </span>
-      <span class="more-meta"> 预计阅读 15 分钟 </span>
+      <span class="more-meta"> 约 7698 字 </span>
+      <span class="more-meta"> 预计阅读 16 分钟 </span>
       
       
       

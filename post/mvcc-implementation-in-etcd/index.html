@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="zh-cn" itemscope itemtype="http://schema.org/WebPage">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>MVCC在etcd中的实现 - 喵叔的博客</title>
+  
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta name="MobileOptimized" content="width"/>
+<meta name="HandheldFriendly" content="true"/>
+
+
+<meta name="applicable-device" content="pc,mobile">
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="author" content="喵叔" />
+  <meta name="description" content="MVCC（Multi-version Cocurrent Control）即多版本并发控制技术，多用于数据库中的事务管理，其基本思想是保存一个数据的多个历史版本" />
+<meta name="keywords" content="mvcc, etcd, 数据库, 事务, 多版本并发控制" />
+
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="canonical" href="//blog.betacat.io/post/mvcc-implementation-in-etcd/" />
+
+
+
+<link rel="icon" href="/favicon.ico" />
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/sass/jane.min.28854364c052ec02eba4ee5867bc889d3a567cdf337ba3a355c33511d20bee1e.css" integrity="sha256-KIVDZMBS7ALrpO5YZ7yInTpWfN8ze6OjVcM1EdIL7h4=" media="screen" crossorigin="anonymous">
+
+
+
+
+
+<meta property="og:title" content="MVCC在etcd中的实现" />
+<meta property="og:description" content="MVCC（Multi-version Cocurrent Control）即多版本并发控制技术，多用于数据库中的事务管理，其基本思想是保存一个数据的多个历史版本" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="//blog.betacat.io/post/mvcc-implementation-in-etcd/" /><meta property="article:published_time" content="2018-12-24T18:26:52&#43;08:00"/>
+<meta property="article:modified_time" content="2018-12-24T18:26:52&#43;08:00"/>
+<meta itemprop="name" content="MVCC在etcd中的实现">
+<meta itemprop="description" content="MVCC（Multi-version Cocurrent Control）即多版本并发控制技术，多用于数据库中的事务管理，其基本思想是保存一个数据的多个历史版本">
+
+
+<meta itemprop="datePublished" content="2018-12-24T18:26:52&#43;08:00" />
+<meta itemprop="dateModified" content="2018-12-24T18:26:52&#43;08:00" />
+<meta itemprop="wordCount" content="3042">
+
+
+
+<meta itemprop="keywords" content="" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="MVCC在etcd中的实现"/>
+<meta name="twitter:description" content="MVCC（Multi-version Cocurrent Control）即多版本并发控制技术，多用于数据库中的事务管理，其基本思想是保存一个数据的多个历史版本"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-36049801-4', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script type="text/javascript">
+    
+    if (window != top)
+            top.location.href = window.location.href;
+</script>
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">喵叔的博客</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+          
+        
+      </li>
+    
+  </ul>
+</nav>
+
+
+  
+    
+
+
+
+
+
+
+  <link rel="stylesheet" href="/lib/photoswipe/photoswipe.min.css" />
+  <link rel="stylesheet" href="/lib/photoswipe/default-skin/default-skin.min.css" />
+
+
+
+
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="pswp__bg"></div>
+
+<div class="pswp__scroll-wrap">
+    
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    
+    <div class="pswp__ui pswp__ui--hidden">
+    <div class="pswp__top-bar">
+      
+      <div class="pswp__counter"></div>
+      <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+      <button class="pswp__button pswp__button--share" title="Share"></button>
+      <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+      <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+      
+      
+      <div class="pswp__preloader">
+        <div class="pswp__preloader__icn">
+          <div class="pswp__preloader__cut">
+            <div class="pswp__preloader__donut"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+      <div class="pswp__share-tooltip"></div>
+    </div>
+    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+    </button>
+    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+    </button>
+    <div class="pswp__caption">
+      <div class="pswp__caption__center"></div>
+    </div>
+    </div>
+    </div>
+</div>
+
+  
+
+  
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">
+    
+      喵叔的博客
+    
+  </a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+          
+
+        
+
+      </li>
+    
+    
+  </ul>
+</nav>
+
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">MVCC在etcd中的实现</h1>
+      
+      <div class="post-meta">
+        <time datetime="2018-12-24" class="post-time">
+          2018-12-24
+        </time>
+        
+        <span class="more-meta"> 约 3042 字 </span>
+          <span class="more-meta"> 预计阅读 7 分钟 </span>
+
+        
+        
+
+        
+        
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li><a href="#数据结构">数据结构</a>
+<ul>
+<li><a href="#revision">revision</a></li>
+<li><a href="#keyindex">keyIndex</a></li>
+<li><a href="#treeindex">treeIndex</a></li>
+<li><a href="#backend">backend</a></li>
+</ul></li>
+<li><a href="#写操作">写操作</a></li>
+<li><a href="#读操作">读操作</a></li>
+<li><a href="#小结">小结</a></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      
+
+<p><a href="https://en.wikipedia.org/wiki/Multiversion_concurrency_control">MVCC</a>（Multi-version Cocurrent Control）即多版本并发控制技术，多用于数据库中的事务管理，其基本思想是保存一个数据的多个历史版本，从而解决事务管理中数据隔离的问题。</p>
+
+<p>这里的版本一般选择使用时间戳或事务ID来标识。在处理一个写请求时，MVCC不是简单的用新值覆盖旧值，而是为这一项添加一个新版本的数据。在读取一个数据项时，要先确定一个要读取的版本，然后根据版本找到对应的数据。这种写操作创建新版本，读操作访问旧版本的方式使得读写操作彼此隔离，他们之间就不需要用锁来协调。换句话说，在MVCC里读操作永远不会被阻塞，因此它特别适合etcd这种读操作比较多的场景。</p>
+
+<p>MVCC的基本原理就是这么简单，下面来结合具体代码，看看etcd是怎么实现的。跟<a href="//blog.betacat.io/post/raft-implementation-in-etcd/">上篇</a>一样，这里的分析仍以etcd <a href="https://github.com/etcd-io/etcd/tree/v3.3.10">v3.3.10</a>为例。</p>
+
+<h1 id="数据结构">数据结构</h1>
+
+<p>etcd的代码中，有关MVCC的实现都在一个叫<a href="https://github.com/etcd-io/etcd/tree/v3.3.10/mvcc">mvcc</a>的包里。在正式介绍读写流程之前，我们先来了解下这个包里面定义的几个基础数据结构。</p>
+
+<h2 id="revision">revision</h2>
+
+<p><a href="https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/revision.go">revision</a>即对应到MVCC中的版本，etcd中的每一次<code>key-value</code>的操作都会有一个相应的<code>revision</code>。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// A revision indicates modification of the key-value space.
+</span><span class="c1">// The set of changes that share same main revision changes the key-value space atomically.
+</span><span class="c1"></span><span class="kd">type</span> <span class="nx">revision</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="c1">// main is the main revision of a set of changes that happen atomically.
+</span><span class="c1"></span>    <span class="nx">main</span> <span class="kt">int64</span>
+
+    <span class="c1">// sub is the the sub revision of a change in a set of changes that happen
+</span><span class="c1"></span>    <span class="c1">// atomically. Each change has different increasing sub revision in that
+</span><span class="c1"></span>    <span class="c1">// set.
+</span><span class="c1"></span>    <span class="nx">sub</span> <span class="kt">int64</span>
+<span class="p">}</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>这里的main属性对应事务ID，全局递增不重复，它etcd中被当做一个逻辑时钟来使用。sub代表一次事务中不同的修改操作（如put和delete）编号，从0开始依次递增。所以在一次事务中，每一个修改操作所绑定的<code>revision</code>依次为<code>{txID, 0}</code>, <code>{txID, 1}</code>, <code>{txID, 2}</code>&hellip;</p>
+
+<h2 id="keyindex">keyIndex</h2>
+
+<p><a href="https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/key_index.go">keyIndex</a>用来记录一个key的生命周期中所涉及过的版本（revision）。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">keyIndex</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="nx">key</span>         <span class="p">[]</span><span class="kt">byte</span>
+    <span class="nx">modified</span>    <span class="nx">revision</span> <span class="c1">// the main rev of the last modification
+</span><span class="c1"></span>    <span class="nx">generations</span> <span class="p">[]</span><span class="nx">generation</span>
+<span class="p">}</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>它保存的是当前<code>key</code>的具体值（key），最近一次修改的版本号（modified），以及记录<code>key</code>生命周期的<code>generation</code>，一个<code>generation</code>代表了一个<code>key</code>从创建到被删除的过程。因为一个<code>key</code>可能会经历创建 =&gt; 删除 =&gt; 创建的好几个轮回，所以它有可能会有一个或多个<code>generation</code>。下面来看看一个<code>generation</code>包含哪些内容：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// generation contains multiple revisions of a key.
+</span><span class="c1"></span><span class="kd">type</span> <span class="nx">generation</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="nx">ver</span>     <span class="kt">int64</span>
+    <span class="nx">created</span> <span class="nx">revision</span> <span class="c1">// when the generation is created (put in first revision).
+</span><span class="c1"></span>    <span class="nx">revs</span>    <span class="p">[]</span><span class="nx">revision</span>
+<span class="p">}</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>可以看到，一个<code>generation</code>中最重要的信息就是那个<code>revision</code>数组，代表在它这一代中，所经历过的版本变更。</p>
+
+<p>不知所云？没关系，我刚开始看这段代码的时候也是一脸懵逼，不明白为啥要这样层层包装。不过还好我们有<a href="https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/key_index_test.go">UT</a>，跟着UT里面的测试样例大概梳理出这样的逻辑：</p>
+
+<ul>
+<li>假设我们有一个值为<code>foo</code>的key</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">ki</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">keyIndex</span><span class="p">{</span><span class="nx">key</span><span class="p">:</span> <span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&#34;foo&#34;</span><span class="p">)}</span></code></pre></td></tr></table>
+</div>
+</div>
+<ul>
+<li>为它记录两次版本变更</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">ki</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nx">NewExample</span><span class="p">(),</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="c1">// 第一次变更发生在ID为2的事务中，且是第一次操作
+</span><span class="c1"></span><span class="nx">ki</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nx">NewExample</span><span class="p">(),</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">//</span> <span class="nx">第二次变更发生在ID为4的事务中</span><span class="err">，</span><span class="nx">且是第三次操作</span></code></pre></td></tr></table>
+</div>
+</div>
+<ul>
+<li>那这个<code>keyIndex</code>变成这样的结构</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml">key<span class="p">:</span><span class="w"> </span><span class="s2">&#34;foo&#34;</span><span class="w">
+</span><span class="w"></span>modified<span class="p">:</span><span class="w"> </span>{<span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">2</span>}<span class="w">
+</span><span class="w"></span>generations<span class="p">:</span><span class="w">
+</span><span class="w">    </span><span class="p">[</span>{<span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}<span class="p">,</span><span class="w"> </span>{<span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">2</span>}<span class="p">]</span></code></pre></td></tr></table>
+</div>
+</div>
+<ul>
+<li>如果在此后的事务中这个key经历了被删除，再创建的过程：</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">ki</span><span class="p">.</span><span class="nx">tombstone</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nx">NewExample</span><span class="p">(),</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1">// 在第6次事务中被删除
+</span><span class="c1"></span><span class="nx">ki</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nx">NewExample</span><span class="p">(),</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="nx">ki</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nx">NewExample</span><span class="p">(),</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></code></pre></td></tr></table>
+</div>
+</div>
+<ul>
+<li>那它会多一个<code>generation</code></li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml">key<span class="p">:</span><span class="w"> </span><span class="s2">&#34;foo&#34;</span><span class="w">
+</span><span class="w"></span>modified<span class="p">:</span><span class="w"> </span>{<span class="m">10</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}<span class="w">
+</span><span class="w"></span>generations<span class="p">:</span><span class="w">
+</span><span class="w">    </span><span class="p">[</span>{<span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}<span class="p">,</span><span class="w"> </span>{<span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">2</span>}<span class="p">,</span><span class="w"> </span>{<span class="m">6</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}(t)<span class="p">],</span><span class="w">
+</span><span class="w">    </span><span class="p">[</span>{<span class="m">8</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}<span class="p">,</span><span class="w"> </span>{<span class="m">10</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}<span class="p">]</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>好了，在知道了key的版本信息及相应的操作后，我们来看看怎么把它们组织起来：</p>
+
+<h2 id="treeindex">treeIndex</h2>
+
+<p><a href="https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/index.go">treeIndex</a>顾名思义就是一个树状索引，它通过在内存中维护一个<a href="https://github.com/google/btree">BTree</a>，来达到加速查询key的功能（不明白为啥这里选用了BTree，BTree似乎更适合磁盘的场景，内存中的树一般不都使用红黑树等来实现么？）。</p>
+
+<p>这棵树的每一个节点都是<code>keyIndex</code>。这样，给定一个key就能很快查到它对应的<code>keyIndex</code>，进而可以得知它的版本信息。树状结构比较简单，看看图就能明白，我就不再分析了。</p>
+
+
+<link rel="stylesheet" href="/css/hugo-easy-gallery.css" />
+<div class="box">
+<figure  itemprop="associatedMedia"
+  itemscope itemtype="http://schema.org/ImageObject" >
+    <div class="img">
+      <img itemprop="thumbnail" src="/image/mvcc-in-etcd/treeIndex.svg" alt="treeIndex结构"/>
+    </div>
+    <a href="/image/mvcc-in-etcd/treeIndex.svg" itemprop="contentUrl"></a>
+      <figcaption>
+          <p>treeIndex结构</p>
+      </figcaption>
+  </figure>
+</div>
+
+
+<p>值得注意的是，这里只存有key的信息，value保存在磁盘里，一方面key一般比较小，同样的内存可以支持存储更多的key；另一方面，value和版本是一一对应的，内存中维护了版本的信息，也就没必要再多存一份value了。</p>
+
+<p>看完了key以及key在内存中的组织结构，我们再来看看value是怎么处理的。</p>
+
+<h2 id="backend">backend</h2>
+
+<p>backend封装了etcd中的存储，按照设计，backend可以对接多种存储，当前使用的是<a href="https://github.com/etcd-io/bbolt">boltdb</a>，但作为一个CNCF项目，官方也在考虑接入更多的存储引擎<sup class="footnote-ref" id="fnref:pluggable-backend"><a href="#fn:pluggable-backend">1</a></sup>。boltdb是一个单机的支持事务的KV存储，etcd的事务是基于boltdb的事务实现的。</p>
+
+<p>etcd在boltdb中存储的key是<code>reversion</code>，value是etcd自己的<code>key-value</code>组合。因此，每次更新时，新的<code>reversion</code>会被记在<code>keyIndex</code>中，同时，这个<code>reversion</code>所对应的<code>key-value</code>组合会被存到boltdb中。</p>
+
+<p>举个例子： 用etcdctl通过批量接口写入两条记录：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">etcdctl txn <span class="o">&lt;&lt;&lt;</span><span class="s1">&#39;
+</span><span class="s1">put key1 &#34;v1&#34;
+</span><span class="s1">put key2 &#34;v2&#34;
+</span><span class="s1">&#39;</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>再通过批量接口更新这两条记录：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">etcdctl txn <span class="o">&lt;&lt;&lt;</span><span class="s1">&#39;
+</span><span class="s1">put key1 &#34;v12&#34;
+</span><span class="s1">put key2 &#34;v22&#34;
+</span><span class="s1">&#39;</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>boltdb中其实有了4条数据：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="nv">rev</span><span class="o">={</span><span class="m">3</span> <span class="m">0</span><span class="o">}</span>, <span class="nv">key</span><span class="o">=</span><span class="s2">&#34;key1&#34;</span>, <span class="nv">value</span><span class="o">=</span><span class="s2">&#34;v1&#34;</span>
+<span class="nv">rev</span><span class="o">={</span><span class="m">3</span> <span class="m">1</span><span class="o">}</span>, <span class="nv">key</span><span class="o">=</span><span class="s2">&#34;key2&#34;</span>, <span class="nv">value</span><span class="o">=</span><span class="s2">&#34;v2&#34;</span>
+<span class="nv">rev</span><span class="o">={</span><span class="m">4</span> <span class="m">0</span><span class="o">}</span>, <span class="nv">key</span><span class="o">=</span><span class="s2">&#34;key1&#34;</span>, <span class="nv">value</span><span class="o">=</span><span class="s2">&#34;v12&#34;</span>
+<span class="nv">rev</span><span class="o">={</span><span class="m">4</span> <span class="m">1</span><span class="o">}</span>, <span class="nv">key</span><span class="o">=</span><span class="s2">&#34;key2&#34;</span>, <span class="nv">value</span><span class="o">=</span><span class="s2">&#34;v22&#34;</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>所以总的来说，内存btree维护的是key =&gt; keyIndex的映射，keyIndex内维护多版本的revision信息，而revision可以映射到磁盘bbolt中具体的value。下面这个图很好的表示了这个过程<sup class="footnote-ref" id="fnref:lichuang"><a href="#fn:lichuang">2</a></sup>：</p>
+
+
+
+<div class="box">
+<figure  itemprop="associatedMedia"
+  itemscope itemtype="http://schema.org/ImageObject" >
+    <div class="img">
+      <img itemprop="thumbnail" src="/image/mvcc-in-etcd/etcd-keyindex.png" alt="MVCC数据流程"/>
+    </div>
+    <a href="/image/mvcc-in-etcd/etcd-keyindex.png" itemprop="contentUrl"></a>
+      <figcaption>
+          <p>MVCC数据流程</p>
+      </figcaption>
+  </figure>
+</div>
+
+
+<p>基本概念就介绍到这里了，下面我们把这些概念串起来，看看读写操作的完整流程是怎样的。</p>
+
+<h1 id="写操作">写操作</h1>
+
+<p>首先写操作的入口是applierV3的<a href="https://github.com/etcd-io/etcd/blob/v3.3.10/etcdserver/apply.go#L50">Put函数</a>，它开启一个写事务，然后进过层层封装，最后干活的是写事务的<code>put</code>函数，精简后的逻辑大概是这样的：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/kvstore_txn.go#L151
+</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">tw</span> <span class="o">*</span><span class="nx">storeTxnWrite</span><span class="p">)</span> <span class="nx">put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">,</span> <span class="nx">leaseID</span> <span class="nx">lease</span><span class="p">.</span><span class="nx">LeaseID</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">rev</span> <span class="o">:=</span> <span class="nx">tw</span><span class="p">.</span><span class="nx">beginRev</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="nx">ibytes</span> <span class="o">:=</span> <span class="nx">newRevBytes</span><span class="p">()</span>
+    <span class="nx">idxRev</span> <span class="o">:=</span> <span class="nx">revision</span><span class="p">{</span><span class="nx">main</span><span class="p">:</span> <span class="nx">rev</span><span class="p">,</span> <span class="nx">sub</span><span class="p">:</span> <span class="nb">int64</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nx">tw</span><span class="p">.</span><span class="nx">changes</span><span class="p">))}</span>
+    <span class="nx">revToBytes</span><span class="p">(</span><span class="nx">idxRev</span><span class="p">,</span> <span class="nx">ibytes</span><span class="p">)</span>
+
+    <span class="nx">kv</span> <span class="o">:=</span> <span class="nx">mvccpb</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{</span>
+        <span class="nx">Key</span><span class="p">:</span>            <span class="nx">key</span><span class="p">,</span>
+        <span class="nx">Value</span><span class="p">:</span>          <span class="nx">value</span><span class="p">,</span>
+        <span class="nx">CreateRevision</span><span class="p">:</span> <span class="nx">c</span><span class="p">,</span>
+        <span class="nx">ModRevision</span><span class="p">:</span>    <span class="nx">rev</span><span class="p">,</span>
+        <span class="nx">Version</span><span class="p">:</span>        <span class="nx">ver</span><span class="p">,</span>
+        <span class="nx">Lease</span><span class="p">:</span>          <span class="nb">int64</span><span class="p">(</span><span class="nx">leaseID</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="nx">d</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">Marshal</span><span class="p">()</span>
+
+    <span class="nx">tw</span><span class="p">.</span><span class="nx">tx</span><span class="p">.</span><span class="nx">UnsafeSeqPut</span><span class="p">(</span><span class="nx">keyBucketName</span><span class="p">,</span> <span class="nx">ibytes</span><span class="p">,</span> <span class="nx">d</span><span class="p">)</span>
+    <span class="nx">tw</span><span class="p">.</span><span class="nx">s</span><span class="p">.</span><span class="nx">kvindex</span><span class="p">.</span><span class="nx">Put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">idxRev</span><span class="p">)</span>
+    <span class="nx">tw</span><span class="p">.</span><span class="nx">changes</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">tw</span><span class="p">.</span><span class="nx">changes</span><span class="p">,</span> <span class="nx">kv</span><span class="p">)</span>
+<span class="p">}</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>正如前面所分析的，这里的<code>put</code>操作首先获取了当前事务的ID（tw.beginRev），以及当前事务中已经进行过的更改数（tw.changes），然后以此为基础生成了<code>revision</code>，并向<code>boltdb</code>和<code>treeIndex</code>分别执行了两次写入操作。</p>
+
+<h1 id="读操作">读操作</h1>
+
+<p>读操作的入口是applierV3的<a href="https://github.com/etcd-io/etcd/blob/v3.3.10/etcdserver/apply.go#L51">Range函数</a>，跟写操作一样，它开启了一个只读事务，然后一路调用到<code>rangeKeys</code>函数：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/kvstore_txn.go#L111
+</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">tr</span> <span class="o">*</span><span class="nx">storeTxnRead</span><span class="p">)</span> <span class="nx">rangeKeys</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">end</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">,</span> <span class="nx">curRev</span> <span class="kt">int64</span><span class="p">,</span> <span class="nx">ro</span> <span class="nx">RangeOptions</span><span class="p">)</span> <span class="p">(</span><span class="o">*</span><span class="nx">RangeResult</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">rev</span> <span class="o">:=</span> <span class="nx">ro</span><span class="p">.</span><span class="nx">Rev</span>
+
+    <span class="nx">revpairs</span> <span class="o">:=</span> <span class="nx">tr</span><span class="p">.</span><span class="nx">s</span><span class="p">.</span><span class="nx">kvindex</span><span class="p">.</span><span class="nx">Revisions</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">end</span><span class="p">,</span> <span class="nx">rev</span><span class="p">)</span>
+
+    <span class="nx">limit</span> <span class="o">:=</span> <span class="nb">int</span><span class="p">(</span><span class="nx">ro</span><span class="p">.</span><span class="nx">Limit</span><span class="p">)</span>
+    <span class="nx">kvs</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="nx">mvccpb</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">,</span> <span class="nx">limit</span><span class="p">)</span>
+    <span class="nx">revBytes</span> <span class="o">:=</span> <span class="nx">newRevBytes</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">revpair</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">revpairs</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="nx">kvs</span><span class="p">)]</span> <span class="p">{</span>
+        <span class="nx">revToBytes</span><span class="p">(</span><span class="nx">revpair</span><span class="p">,</span> <span class="nx">revBytes</span><span class="p">)</span>
+        <span class="nx">_</span><span class="p">,</span> <span class="nx">vs</span> <span class="o">:=</span> <span class="nx">tr</span><span class="p">.</span><span class="nx">tx</span><span class="p">.</span><span class="nx">UnsafeRange</span><span class="p">(</span><span class="nx">keyBucketName</span><span class="p">,</span> <span class="nx">revBytes</span><span class="p">,</span> <span class="kc">nil</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="nx">kvs</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">Unmarshal</span><span class="p">(</span><span class="nx">vs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="o">&amp;</span><span class="nx">RangeResult</span><span class="p">{</span><span class="nx">KVs</span><span class="p">:</span> <span class="nx">kvs</span><span class="p">,</span> <span class="nx">Count</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="nx">revpairs</span><span class="p">),</span> <span class="nx">Rev</span><span class="p">:</span> <span class="nx">curRev</span><span class="p">},</span> <span class="kc">nil</span>
+    <span class="p">}</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>这里函数的参数<code>curRev</code>代表当前事务ID。拿到这个ID后，我们去<code>treeIndex</code>中查询，满足指定条件的<code>revision</code>有哪些，然后再根据这些<code>revision</code>去<code>boltdb</code>中查询当时存的<code>key-value</code>是什么。</p>
+
+<h1 id="小结">小结</h1>
+
+<p>可以看到，MVCC的实现还是比较简单直接的。但在阅读代码的过程中，我也有一些看不明白的地方，毕竟一段代码在演化的过程中，会多出各种各样的细节处理，比如边界情况，性能调优，这些细节会扰乱视线，让我们难以抓住主干。一般碰到这种情况，我会采用两种方法：</p>
+
+<ol>
+<li>阅读UT，看他们都在测试什么。一般UT的输入输出都比较确定，它能够向我们揭示这段代码的作者期望完成的功能是什么。有了这个目标后我们再去看实现，就能剔出哪些是跟主干功能有关的，哪些是细节处理。</li>
+<li>查找较早的提交。既然代码是演进出来的，那它刚开始的几个版本一般都比较粗糙，有很多细节没有处理，但那也是这个功能最简单的实现。通过阅读作者早期的实现，也能帮助我们快速抓住主干。</li>
+</ol>
+
+<!-- 本文将Lease机制的本质及在分布式系统中的主要应用梳理出来了，希望对读者在分布式系统中使用lease机制有帮助。 -->
+<div class="footnotes">
+
+<hr />
+
+<ol>
+<li id="fn:pluggable-backend"><a href="https://github.com/etcd-io/etcd/issues/10321">Meta issue: Pluggable backend #10321</a>
+ <a class="footnote-return" href="#fnref:pluggable-backend"><sup>[return]</sup></a></li>
+<li id="fn:lichuang"><a href="https://lichuang.github.io/post/20181125-etcd-server/">Etcd存储的实现</a>
+ <a class="footnote-return" href="#fnref:lichuang"><sup>[return]</sup></a></li>
+</ol>
+</div>
+
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">喵叔</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2018-12-24</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>（转载请注明出处）</span>
+  </p>
+</div>
+
+
+    
+    
+
+    <footer class="post-footer">
+      
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/raft-implementation-in-etcd/">
+            <span class="next-text nav-default">Raft在etcd中的实现</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            
+            <i class="iconfont">
+              <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M332.091514 74.487481l-75.369571 89.491197c-10.963703 12.998035-10.285251 32.864502 1.499144 44.378743l286.278095 300.375162L266.565125 819.058374c-11.338233 12.190647-11.035334 32.285311 0.638543 44.850487l80.46666 86.564541c11.680017 12.583596 30.356378 12.893658 41.662889 0.716314l377.434212-421.426145c11.332093-12.183484 11.041474-32.266891-0.657986-44.844348l-80.46666-86.564541c-1.772366-1.910513-3.706415-3.533476-5.750981-4.877077L373.270379 71.774697C361.493148 60.273758 343.054193 61.470003 332.091514 74.487481z"></path>
+</svg>
+
+            </i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+
+  
+  
+
+  
+  
+
+  
+  
+
+  
+
+  
+
+  
+  
+    
+
+
+
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+  
+  
+    <a href="/email.gif" rel="me noopener" class="iconfont"
+      title="email"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1451 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M664.781909 681.472759 0 97.881301C0 3.997201 71.046997 0 71.046997 0L474.477909 0 961.649408 0 1361.641813 0C1361.641813 0 1432.688811 3.997201 1432.688811 97.881301L771.345323 681.472759C771.345323 681.472759 764.482731 685.154773 753.594283 688.65053L753.594283 688.664858C741.602731 693.493018 729.424896 695.068979 718.077952 694.839748 706.731093 695.068979 694.553173 693.493018 682.561621 688.664858L682.561621 688.65053C671.644501 685.140446 664.781909 681.472759 664.781909 681.472759L664.781909 681.472759ZM718.063616 811.603883C693.779541 811.016482 658.879232 802.205449 619.10784 767.734955 542.989056 701.759633 0 212.052267 0 212.052267L0 942.809523C0 942.809523 0 1024 83.726336 1024L682.532949 1024 753.579947 1024 1348.948139 1024C1432.688811 1024 1432.688811 942.809523 1432.688811 942.809523L1432.688811 212.052267C1432.688811 212.052267 893.138176 701.759633 817.019477 767.734955 777.248 802.205449 742.347691 811.03081 718.063616 811.603883L718.063616 811.603883Z"></path>
+</svg>
+
+    </a>
+  
+    <a href="javascript:alert%28%27My%20tweets%20are%20protected%20now%27%29" rel="me noopener" class="iconfont"
+      title="twitter"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1264 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M1229.8616 18.043658c0 0-117.852626 63.135335-164.151872 67.344358-105.225559-164.151872-505.082682-92.598492-437.738325 223.078185C278.622548 312.675223 89.216542 47.506814 89.216542 47.506814s-117.852626 189.406006 75.762402 345.139833C127.097743 396.85567 55.544363 371.601535 55.544363 371.601535S26.081207 535.753407 253.368414 615.724832c-21.045112 29.463156-113.643603 8.418045-113.643603 8.418045s25.254134 143.10676 231.496229 180.987961c-143.10676 130.479693-387.230056 92.598492-370.393967 105.225559 206.242095 189.406006 1119.599946 231.496229 1128.01799-643.98042C1179.353331 249.539887 1263.533778 123.269217 1263.533778 123.269217s-130.479693 37.881201-138.897738 33.672179C1225.652577 98.015083 1229.8616 18.043658 1229.8616 18.043658"></path>
+</svg>
+
+    </a>
+  
+    <a href="https://www.linkedin.com/in/%E6%98%8C%E6%96%B0-%E7%BC%AA-b46b8591/" rel="me noopener" class="iconfont"
+      title="linkedin"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="33" height="33">
+  <path d="M872.405333 872.618667h-151.637333v-237.610667c0-56.661333-1.152-129.578667-79.018667-129.578667-79.061333 0-91.136 61.653333-91.136 125.397334v241.792H398.976V384h145.664v66.602667h1.962667c20.352-38.4 69.845333-78.933333 143.786666-78.933334 153.642667 0 182.058667 101.12 182.058667 232.746667v268.202667zM227.712 317.141333a87.978667 87.978667 0 0 1-88.021333-88.106666 88.064 88.064 0 1 1 88.021333 88.106666z m76.032 555.477334H151.68V384h152.064v488.618667zM948.266667 0H75.562667C33.792 0 0 33.024 0 73.770667v876.458666C0 991.018667 33.792 1024 75.562667 1024h872.576C989.866667 1024 1024 991.018667 1024 950.229333V73.770667C1024 33.024 989.866667 0 948.138667 0h0.128z"></path>
+</svg>
+
+    </a>
+  
+    <a href="https://github.com/polyrabbit" rel="me noopener" class="iconfont"
+      title="github"  target="_blank"
+      >
+      <svg class="icon" style="" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M512 12.672c-282.88 0-512 229.248-512 512 0 226.261333 146.688 418.133333 350.08 485.76 25.6 4.821333 34.986667-11.008 34.986667-24.618667 0-12.16-0.426667-44.373333-0.64-87.04-142.421333 30.890667-172.458667-68.693333-172.458667-68.693333C188.672 770.986667 155.008 755.2 155.008 755.2c-46.378667-31.744 3.584-31.104 3.584-31.104 51.413333 3.584 78.421333 52.736 78.421333 52.736 45.653333 78.293333 119.850667 55.68 149.12 42.581333 4.608-33.109333 17.792-55.68 32.426667-68.48-113.706667-12.8-233.216-56.832-233.216-253.013333 0-55.893333 19.84-101.546667 52.693333-137.386667-5.76-12.928-23.04-64.981333 4.48-135.509333 0 0 42.88-13.738667 140.8 52.48 40.96-11.392 84.48-17.024 128-17.28 43.52 0.256 87.04 5.888 128 17.28 97.28-66.218667 140.16-52.48 140.16-52.48 27.52 70.528 10.24 122.581333 5.12 135.509333 32.64 35.84 52.48 81.493333 52.48 137.386667 0 196.693333-119.68 240-233.6 252.586667 17.92 15.36 34.56 46.762667 34.56 94.72 0 68.522667-0.64 123.562667-0.64 140.202666 0 13.44 8.96 29.44 35.2 24.32C877.44 942.592 1024 750.592 1024 524.672c0-282.752-229.248-512-512-512"></path>
+</svg>
+
+    </a>
+
+
+<a href="//blog.betacat.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
+    class="iconfont" title="rss" target="_blank">
+    <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="30" height="30">
+  <path d="M819.157333 1024C819.157333 574.592 449.408 204.8 0 204.8V0c561.706667 0 1024 462.293333 1024 1024h-204.842667zM140.416 743.04a140.8 140.8 0 0 1 140.501333 140.586667A140.928 140.928 0 0 1 140.074667 1024C62.72 1024 0 961.109333 0 883.626667s62.933333-140.544 140.416-140.586667zM678.784 1024h-199.04c0-263.210667-216.533333-479.786667-479.744-479.786667V345.173333c372.352 0 678.784 306.517333 678.784 678.826667z"></path>
+</svg>
+
+  </a>
+  
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy;
+    
+      2018 -
+    2019
+    <span class="heart">
+      
+      <i class="iconfont">
+        <svg class="icon" viewBox="0 0 1025 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="14" height="14">
+  <path d="M1000.1 247.9c-15.5-37.3-37.6-70.6-65.7-98.9-54.4-54.8-125.8-85-201-85-85.7 0-166 39-221.4 107.4C456.6 103 376.3 64 290.6 64c-75.1 0-146.5 30.4-201.1 85.6-28.2 28.5-50.4 61.9-65.8 99.3-16 38.8-24 79.9-23.6 122.2 0.7 91.7 40.1 177.2 108.1 234.8 3.1 2.6 6 5.1 8.9 7.8 14.9 13.4 58 52.8 112.6 102.7 93.5 85.5 209.9 191.9 257.5 234.2 7 6.1 15.8 9.5 24.9 9.5 9.2 0 18.1-3.4 24.9-9.5 34.5-30.7 105.8-95.9 181.4-165 74.2-67.8 150.9-138 195.8-178.2 69.5-57.9 109.6-144.4 109.9-237.3 0.1-42.5-8-83.6-24-122.2z"
+   fill="#8a8a8a"></path>
+</svg>
+
+      </i>
+    </span><span class="author">
+        喵叔
+        
+      </span></span>
+
+  
+  
+
+  
+    <span>
+      沪ICP备17033881号-1
+    </span>
+  
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont">
+        
+        <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="35" height="35">
+  <path d="M510.866688 227.694839 95.449397 629.218702l235.761562 0-2.057869 328.796468 362.40389 0L691.55698 628.188232l241.942331-3.089361L510.866688 227.694839zM63.840492 63.962777l894.052392 0 0 131.813095L63.840492 195.775872 63.840492 63.962777 63.840492 63.962777zM63.840492 63.962777"></path>
+</svg>
+
+      </i>
+    </div>
+  </div>
+  
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+
+
+
+
+<script type="text/javascript" src="/js/main.638251f4230630f0335d8c6748e53a96f94b72670920b60c09a56fdc8bece214.js" integrity="sha256-Y4JR9CMGMPAzXYxnSOU6lvlLcmcJILYMCaVv3Ivs4hQ=" crossorigin="anonymous"></script>
+<script id="baidu_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+    hm.src = "https://hm.baidu.com/hm.js?1d8c3618a611e95c78e0fcaf38baf230";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+  
+    <script type="text/javascript" src="/js/load-photoswipe.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe.min.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe-ui-default.min.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -6,10 +6,19 @@
     <description>Recent content in Posts on 喵叔的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 13 Nov 2018 19:47:17 +0800</lastBuildDate>
+    <lastBuildDate>Mon, 24 Dec 2018 18:26:52 +0800</lastBuildDate>
     
 	<atom:link href="//blog.betacat.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>MVCC在etcd中的实现</title>
+      <link>//blog.betacat.io/post/mvcc-implementation-in-etcd/</link>
+      <pubDate>Mon, 24 Dec 2018 18:26:52 +0800</pubDate>
+      
+      <guid>//blog.betacat.io/post/mvcc-implementation-in-etcd/</guid>
+      <description>MVCC（Multi-version Cocurrent Control）即多版本并发控制技术，多用于数据库中的事务管理，其基本思想是保存一个数据的多个历史版本</description>
+    </item>
     
     <item>
       <title>Raft在etcd中的实现</title>

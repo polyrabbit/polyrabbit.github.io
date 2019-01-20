@@ -68,7 +68,7 @@
 
 <meta itemprop="datePublished" content="2018-11-13T19:47:17&#43;08:00" />
 <meta itemprop="dateModified" content="2018-11-13T19:47:17&#43;08:00" />
-<meta itemprop="wordCount" content="7484">
+<meta itemprop="wordCount" content="7698">
 
 
 
@@ -98,12 +98,10 @@ if (!doNotTrack) {
 </script>
 <script async src='https://www.google-analytics.com/analytics.js'></script>
 
-<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<script>
-  (adsbygoogle = window.adsbygoogle || []).push({
-    google_ad_client: "ca-pub-9393129008813908",
-    enable_page_level_ads: true
-  });
+<script type="text/javascript">
+    
+    if (window != top)
+            top.location.href = window.location.href;
 </script>
 
 </head>
@@ -275,8 +273,8 @@ if (!doNotTrack) {
           2018-11-13
         </time>
         
-        <span class="more-meta"> 约 7484 字 </span>
-          <span class="more-meta"> 预计阅读 15 分钟 </span>
+        <span class="more-meta"> 约 7698 字 </span>
+          <span class="more-meta"> 预计阅读 16 分钟 </span>
 
         
         
@@ -358,7 +356,7 @@ if (!doNotTrack) {
 </div>
 
 
-<p>这种全异步的交互方式好处就是它提高了性能，但坏处就是难以调试，代码看起来会很绕。拿etcd举例，很多时候你只看到它把一个消息push到一个slice/channel里面，然后这部分函数调用就结束了，你无法直观的追踪到，到底是谁最后处理了这个消息。</p>
+<p>这种全异步的交互方式好处就是它提高了性能，但坏处就是难以调试，代码看起来会很绕。拿etcd举例，很多时候你只看到它把一个消息push到一个slice/channel里面，然后这部分函数调用链就结束了，你无法直观的追踪到，到底是谁最后处理了这个消息。</p>
 
 <h2 id="code-breakdown">Code Breakdown</h2>
 
@@ -515,7 +513,7 @@ if (!doNotTrack) {
 <span class="p">}</span></code></pre></td></tr></table>
 </div>
 </div>
-<p>它们的关系可以用下图表示<sup class="footnote-ref" id="fnref:lichuang"><a href="#fn:lichuang">3</a></sup>：</p>
+<p><code>entries</code>代表的是要进行操作的日志，但日志不可能无限增长，在特定的情况下，某些过期的日志会被清空。那这就引入一个新问题了，如果此后一个新的<code>follower</code>加入，而<code>leader</code>只有一部分操作日志，那这个新<code>follower</code>不是没法跟别人同步了吗？所以这个时候<code>snapshot</code>就登场了 - 我无法给你之前的日志，但我给你所有之前日志应用后的结果，之后的日志你再以这个<code>snapshot</code>为基础进行应用，那我们的状态就可以同步了。因此它们的结构关系可以用下图表示<sup class="footnote-ref" id="fnref:lichuang"><a href="#fn:lichuang">3</a></sup>：</p>
 
 
 
@@ -1253,7 +1251,7 @@ if (!doNotTrack) {
   
   <p class="copyright-item">
     <span class="item-title">许可协议</span>
-    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>（转载请注明出处）</span>
   </p>
 </div>
 
@@ -1267,6 +1265,19 @@ if (!doNotTrack) {
       
       <nav class="post-nav">
         
+          <a class="prev" href="/post/mvcc-implementation-in-etcd/">
+            
+            <i class="iconfont">
+              <svg  class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M691.908486 949.511495l75.369571-89.491197c10.963703-12.998035 10.285251-32.864502-1.499144-44.378743L479.499795 515.267417 757.434875 204.940602c11.338233-12.190647 11.035334-32.285311-0.638543-44.850487l-80.46666-86.564541c-11.680017-12.583596-30.356378-12.893658-41.662889-0.716314L257.233596 494.235404c-11.332093 12.183484-11.041474 32.266891 0.657986 44.844348l80.46666 86.564541c1.772366 1.910513 3.706415 3.533476 5.750981 4.877077l306.620399 321.703933C662.505829 963.726242 680.945807 962.528973 691.908486 949.511495z"></path>
+</svg>
+
+            </i>
+            <span class="prev-text nav-default">MVCC在etcd中的实现</span>
+            <span class="prev-text nav-mobile">上一篇</span>
+          </a>
         
           <a class="next" href="/post/introduction-to-ibm-mainframe/">
             <span class="next-text nav-default">我所了解的IBM主机</span>
