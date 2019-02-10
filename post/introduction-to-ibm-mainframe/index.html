@@ -68,7 +68,7 @@
 
 <meta itemprop="datePublished" content="2018-10-16T17:16:09&#43;08:00" />
 <meta itemprop="dateModified" content="2018-10-16T17:16:09&#43;08:00" />
-<meta itemprop="wordCount" content="3263">
+<meta itemprop="wordCount" content="3504">
 
 
 
@@ -273,7 +273,7 @@ if (!doNotTrack) {
           2018-10-16
         </time>
         
-        <span class="more-meta"> 约 3263 字 </span>
+        <span class="more-meta"> 约 3504 字 </span>
           <span class="more-meta"> 预计阅读 7 分钟 </span>
 
         
@@ -314,7 +314,7 @@ if (!doNotTrack) {
 
 <h1 id="历史及现状">历史及现状</h1>
 
-<p>IBM主机又称大型机(mainframe)，最早可以追溯到上世纪60年代IBM研发的<a href="https://zh.wikipedia.org/wiki/IBM_System/360">S/360系统</a>，经过半个多世纪的不断更新，IBM的主机产品线已经从当初的S/360、S/370、S/390，发展到后来的z9、z10系列，现在(2018)已经GA的最新版本是z14：</p>
+<p>IBM主机又称大型机（Mainframe），最早可以追溯到上世纪60年代IBM研发的<a href="https://zh.wikipedia.org/wiki/IBM_System/360">S/360系统</a>，经过半个多世纪的不断更新，IBM的主机产品线已经从当初的S/360、S/370、S/390，发展到后来的z9、z10系列，现在（2018）已经GA的最新版本是z14：</p>
 
 <!-- ![z14(zMidas)](/ibm-mainframe/ibm_z14-large.jpg) -->
 
@@ -363,7 +363,9 @@ if (!doNotTrack) {
 </div>
 
 
-<p>除此之外，IBM还将一些常用的软件模块用硬件实现了，比如硬件压缩卡(zEDC)，排序指令，加密指令，向量运算指令等。这些原本需要通过软件模拟来实现的功能，直接有了对应的硬件支持，这种霸气的设计方法，对年轻的我造成了巨大的冲击。</p>
+<p>主机的一个鲜明的特色就是采用了中央处理器（<code>CP</code>）与系统辅助处理器（<code>SAP</code>，System Assist Processor）组成，其所采用的CP既不是IBM自家的POWER，也不是x86，而是一个“IBM独立自主”的，基于z/Architecture主机架构而开发的处理器，其采用复杂指令集架构（CISC），有一些复杂指令负责微码执行，也有一些被分解为类似于RISC的操作，因此虽然在总体架构上是CISC，但也兼具了RISC的优点。<sup class="footnote-ref" id="fnref:cpu-architecture"><a href="#fn:cpu-architecture">3</a></sup></p>
+
+<p>除此之外，主机还将一些常用的软件模块用硬件实现了，比如硬件压缩卡（zEDC），排序指令，加密指令，向量运算指令等。这些原本需要通过软件模拟来实现的功能，直接有了对应的硬件支持，这种霸气的设计方法，对年轻的我造成了巨大的冲击。</p>
 
 <h1 id="操作系统">操作系统</h1>
 
@@ -421,9 +423,9 @@ if (!doNotTrack) {
 
 <h2 id="向后兼容性">向后兼容性</h2>
 
-<p>z/OS的向后兼容性简直可以用典范来形容<sup class="footnote-ref" id="fnref:quote-of-john"><a href="#fn:quote-of-john">3</a></sup>，据说一个上世纪80年代编译出来的程序，在现在的主机上依然可以运行。但也正是这种严苛的向后兼容性让主机背上了沉重的历史包袱，比如主机上使用的字符集是<a href="https://zh.wikipedia.org/wiki/EBCDIC">EBCDIC</a>，它跟ASCII是不兼容的（比ASCII标准出来的要早）。用现在的眼光看，EBCDIC是一种奇怪的编码格式，它的<code>I</code>和<code>J</code>、<code>R</code>和<code>S</code>是不连续的。这个格式源自于<a href="https://zh.wikipedia.org/wiki/%E6%89%93%E5%AD%94%E5%8D%A1">打孔卡</a>时代，那个时代，IBM是计算机领域的头号玩家，所以他们制定的编码标准也希望能与自己的<code>打孔卡</code>相兼容<sup class="footnote-ref" id="fnref:quote-of-john"><a href="#fn:quote-of-john">3</a></sup>。</p>
+<p>z/OS的向后兼容性简直可以用典范来形容<sup class="footnote-ref" id="fnref:quote-of-john"><a href="#fn:quote-of-john">4</a></sup>，据说一个上世纪80年代编译出来的程序，在现在的主机上依然可以运行。但也正是这种严苛的向后兼容性让主机背上了沉重的历史包袱，比如主机上使用的字符集是<a href="https://zh.wikipedia.org/wiki/EBCDIC">EBCDIC</a>，它跟ASCII是不兼容的（比ASCII标准出来的要早）。用现在的眼光看，EBCDIC是一种奇怪的编码格式，它的<code>I</code>和<code>J</code>、<code>R</code>和<code>S</code>是不连续的。这个格式源自于<a href="https://zh.wikipedia.org/wiki/%E6%89%93%E5%AD%94%E5%8D%A1">打孔卡</a>时代，那个时代，IBM是计算机领域的头号玩家，所以他们制定的编码标准也希望能与自己的<code>打孔卡</code>相兼容<sup class="footnote-ref" id="fnref:quote-of-john"><a href="#fn:quote-of-john">4</a></sup>。</p>
 
-<p><img src="/ibm-mainframe/ebcdic.png" alt="EBCDIC Standard" /></p>
+<p><img src="/image/ibm-mainframe/ebcdic.png" alt="EBCDIC Standard" /></p>
 
 <p>这个在当时看来无比正确的决定却给现在的我们带来无数的坑，在移植x86平台的程序到主机时，最大的麻烦就在于字符集的处理。但这种备受开发人员吐槽的向后兼容性却很受客户的欢迎，因为客户的诉求就是稳定可靠，他们希望应用程序开发完了之后，不应该因为操作系统的升级而需要重新开发，从这点也可以看出IBM<code>客户至上</code>的理念。</p>
 
@@ -465,6 +467,8 @@ if (!doNotTrack) {
  <a class="footnote-return" href="#fnref:market-share"><sup>[return]</sup></a></li>
 <li id="fn:performance"><a href="https://cloud.tencent.com/developer/news/268909">新一代IBM z14主机技术介绍</a>
  <a class="footnote-return" href="#fnref:performance"><sup>[return]</sup></a></li>
+<li id="fn:cpu-architecture"><a href="https://mainframecn.com/article-71-1.html">浅析IBM新一代zEnterprise System大型主机的设计</a>
+ <a class="footnote-return" href="#fnref:cpu-architecture"><sup>[return]</sup></a></li>
 <li id="fn:quote-of-john"><a href="https://groups.google.com/d/msg/golang-dev/f6IC8Dm7weI/4Vzs9EY9CAAJ">John McKown on glang-dev mail-list</a>
  <a class="footnote-return" href="#fnref:quote-of-john"><sup>[return]</sup></a></li>
 </ol>
