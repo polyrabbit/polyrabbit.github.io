@@ -68,7 +68,7 @@
 
 <meta itemprop="datePublished" content="2018-11-13T19:47:17&#43;08:00" />
 <meta itemprop="dateModified" content="2018-11-13T19:47:17&#43;08:00" />
-<meta itemprop="wordCount" content="7698">
+<meta itemprop="wordCount" content="7850">
 
 
 
@@ -273,7 +273,7 @@ if (!doNotTrack) {
           2018-11-13
         </time>
         
-        <span class="more-meta"> 约 7698 字 </span>
+        <span class="more-meta"> 约 7850 字 </span>
           <span class="more-meta"> 预计阅读 16 分钟 </span>
 
         
@@ -327,10 +327,10 @@ if (!doNotTrack) {
 
 <!-- The authors claim it is the most widely used Raft library in production. -->
 
-<p>如果你还不熟悉raft，这个经典的<a href="http://thesecretlivesofdata.com/raft/">动画演示</a>、<a href="https://raft.github.io/raft.pdf">它的论文</a>和下面这个lecture可能会对你有帮助。说句题外话，很多conference和meetup都会把视频录像上传到YouTube上，YouTube简直就是程序员的衣柜，每逛一次都有新收获。
+<p>如果你还不熟悉raft，这个经典的<a href="http://thesecretlivesofdata.com/raft/">动画演示</a>、<a href="https://raft.github.io/raft.pdf">它的论文</a>以及<a href="https://www.youtube.com/watch?v=YbZ3zDzDnrw">这个lecture</a>可能会对你有帮助。或者你也可以直接观看<strong>下面的视频</strong>，这是我作的一次技术分享，讲的是<a href="https://reading.developerlearning.cn/reading/32-2019-03-02-etcd-raft/">etcd中raft模块的源码解析</a>。说句题外话，很多Conference和Meetup都会把视频录像上传到YouTube上，YouTube简直就是程序员的衣柜，每逛一次都有新收获。
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
-  <iframe src="//www.youtube.com/embed/YbZ3zDzDnrw" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen title="YouTube Video"></iframe>
+  <iframe src="//www.youtube.com/embed/sL02PsR20gE" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen title="YouTube Video"></iframe>
 </div>
 </p>
 
@@ -1218,7 +1218,9 @@ if (!doNotTrack) {
 
 <h1 id="conclusion">Conclusion</h1>
 
-<p>到目前为止，我还只是简单的带你过了一遍raft算法的实现，当然还有很多细节这里没有涉及，比如说Linearizable Read，snapshot机制，WAL的存储与回放，所以希望你能以这篇文章为基础，顺藤摸瓜，继续深入研究下去。</p>
+<p>Etcd里的raft模块只实现了raft共识算法，而像消息的网络传输，数据存储都由上层应用来完成。这篇文章先介绍了基本的数据结构，然后在这些数据结构的基础上引入了raft算法。同时，这里还以一个投票请求和写请求为例，介绍了一个请求从接受到应答的完整处理过程。</p>
+
+<p>但到目前为止，我们还有很多细节没有涉及，比如说Linearizable Read，snapshot机制，WAL的存储与回放，所以希望你能以这篇文章为基础，顺藤摸瓜，继续深入研究下去。</p>
 <div class="footnotes">
 
 <hr />

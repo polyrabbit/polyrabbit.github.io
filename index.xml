@@ -18,9 +18,23 @@
       
       <guid>//blog.betacat.io/about/</guid>
       
-        <description>&lt;p&gt;随着年纪的增长，越来越多的小朋友开始叫我叔叔，再加上我姓&lt;code&gt;缪(miào)&lt;/code&gt;，因此得名&lt;code&gt;喵叔&lt;/code&gt;。&lt;/p&gt;
+        <description>
+
+&lt;h1 id=&#34;关于博客&#34;&gt;关于博客&lt;/h1&gt;
+
+&lt;p&gt;&lt;img src=&#34;//blog.betacat.io/image/information-is-power.jpg&#34; alt=&#34;Information is power&#34; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Information is power. But like all power, there are those who want to keep it for themselves.&lt;/p&gt;
+&lt;/blockquote&gt;
 
 &lt;p&gt;希望通过这个博客，能够将自己的学习成果总结出来，与大家分享交流。&lt;/p&gt;
+
+&lt;h1 id=&#34;关于我&#34;&gt;关于我&lt;/h1&gt;
+
+&lt;p&gt;随着年纪的增长，越来越多的小朋友开始叫我叔叔，再加上我姓&lt;code&gt;缪(miào)&lt;/code&gt;，因此得名&lt;code&gt;喵叔&lt;/code&gt;。&lt;/p&gt;
+
+&lt;p&gt;你可以通过页面下的社交媒体联系到我。&lt;/p&gt;
 </description>
       
     </item>
@@ -1078,10 +1092,10 @@
 
 &lt;!-- The authors claim it is the most widely used Raft library in production. --&gt;
 
-&lt;p&gt;如果你还不熟悉raft，这个经典的&lt;a href=&#34;http://thesecretlivesofdata.com/raft/&#34;&gt;动画演示&lt;/a&gt;、&lt;a href=&#34;https://raft.github.io/raft.pdf&#34;&gt;它的论文&lt;/a&gt;和下面这个lecture可能会对你有帮助。说句题外话，很多conference和meetup都会把视频录像上传到YouTube上，YouTube简直就是程序员的衣柜，每逛一次都有新收获。
+&lt;p&gt;如果你还不熟悉raft，这个经典的&lt;a href=&#34;http://thesecretlivesofdata.com/raft/&#34;&gt;动画演示&lt;/a&gt;、&lt;a href=&#34;https://raft.github.io/raft.pdf&#34;&gt;它的论文&lt;/a&gt;以及&lt;a href=&#34;https://www.youtube.com/watch?v=YbZ3zDzDnrw&#34;&gt;这个lecture&lt;/a&gt;可能会对你有帮助。或者你也可以直接观看&lt;strong&gt;下面的视频&lt;/strong&gt;，这是我作的一次技术分享，讲的是&lt;a href=&#34;https://reading.developerlearning.cn/reading/32-2019-03-02-etcd-raft/&#34;&gt;etcd中raft模块的源码解析&lt;/a&gt;。说句题外话，很多Conference和Meetup都会把视频录像上传到YouTube上，YouTube简直就是程序员的衣柜，每逛一次都有新收获。
 
 &lt;div style=&#34;position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;&#34;&gt;
-  &lt;iframe src=&#34;//www.youtube.com/embed/YbZ3zDzDnrw&#34; style=&#34;position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;&#34; allowfullscreen title=&#34;YouTube Video&#34;&gt;&lt;/iframe&gt;
+  &lt;iframe src=&#34;//www.youtube.com/embed/sL02PsR20gE&#34; style=&#34;position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;&#34; allowfullscreen title=&#34;YouTube Video&#34;&gt;&lt;/iframe&gt;
 &lt;/div&gt;
 &lt;/p&gt;
 
@@ -1969,7 +1983,9 @@
 
 &lt;h1 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h1&gt;
 
-&lt;p&gt;到目前为止，我还只是简单的带你过了一遍raft算法的实现，当然还有很多细节这里没有涉及，比如说Linearizable Read，snapshot机制，WAL的存储与回放，所以希望你能以这篇文章为基础，顺藤摸瓜，继续深入研究下去。&lt;/p&gt;
+&lt;p&gt;Etcd里的raft模块只实现了raft共识算法，而像消息的网络传输，数据存储都由上层应用来完成。这篇文章先介绍了基本的数据结构，然后在这些数据结构的基础上引入了raft算法。同时，这里还以一个投票请求和写请求为例，介绍了一个请求从接受到应答的完整处理过程。&lt;/p&gt;
+
+&lt;p&gt;但到目前为止，我们还有很多细节没有涉及，比如说Linearizable Read，snapshot机制，WAL的存储与回放，所以希望你能以这篇文章为基础，顺藤摸瓜，继续深入研究下去。&lt;/p&gt;
 &lt;div class=&#34;footnotes&#34;&gt;
 
 &lt;hr /&gt;
