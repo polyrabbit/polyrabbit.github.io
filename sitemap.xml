@@ -10,6 +10,13 @@
   </url>
   
   <url>
+    <loc>//blog.betacat.io/post/golang-atomic-value-exploration/</loc>
+    <lastmod>2019-03-15T21:30:47+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
     <loc>//blog.betacat.io/post/introduction-to-paging/</loc>
     <lastmod>2019-02-10T11:31:31+08:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -59,7 +66,7 @@
   
   <url>
     <loc>//blog.betacat.io/post/</loc>
-    <lastmod>2019-02-10T11:31:31+08:00</lastmod>
+    <lastmod>2019-03-15T21:30:47+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
