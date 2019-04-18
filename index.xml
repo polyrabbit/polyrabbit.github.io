@@ -42,7 +42,7 @@
     </item>
     
     <item>
-      <title>Go atomic.Value 探究</title>
+      <title>理解Go标准库中的atomic.Value类型</title>
       <link>//blog.betacat.io/post/golang-atomic-value-exploration/</link>
       <pubDate>Fri, 15 Mar 2019 21:30:47 +0800</pubDate>
       
@@ -64,7 +64,7 @@
 &lt;p&gt;Mutexes do no scale. Atomic loads do.&lt;/p&gt;
 &lt;/blockquote&gt;
 
-&lt;p&gt;&lt;code&gt;mutex&lt;/code&gt;会降低系统的并发度，而&lt;code&gt;atomic&lt;/code&gt;包中的原子操作则不会。它的实现依赖于底层硬件提供的某些指令，这些指令在执行的过程中是不允许中断（interrupt）的，因此原子操作可以在&lt;code&gt;lock-free&lt;/code&gt;的情况下保证并发安全，并且能够做到线性扩展。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Mutex&lt;/code&gt;由&lt;strong&gt;操作系统&lt;/strong&gt;实现，而&lt;code&gt;atomic&lt;/code&gt;包中的原子操作则由&lt;strong&gt;底层硬件&lt;/strong&gt;直接提供支持。在 CPU 实现的指令集里，有一些指令被封装进了&lt;code&gt;atomic&lt;/code&gt;包，这些指令在执行的过程中是不允许中断（interrupt）的，因此原子操作可以在&lt;code&gt;lock-free&lt;/code&gt;的情况下保证并发安全，并且它的性能也能做到随 CPU 个数的增多而线性扩展。&lt;/p&gt;
 
 &lt;p&gt;好了，说了这么多的原子操作，我们先来看看什么样的操作能被叫做&lt;em&gt;原子操作&lt;/em&gt; 。&lt;/p&gt;
 
@@ -234,7 +234,7 @@
 
 &lt;p&gt;出于安全考虑，Go 语言并不支持直接操作内存，但它的标准库中又提供一种&lt;em&gt;不安全（不保证向后兼容性）&lt;/em&gt; 的指针类型&lt;code&gt;unsafe.Pointer&lt;/code&gt;，让程序可以灵活的读取/操作内存。&lt;/p&gt;
 
-&lt;p&gt;&lt;code&gt;unsafe.Pointer&lt;/code&gt;的特别之处在于，它可以绕过 Go 语言类型系统的检查，与任意的指针类型互相转换。也就是说，如果两种类型具有相同的内存结构，我们可以将&lt;code&gt;unsafe.Pointer&lt;/code&gt;当做桥梁，让这两种类型的指针相互转换，从而实现同一份内存拥有两种不同的解释方式。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;unsafe.Pointer&lt;/code&gt;的特别之处在于，它可以绕过 Go 语言类型系统的检查，与任意的指针类型互相转换。也就是说，如果两种类型具有相同的内存结构，我们可以将&lt;code&gt;unsafe.Pointer&lt;/code&gt;当做桥梁，让这两种类型的指针相互转换，从而实现同一份内存拥有两种不同的解读方式。&lt;/p&gt;
 
 &lt;p&gt;比如说，&lt;code&gt;[]byte&lt;/code&gt;和&lt;code&gt;string&lt;/code&gt;其实内部的存储结构都是一样的，但 Go 语言的类型系统禁止他俩互换。如果借助&lt;code&gt;unsafe.Pointer&lt;/code&gt;，我们就可以实现在零拷贝的情况下，将&lt;code&gt;[]byte&lt;/code&gt;数组直接转换成&lt;code&gt;string&lt;/code&gt;类型。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
@@ -300,9 +300,9 @@
   &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;x&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;kc&#34;&gt;nil&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
     &lt;span class=&#34;nb&#34;&gt;panic&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;&amp;#34;sync/atomic: store of nil value into Value&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
   &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-  &lt;span class=&#34;nx&#34;&gt;vp&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;ifaceWords&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;unsafe&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;Pointer&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;v&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt;
-  &lt;span class=&#34;nx&#34;&gt;xp&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;ifaceWords&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;unsafe&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;Pointer&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt;
-  &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;nx&#34;&gt;vp&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;ifaceWords&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;unsafe&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;Pointer&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;v&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// Old value
+&lt;/span&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;  &lt;span class=&#34;nx&#34;&gt;xp&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;ifaceWords&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)(&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;unsafe&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;Pointer&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;x&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt; &lt;span class=&#34;c1&#34;&gt;// New value
+&lt;/span&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;  &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
     &lt;span class=&#34;nx&#34;&gt;typ&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;:=&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;LoadPointer&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;vp&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;typ&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
     &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;nx&#34;&gt;typ&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;kc&#34;&gt;nil&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
       &lt;span class=&#34;c1&#34;&gt;// Attempt to start first store.
@@ -339,7 +339,7 @@
 &lt;p&gt;大概的逻辑：&lt;/p&gt;
 
 &lt;ul&gt;
-&lt;li&gt;第5~6行 - 通过&lt;code&gt;unsafe.Pointer&lt;/code&gt;将现有的和要写入值分别转成&lt;code&gt;ifaceWords&lt;/code&gt;类型，这样我们下一步就可以得到这两个&lt;code&gt;interface{}&lt;/code&gt;的原始类型（typ）和真正的值（data）。&lt;/li&gt;
+&lt;li&gt;第5~6行 - 通过&lt;code&gt;unsafe.Pointer&lt;/code&gt;将&lt;strong&gt;现有的&lt;/strong&gt;和&lt;strong&gt;要写入的&lt;/strong&gt;值分别转成&lt;code&gt;ifaceWords&lt;/code&gt;类型，这样我们下一步就可以得到这两个&lt;code&gt;interface{}&lt;/code&gt;的原始类型（typ）和真正的值（data）。&lt;/li&gt;
 &lt;li&gt;从第7行开始就是一个无限 for 循环。配合&lt;code&gt;CompareAndSwap&lt;/code&gt;食用，可以达到乐观锁的功效。&lt;/li&gt;
 &lt;li&gt;第8行，我们可以通过&lt;code&gt;LoadPointer&lt;/code&gt;这个原子操作拿到当前&lt;code&gt;Value&lt;/code&gt;中存储的类型。下面根据这个类型的不同，分3种情况处理。
 
@@ -410,7 +410,7 @@
 
 &lt;p&gt;本文从邮件列表中的一段讨论开始，介绍了&lt;code&gt;atomic.Value&lt;/code&gt;的被提出来的历史缘由。然后由浅入深的介绍了它的使用姿势，以及内部实现。让大家不仅知其然，还能知其所以然。&lt;/p&gt;
 
-&lt;p&gt;另外，再强调一遍，原子操作由底层硬件支持，而锁则由操作系统提供的API实现。若实现相同的功能，前者通常会更有效率，并且更能利用计算机多核的优势。所以，以后当我们想并发安全的更新一些变量的时候，我们应该优先选择用&lt;code&gt;atomic.Value&lt;/code&gt;来实现。&lt;/p&gt;
+&lt;p&gt;另外，再强调一遍，原子操作由&lt;strong&gt;底层硬件&lt;/strong&gt;支持，而锁则由&lt;strong&gt;操作系统&lt;/strong&gt;提供的 API 实现。若实现相同的功能，前者通常会更有效率，并且更能利用计算机多核的优势。所以，以后当我们想并发安全的更新一些变量的时候，我们应该优先选择用&lt;code&gt;atomic.Value&lt;/code&gt;来实现。&lt;/p&gt;
 </description>
       
     </item>
@@ -2417,17 +2417,29 @@
 
 &lt;p&gt;IBM主机相比于其他计算机系统，其主要特点在于它的 &lt;a href=&#34;https://zh.wikipedia.org/wiki/%E5%8F%AF%E9%9D%A0%E6%80%A7%E3%80%81%E5%8F%AF%E7%94%A8%E6%80%A7%E5%92%8C%E5%8F%AF%E7%B6%AD%E8%AD%B7%E6%80%A7&#34;&gt;RAS&lt;/a&gt; (Reliability, Availability, Serviceability 高可靠性、高可用性、高可维护性)。曾经有用户反馈，在使用主机的数十年时间内，从未发生过异常停机事件。正是因为这些方面的优点和强大的处理能力，到现在为止还没有其他的系统可以替代它。但由于成本巨大（一台主机通常以亿为计价单位），使用主机系统的一般以政府、银行、保险公司和大型制造企业为主，因为这些机构对信息的稳定性和安全性要求很高。全球财富500强企业中的71%是IBM主机用户，全球企业级数据有80%驻留在IBM主机上&lt;sup class=&#34;footnote-ref&#34; id=&#34;fnref:market-share&#34;&gt;&lt;a href=&#34;#fn:market-share&#34;&gt;1&lt;/a&gt;&lt;/sup&gt;。在我国，从央行到工农中建四大商业银行，其核心业务平台都是跑在IBM主机上的（希望银行能给点力，早日摆脱对国外技术的依赖）。&lt;/p&gt;
 
+&lt;p&gt;这里有一个 z14 的宣传视频，希望能给大家带来一定的感性认识：&lt;/p&gt;
+
+
+&lt;div style=&#34;position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;&#34;&gt;
+  &lt;iframe src=&#34;//www.youtube.com/embed/iCinf0v44Y4&#34; style=&#34;position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;&#34; allowfullscreen title=&#34;YouTube Video&#34;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+
+
 &lt;h1 id=&#34;硬件&#34;&gt;硬件&lt;/h1&gt;
 
-&lt;p&gt;我对硬件不是很了解，只能列举一些数据来说明主机的硬件性能（以最新的z14为例）&lt;sup class=&#34;footnote-ref&#34; id=&#34;fnref:performance&#34;&gt;&lt;a href=&#34;#fn:performance&#34;&gt;2&lt;/a&gt;&lt;/sup&gt;：&lt;/p&gt;
+&lt;p&gt;我对硬件不是很了解，只能列举一些数据来说明主机的硬件性能（以最新的 z14 为例）&lt;sup class=&#34;footnote-ref&#34; id=&#34;fnref:performance&#34;&gt;&lt;a href=&#34;#fn:performance&#34;&gt;2&lt;/a&gt;&lt;/sup&gt;：&lt;/p&gt;
 
 &lt;ul&gt;
-&lt;li&gt;14nm制造工艺&lt;/li&gt;
-&lt;li&gt;5.2GHz主频&lt;/li&gt;
-&lt;li&gt;170颗处理器&lt;/li&gt;
-&lt;li&gt;支持32TB内存&lt;/li&gt;
+&lt;li&gt;14nm 制造工艺&lt;/li&gt;
+&lt;li&gt;5.2GHz 主频&lt;/li&gt;
+&lt;li&gt;170 颗处理器&lt;/li&gt;
+&lt;li&gt;L1 private cache 128k i, 128k d&lt;/li&gt;
+&lt;li&gt;L2 private cache 2 MB i, 4 MB d&lt;/li&gt;
+&lt;li&gt;L3 shared cache 128 MB / chip&lt;/li&gt;
+&lt;li&gt;L4 shared cache 672 MB / drawer&lt;/li&gt;
+&lt;li&gt;支持 32TB 内存&lt;/li&gt;
 &lt;li&gt;支持8000个虚拟机&lt;/li&gt;
-&lt;li&gt;可以横向扩展（Scale-out）到2百万个Docker容器&lt;/li&gt;
+&lt;li&gt;可以横向扩展（scale out）到2百万个Docker容器&lt;/li&gt;
 &lt;/ul&gt;
 
 
@@ -2446,7 +2458,24 @@
 &lt;/div&gt;
 
 
-&lt;p&gt;主机的一个鲜明的特色就是采用了中央处理器（&lt;code&gt;CP&lt;/code&gt;）与系统辅助处理器（&lt;code&gt;SAP&lt;/code&gt;，System Assist Processor）组成，其所采用的CP既不是IBM自家的POWER，也不是x86，而是一个“IBM独立自主”的，基于z/Architecture主机架构而开发的处理器，其采用复杂指令集架构（CISC），有一些复杂指令负责微码执行，也有一些被分解为类似于RISC的操作，因此虽然在总体架构上是CISC，但也兼具了RISC的优点。&lt;sup class=&#34;footnote-ref&#34; id=&#34;fnref:cpu-architecture&#34;&gt;&lt;a href=&#34;#fn:cpu-architecture&#34;&gt;3&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+&lt;p&gt;主机的一个鲜明的特色就是采用了中央处理器（&lt;code&gt;CP&lt;/code&gt;）与系统辅助处理器（&lt;code&gt;SAP&lt;/code&gt;，System Assist Processor）组成，其所采用的CP既不是IBM自家的POWER，也不是x86，而是一个“IBM独立自主”的，基于z/Architecture主机架构而开发的处理器，其采用复杂指令集架构（CISC），有一些复杂指令负责微码（millicode）执行，也有一些被分解为类似于RISC的操作，因此虽然在总体架构上是CISC，但也兼具了RISC的优点。&lt;sup class=&#34;footnote-ref&#34; id=&#34;fnref:cpu-architecture&#34;&gt;&lt;a href=&#34;#fn:cpu-architecture&#34;&gt;3&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+
+
+
+&lt;div class=&#34;box&#34;&gt;
+&lt;figure  itemprop=&#34;associatedMedia&#34;
+  itemscope itemtype=&#34;http://schema.org/ImageObject&#34; 
+  style=&#34;max-width:400px&#34; &gt;
+    &lt;div class=&#34;img&#34;&gt;
+      &lt;img itemprop=&#34;thumbnail&#34; src=&#34;//blog.betacat.io/image/ibm-mainframe/z14-core-chip-spec-sheet-2017.png&#34; alt=&#34;z14 10-core CP chip&#34;/&gt;
+    &lt;/div&gt;
+    &lt;a href=&#34;//blog.betacat.io/image/ibm-mainframe/z14-core-chip-spec-sheet-2017.png&#34; itemprop=&#34;contentUrl&#34;&gt;&lt;/a&gt;
+      &lt;figcaption&gt;
+          &lt;p&gt;z14 10-core CP chip&lt;/p&gt;
+      &lt;/figcaption&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;
+
 
 &lt;p&gt;除此之外，主机还将一些常用的软件模块用硬件实现了，比如硬件压缩卡（zEDC），排序指令，加密指令，向量运算指令等。这些原本需要通过软件模拟来实现的功能，直接有了对应的硬件支持，这种霸气的设计方法，对年轻的我造成了巨大的冲击。&lt;/p&gt;
 

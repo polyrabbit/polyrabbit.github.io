@@ -68,7 +68,7 @@
 
 <meta itemprop="datePublished" content="2018-10-16T17:16:09&#43;08:00" />
 <meta itemprop="dateModified" content="2018-10-16T17:16:09&#43;08:00" />
-<meta itemprop="wordCount" content="3486">
+<meta itemprop="wordCount" content="3543">
 
 
 
@@ -273,8 +273,8 @@ if (!doNotTrack) {
           2018-10-16
         </time>
         
-        <span class="more-meta"> 约 3486 字 </span>
-          <span class="more-meta"> 预计阅读 7 分钟 </span>
+        <span class="more-meta"> 约 3543 字 </span>
+          <span class="more-meta"> 预计阅读 8 分钟 </span>
 
         
         
@@ -336,17 +336,29 @@ if (!doNotTrack) {
 
 <p>IBM主机相比于其他计算机系统，其主要特点在于它的 <a href="https://zh.wikipedia.org/wiki/%E5%8F%AF%E9%9D%A0%E6%80%A7%E3%80%81%E5%8F%AF%E7%94%A8%E6%80%A7%E5%92%8C%E5%8F%AF%E7%B6%AD%E8%AD%B7%E6%80%A7">RAS</a> (Reliability, Availability, Serviceability 高可靠性、高可用性、高可维护性)。曾经有用户反馈，在使用主机的数十年时间内，从未发生过异常停机事件。正是因为这些方面的优点和强大的处理能力，到现在为止还没有其他的系统可以替代它。但由于成本巨大（一台主机通常以亿为计价单位），使用主机系统的一般以政府、银行、保险公司和大型制造企业为主，因为这些机构对信息的稳定性和安全性要求很高。全球财富500强企业中的71%是IBM主机用户，全球企业级数据有80%驻留在IBM主机上<sup class="footnote-ref" id="fnref:market-share"><a href="#fn:market-share">1</a></sup>。在我国，从央行到工农中建四大商业银行，其核心业务平台都是跑在IBM主机上的（希望银行能给点力，早日摆脱对国外技术的依赖）。</p>
 
+<p>这里有一个 z14 的宣传视频，希望能给大家带来一定的感性认识：</p>
+
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+  <iframe src="//www.youtube.com/embed/iCinf0v44Y4" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen title="YouTube Video"></iframe>
+</div>
+
+
 <h1 id="硬件">硬件</h1>
 
-<p>我对硬件不是很了解，只能列举一些数据来说明主机的硬件性能（以最新的z14为例）<sup class="footnote-ref" id="fnref:performance"><a href="#fn:performance">2</a></sup>：</p>
+<p>我对硬件不是很了解，只能列举一些数据来说明主机的硬件性能（以最新的 z14 为例）<sup class="footnote-ref" id="fnref:performance"><a href="#fn:performance">2</a></sup>：</p>
 
 <ul>
-<li>14nm制造工艺</li>
-<li>5.2GHz主频</li>
-<li>170颗处理器</li>
-<li>支持32TB内存</li>
+<li>14nm 制造工艺</li>
+<li>5.2GHz 主频</li>
+<li>170 颗处理器</li>
+<li>L1 private cache 128k i, 128k d</li>
+<li>L2 private cache 2 MB i, 4 MB d</li>
+<li>L3 shared cache 128 MB / chip</li>
+<li>L4 shared cache 672 MB / drawer</li>
+<li>支持 32TB 内存</li>
 <li>支持8000个虚拟机</li>
-<li>可以横向扩展（Scale-out）到2百万个Docker容器</li>
+<li>可以横向扩展（scale out）到2百万个Docker容器</li>
 </ul>
 
 
@@ -365,7 +377,24 @@ if (!doNotTrack) {
 </div>
 
 
-<p>主机的一个鲜明的特色就是采用了中央处理器（<code>CP</code>）与系统辅助处理器（<code>SAP</code>，System Assist Processor）组成，其所采用的CP既不是IBM自家的POWER，也不是x86，而是一个“IBM独立自主”的，基于z/Architecture主机架构而开发的处理器，其采用复杂指令集架构（CISC），有一些复杂指令负责微码执行，也有一些被分解为类似于RISC的操作，因此虽然在总体架构上是CISC，但也兼具了RISC的优点。<sup class="footnote-ref" id="fnref:cpu-architecture"><a href="#fn:cpu-architecture">3</a></sup></p>
+<p>主机的一个鲜明的特色就是采用了中央处理器（<code>CP</code>）与系统辅助处理器（<code>SAP</code>，System Assist Processor）组成，其所采用的CP既不是IBM自家的POWER，也不是x86，而是一个“IBM独立自主”的，基于z/Architecture主机架构而开发的处理器，其采用复杂指令集架构（CISC），有一些复杂指令负责微码（millicode）执行，也有一些被分解为类似于RISC的操作，因此虽然在总体架构上是CISC，但也兼具了RISC的优点。<sup class="footnote-ref" id="fnref:cpu-architecture"><a href="#fn:cpu-architecture">3</a></sup></p>
+
+
+
+<div class="box">
+<figure  itemprop="associatedMedia"
+  itemscope itemtype="http://schema.org/ImageObject" 
+  style="max-width:400px" >
+    <div class="img">
+      <img itemprop="thumbnail" src="/image/ibm-mainframe/z14-core-chip-spec-sheet-2017.png" alt="z14 10-core CP chip"/>
+    </div>
+    <a href="/image/ibm-mainframe/z14-core-chip-spec-sheet-2017.png" itemprop="contentUrl"></a>
+      <figcaption>
+          <p>z14 10-core CP chip</p>
+      </figcaption>
+  </figure>
+</div>
+
 
 <p>除此之外，主机还将一些常用的软件模块用硬件实现了，比如硬件压缩卡（zEDC），排序指令，加密指令，向量运算指令等。这些原本需要通过软件模拟来实现的功能，直接有了对应的硬件支持，这种霸气的设计方法，对年轻的我造成了巨大的冲击。</p>
 

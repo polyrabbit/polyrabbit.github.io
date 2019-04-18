@@ -12,7 +12,7 @@
     
     
     <item>
-      <title>Go atomic.Value 探究</title>
+      <title>理解Go标准库中的atomic.Value类型</title>
       <link>//blog.betacat.io/post/golang-atomic-value-exploration/</link>
       <pubDate>Fri, 15 Mar 2019 21:30:47 +0800</pubDate>
       
