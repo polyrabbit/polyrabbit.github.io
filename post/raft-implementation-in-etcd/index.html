@@ -32,7 +32,7 @@
 
 
 
-<meta name="generator" content="Hugo 0.48" />
+<meta name="generator" content="Hugo 0.55.6" />
 
 
 <link rel="canonical" href="//blog.betacat.io/post/raft-implementation-in-etcd/" />
@@ -51,7 +51,7 @@
 
 
 
-<link rel="stylesheet" href="/sass/jane.min.28854364c052ec02eba4ee5867bc889d3a567cdf337ba3a355c33511d20bee1e.css" integrity="sha256-KIVDZMBS7ALrpO5YZ7yInTpWfN8ze6OjVcM1EdIL7h4=" media="screen" crossorigin="anonymous">
+<link rel="stylesheet" href="/sass/jane.min.31c4b7729c8d71cc152f8de4203d90bfd8a04f7eab69372de7234ebf55b7701b.css" integrity="sha256-McS3cpyNccwVL43kID2Qv9igT36raTct5yNOv1W3cBs=" media="screen" crossorigin="anonymous">
 
 
 
@@ -60,8 +60,10 @@
 <meta property="og:title" content="Raft在etcd中的实现" />
 <meta property="og:description" content="Raft是近年来比较流行的一个一致性算法。它的原理比较容易理解，网上也有很多相关的介绍，因此这里我就不再啰嗦原理了，而是打算以raft在et" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="//blog.betacat.io/post/raft-implementation-in-etcd/" /><meta property="article:published_time" content="2018-11-13T19:47:17&#43;08:00"/>
+<meta property="og:url" content="//blog.betacat.io/post/raft-implementation-in-etcd/" />
+<meta property="article:published_time" content="2018-11-13T19:47:17&#43;08:00"/>
 <meta property="article:modified_time" content="2018-11-13T19:47:17&#43;08:00"/>
+
 <meta itemprop="name" content="Raft在etcd中的实现">
 <meta itemprop="description" content="Raft是近年来比较流行的一个一致性算法。它的原理比较容易理解，网上也有很多相关的介绍，因此这里我就不再啰嗦原理了，而是打算以raft在et">
 
@@ -141,6 +143,8 @@ if (!doNotTrack) {
         
       </li>
     
+
+    
   </ul>
 </nav>
 
@@ -207,6 +211,8 @@ if (!doNotTrack) {
 
   
 
+  
+
   <header id="header" class="header container">
     <div class="logo-wrapper">
   <a href="/" class="logo">
@@ -253,6 +259,10 @@ if (!doNotTrack) {
 
       </li>
     
+
+    
+    
+
     
   </ul>
 </nav>
@@ -604,19 +614,19 @@ if (!doNotTrack) {
 <pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// https://github.com/etcd-io/etcd/blob/v3.3.10/raft/log.go#L45
 </span><span class="c1">// newLog returns log using the given storage. It recovers the log to the state
 </span><span class="c1">// that it just commits and applies the latest snapshot.
-</span><span class="c1"></span><span class="kd">func</span> <span class="nx">newLog</span><span class="p">(</span><span class="nx">storage</span> <span class="nx">Storage</span><span class="p">,</span> <span class="nx">logger</span> <span class="nx">Logger</span><span class="p">)</span> <span class="o">*</span><span class="nx">raftLog</span> <span class="p">{</span>
+</span><span class="c1"></span><span class="kd">func</span> <span class="nf">newLog</span><span class="p">(</span><span class="nx">storage</span> <span class="nx">Storage</span><span class="p">,</span> <span class="nx">logger</span> <span class="nx">Logger</span><span class="p">)</span> <span class="o">*</span><span class="nx">raftLog</span> <span class="p">{</span>
     <span class="k">if</span> <span class="nx">storage</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
-        <span class="nx">log</span><span class="p">.</span><span class="nx">Panic</span><span class="p">(</span><span class="s">&#34;storage must not be nil&#34;</span><span class="p">)</span>
+        <span class="nx">log</span><span class="p">.</span><span class="nf">Panic</span><span class="p">(</span><span class="s">&#34;storage must not be nil&#34;</span><span class="p">)</span>
     <span class="p">}</span>
     <span class="nx">log</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">raftLog</span><span class="p">{</span>
         <span class="nx">storage</span><span class="p">:</span> <span class="nx">storage</span><span class="p">,</span>
         <span class="nx">logger</span><span class="p">:</span>  <span class="nx">logger</span><span class="p">,</span>
     <span class="p">}</span>
-    <span class="nx">firstIndex</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">storage</span><span class="p">.</span><span class="nx">FirstIndex</span><span class="p">()</span>
+    <span class="nx">firstIndex</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">storage</span><span class="p">.</span><span class="nf">FirstIndex</span><span class="p">()</span>
     <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
         <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="c1">// TODO(bdarnell)
 </span><span class="c1"></span>    <span class="p">}</span>
-    <span class="nx">lastIndex</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">storage</span><span class="p">.</span><span class="nx">LastIndex</span><span class="p">()</span>
+    <span class="nx">lastIndex</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">storage</span><span class="p">.</span><span class="nf">LastIndex</span><span class="p">()</span>
     <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
         <span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="c1">// TODO(bdarnell)
 </span><span class="c1"></span>    <span class="p">}</span>
@@ -734,7 +744,7 @@ if (!doNotTrack) {
 </span></code></pre></td>
 <td class="lntd">
 <pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// https://github.com/etcd-io/etcd/blob/v3.3.10/raft/raft.go#L752
-</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">)</span> <span class="nx">Step</span><span class="p">(</span><span class="nx">m</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">)</span> <span class="nf">Step</span><span class="p">(</span><span class="nx">m</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
     <span class="c1">//...
 </span><span class="c1"></span>    <span class="k">switch</span> <span class="nx">m</span><span class="p">.</span><span class="nx">Type</span> <span class="p">{</span>
         <span class="k">case</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">MsgHup</span><span class="p">:</span>
@@ -742,7 +752,7 @@ if (!doNotTrack) {
 </span><span class="c1"></span>        <span class="k">case</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">MsgVote</span><span class="p">,</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">MsgPreVote</span><span class="p">:</span>
         <span class="c1">//...
 </span><span class="c1"></span>        <span class="k">default</span><span class="p">:</span>
-            <span class="nx">r</span><span class="p">.</span><span class="nx">step</span><span class="p">(</span><span class="nx">r</span><span class="p">,</span> <span class="nx">m</span><span class="p">)</span>
+            <span class="nx">r</span><span class="p">.</span><span class="nf">step</span><span class="p">(</span><span class="nx">r</span><span class="p">,</span> <span class="nx">m</span><span class="p">)</span>
     <span class="p">}</span>
 <span class="p">}</span></code></pre></td></tr></table>
 </div>
@@ -800,13 +810,13 @@ if (!doNotTrack) {
 </span><span class="c1"></span><span class="k">for</span> <span class="p">{</span>
   <span class="k">select</span> <span class="p">{</span>
     <span class="k">case</span> <span class="nx">m</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">propc</span><span class="p">:</span>
-        <span class="nx">r</span><span class="p">.</span><span class="nx">Step</span><span class="p">(</span><span class="nx">m</span><span class="p">)</span>
+        <span class="nx">r</span><span class="p">.</span><span class="nf">Step</span><span class="p">(</span><span class="nx">m</span><span class="p">)</span>
     <span class="k">case</span> <span class="nx">m</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">n</span><span class="p">.</span><span class="nx">recvc</span><span class="p">:</span>
-        <span class="nx">r</span><span class="p">.</span><span class="nx">Step</span><span class="p">(</span><span class="nx">m</span><span class="p">)</span>
+        <span class="nx">r</span><span class="p">.</span><span class="nf">Step</span><span class="p">(</span><span class="nx">m</span><span class="p">)</span>
     <span class="k">case</span> <span class="nx">cc</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">n</span><span class="p">.</span><span class="nx">confc</span><span class="p">:</span>
         <span class="c1">// Add/remove/update node according to cc.Type
 </span><span class="c1"></span>    <span class="k">case</span> <span class="o">&lt;-</span><span class="nx">n</span><span class="p">.</span><span class="nx">tickc</span><span class="p">:</span>
-        <span class="nx">r</span><span class="p">.</span><span class="nx">tick</span><span class="p">()</span>
+        <span class="nx">r</span><span class="p">.</span><span class="nf">tick</span><span class="p">()</span>
     <span class="k">case</span> <span class="nx">readyc</span> <span class="o">&lt;-</span> <span class="nx">rd</span><span class="p">:</span>
         <span class="c1">// Cleaning after result is consumed by application
 </span><span class="c1"></span>    <span class="k">case</span> <span class="o">&lt;-</span><span class="nx">advancec</span><span class="p">:</span>
@@ -955,26 +965,27 @@ if (!doNotTrack) {
 </span></code></pre></td>
 <td class="lntd">
 <pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// tickElection is run by followers and candidates after r.electionTimeout.
-</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">)</span> <span class="nx">tickElection</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">)</span> <span class="nf">tickElection</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">r</span><span class="p">.</span><span class="nx">electionElapsed</span><span class="o">++</span>
 
-    <span class="k">if</span> <span class="nx">r</span><span class="p">.</span><span class="nx">promotable</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="nx">r</span><span class="p">.</span><span class="nx">pastElectionTimeout</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="nx">r</span><span class="p">.</span><span class="nf">promotable</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="nx">r</span><span class="p">.</span><span class="nf">pastElectionTimeout</span><span class="p">()</span> <span class="p">{</span>
         <span class="nx">r</span><span class="p">.</span><span class="nx">electionElapsed</span> <span class="p">=</span> <span class="mi">0</span>
-        <span class="nx">r</span><span class="p">.</span><span class="nx">Step</span><span class="p">(</span><span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">{</span><span class="nx">From</span><span class="p">:</span> <span class="nx">r</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">Type</span><span class="p">:</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">MsgHup</span><span class="p">})</span>
+        <span class="nx">r</span><span class="p">.</span><span class="nf">Step</span><span class="p">(</span><span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">{</span><span class="nx">From</span><span class="p">:</span> <span class="nx">r</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">Type</span><span class="p">:</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">MsgHup</span><span class="p">})</span>
     <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">)</span> <span class="nx">Step</span><span class="p">(</span><span class="nx">m</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+<span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">)</span> <span class="nf">Step</span><span class="p">(</span><span class="nx">m</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
     <span class="c1">//...
 </span><span class="c1"></span>    <span class="k">switch</span> <span class="nx">m</span><span class="p">.</span><span class="nx">Type</span> <span class="p">{</span>
     <span class="k">case</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">MsgHup</span><span class="p">:</span>
-        <span class="nx">r</span><span class="p">.</span><span class="nx">campaign</span><span class="p">(</span><span class="nx">campaignElection</span><span class="p">)</span>
+        <span class="nx">r</span><span class="p">.</span><span class="nf">campaign</span><span class="p">(</span><span class="nx">campaignElection</span><span class="p">)</span>
     <span class="p">}</span>
 <span class="p">}</span></code></pre></td></tr></table>
 </div>
-</div></li>
-
-<li><p><code>campaign</code>则会调用<code>becomeCandidate</code>把自己切换到candidate模式，并递增<code>Term</code>值。然后再将自己的<code>Term</code>及日志信息发送给其他的节点，请求投票。</p>
+</div>
+<ol>
+<li><code>campaign</code>则会调用<code>becomeCandidate</code>把自己切换到candidate模式，并递增<code>Term</code>值。然后再将自己的<code>Term</code>及日志信息发送给其他的节点，请求投票。</li>
+</ol>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt">1
@@ -988,13 +999,13 @@ if (!doNotTrack) {
 </span><span class="lnt">9
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">)</span> <span class="nx">campaign</span><span class="p">(</span><span class="nx">t</span> <span class="nx">CampaignType</span><span class="p">)</span> <span class="p">{</span>
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">)</span> <span class="nf">campaign</span><span class="p">(</span><span class="nx">t</span> <span class="nx">CampaignType</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">//...
-</span><span class="c1"></span>    <span class="nx">r</span><span class="p">.</span><span class="nx">becomeCandidate</span><span class="p">()</span>
+</span><span class="c1"></span>    <span class="nx">r</span><span class="p">.</span><span class="nf">becomeCandidate</span><span class="p">()</span>
     <span class="c1">// Get peer id from progress
 </span><span class="c1"></span>    <span class="k">for</span> <span class="nx">id</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">r</span><span class="p">.</span><span class="nx">prs</span> <span class="p">{</span>
         <span class="c1">//...
-</span><span class="c1"></span>        <span class="nx">r</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">{</span><span class="nx">Term</span><span class="p">:</span> <span class="nx">term</span><span class="p">,</span> <span class="nx">To</span><span class="p">:</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">Type</span><span class="p">:</span> <span class="nx">voteMsg</span><span class="p">,</span> <span class="nx">Index</span><span class="p">:</span> <span class="nx">r</span><span class="p">.</span><span class="nx">raftLog</span><span class="p">.</span><span class="nx">lastIndex</span><span class="p">(),</span> <span class="nx">LogTerm</span><span class="p">:</span> <span class="nx">r</span><span class="p">.</span><span class="nx">raftLog</span><span class="p">.</span><span class="nx">lastTerm</span><span class="p">(),</span> <span class="nx">Context</span><span class="p">:</span> <span class="nx">ctx</span><span class="p">})</span>
+</span><span class="c1"></span>        <span class="nx">r</span><span class="p">.</span><span class="nf">send</span><span class="p">(</span><span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">{</span><span class="nx">Term</span><span class="p">:</span> <span class="nx">term</span><span class="p">,</span> <span class="nx">To</span><span class="p">:</span> <span class="nx">id</span><span class="p">,</span> <span class="nx">Type</span><span class="p">:</span> <span class="nx">voteMsg</span><span class="p">,</span> <span class="nx">Index</span><span class="p">:</span> <span class="nx">r</span><span class="p">.</span><span class="nx">raftLog</span><span class="p">.</span><span class="nf">lastIndex</span><span class="p">(),</span> <span class="nx">LogTerm</span><span class="p">:</span> <span class="nx">r</span><span class="p">.</span><span class="nx">raftLog</span><span class="p">.</span><span class="nf">lastTerm</span><span class="p">(),</span> <span class="nx">Context</span><span class="p">:</span> <span class="nx">ctx</span><span class="p">})</span>
     <span class="p">}</span>
 <span class="p">}</span></code></pre></td></tr></table>
 </div>
@@ -1023,7 +1034,7 @@ if (!doNotTrack) {
 </span><span class="lnt">18
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">)</span> <span class="nx">Step</span><span class="p">(</span><span class="nx">m</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">)</span> <span class="nf">Step</span><span class="p">(</span><span class="nx">m</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
     <span class="c1">//...
 </span><span class="c1"></span>    <span class="k">switch</span> <span class="nx">m</span><span class="p">.</span><span class="nx">Type</span> <span class="p">{</span>
     <span class="k">case</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">MsgVote</span><span class="p">,</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">MsgPreVote</span><span class="p">:</span>
@@ -1034,17 +1045,18 @@ if (!doNotTrack) {
             <span class="c1">// ...or this is a PreVote for a future term...
 </span><span class="c1"></span>            <span class="p">(</span><span class="nx">m</span><span class="p">.</span><span class="nx">Type</span> <span class="o">==</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">MsgPreVote</span> <span class="o">&amp;&amp;</span> <span class="nx">m</span><span class="p">.</span><span class="nx">Term</span> <span class="p">&gt;</span> <span class="nx">r</span><span class="p">.</span><span class="nx">Term</span><span class="p">)</span>
         <span class="c1">// ...and we believe the candidate is up to date.
-</span><span class="c1"></span>        <span class="k">if</span> <span class="nx">canVote</span> <span class="o">&amp;&amp;</span> <span class="nx">r</span><span class="p">.</span><span class="nx">raftLog</span><span class="p">.</span><span class="nx">isUpToDate</span><span class="p">(</span><span class="nx">m</span><span class="p">.</span><span class="nx">Index</span><span class="p">,</span> <span class="nx">m</span><span class="p">.</span><span class="nx">LogTerm</span><span class="p">)</span> <span class="p">{</span>
-            <span class="nx">r</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">{</span><span class="nx">To</span><span class="p">:</span> <span class="nx">m</span><span class="p">.</span><span class="nx">From</span><span class="p">,</span> <span class="nx">Term</span><span class="p">:</span> <span class="nx">m</span><span class="p">.</span><span class="nx">Term</span><span class="p">,</span> <span class="nx">Type</span><span class="p">:</span> <span class="nx">voteRespMsgType</span><span class="p">(</span><span class="nx">m</span><span class="p">.</span><span class="nx">Type</span><span class="p">)})</span>
+</span><span class="c1"></span>        <span class="k">if</span> <span class="nx">canVote</span> <span class="o">&amp;&amp;</span> <span class="nx">r</span><span class="p">.</span><span class="nx">raftLog</span><span class="p">.</span><span class="nf">isUpToDate</span><span class="p">(</span><span class="nx">m</span><span class="p">.</span><span class="nx">Index</span><span class="p">,</span> <span class="nx">m</span><span class="p">.</span><span class="nx">LogTerm</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">r</span><span class="p">.</span><span class="nf">send</span><span class="p">(</span><span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">{</span><span class="nx">To</span><span class="p">:</span> <span class="nx">m</span><span class="p">.</span><span class="nx">From</span><span class="p">,</span> <span class="nx">Term</span><span class="p">:</span> <span class="nx">m</span><span class="p">.</span><span class="nx">Term</span><span class="p">,</span> <span class="nx">Type</span><span class="p">:</span> <span class="nf">voteRespMsgType</span><span class="p">(</span><span class="nx">m</span><span class="p">.</span><span class="nx">Type</span><span class="p">)})</span>
         <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-            <span class="nx">r</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">{</span><span class="nx">To</span><span class="p">:</span> <span class="nx">m</span><span class="p">.</span><span class="nx">From</span><span class="p">,</span> <span class="nx">Term</span><span class="p">:</span> <span class="nx">r</span><span class="p">.</span><span class="nx">Term</span><span class="p">,</span> <span class="nx">Type</span><span class="p">:</span> <span class="nx">voteRespMsgType</span><span class="p">(</span><span class="nx">m</span><span class="p">.</span><span class="nx">Type</span><span class="p">),</span> <span class="nx">Reject</span><span class="p">:</span> <span class="kc">true</span><span class="p">})</span>
+            <span class="nx">r</span><span class="p">.</span><span class="nf">send</span><span class="p">(</span><span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">{</span><span class="nx">To</span><span class="p">:</span> <span class="nx">m</span><span class="p">.</span><span class="nx">From</span><span class="p">,</span> <span class="nx">Term</span><span class="p">:</span> <span class="nx">r</span><span class="p">.</span><span class="nx">Term</span><span class="p">,</span> <span class="nx">Type</span><span class="p">:</span> <span class="nf">voteRespMsgType</span><span class="p">(</span><span class="nx">m</span><span class="p">.</span><span class="nx">Type</span><span class="p">),</span> <span class="nx">Reject</span><span class="p">:</span> <span class="kc">true</span><span class="p">})</span>
         <span class="p">}</span>
     <span class="p">}</span>
 <span class="p">}</span></code></pre></td></tr></table>
 </div>
-</div></li>
-
-<li><p>最后当candidate节点收到投票回复后，就会计算收到的选票数目是否大于所有节点数的一半，如果大于则自己成为leader，并昭告天下，否则将自己置为follower：</p>
+</div>
+<ol>
+<li>最后当candidate节点收到投票回复后，就会计算收到的选票数目是否大于所有节点数的一半，如果大于则自己成为leader，并昭告天下，否则将自己置为follower：</li>
+</ol>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt"> 1
@@ -1066,21 +1078,21 @@ if (!doNotTrack) {
 </span><span class="lnt">17
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">)</span> <span class="nx">Step</span><span class="p">(</span><span class="nx">m</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">)</span> <span class="nf">Step</span><span class="p">(</span><span class="nx">m</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
     <span class="c1">//...
 </span><span class="c1"></span>    <span class="k">switch</span> <span class="nx">m</span><span class="p">.</span><span class="nx">Type</span> <span class="p">{</span>
     <span class="k">case</span> <span class="nx">myVoteRespType</span><span class="p">:</span>
-        <span class="nx">gr</span> <span class="o">:=</span> <span class="nx">r</span><span class="p">.</span><span class="nx">poll</span><span class="p">(</span><span class="nx">m</span><span class="p">.</span><span class="nx">From</span><span class="p">,</span> <span class="nx">m</span><span class="p">.</span><span class="nx">Type</span><span class="p">,</span> <span class="p">!</span><span class="nx">m</span><span class="p">.</span><span class="nx">Reject</span><span class="p">)</span>
-        <span class="k">switch</span> <span class="nx">r</span><span class="p">.</span><span class="nx">quorum</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nx">gr</span> <span class="o">:=</span> <span class="nx">r</span><span class="p">.</span><span class="nf">poll</span><span class="p">(</span><span class="nx">m</span><span class="p">.</span><span class="nx">From</span><span class="p">,</span> <span class="nx">m</span><span class="p">.</span><span class="nx">Type</span><span class="p">,</span> <span class="p">!</span><span class="nx">m</span><span class="p">.</span><span class="nx">Reject</span><span class="p">)</span>
+        <span class="k">switch</span> <span class="nx">r</span><span class="p">.</span><span class="nf">quorum</span><span class="p">()</span> <span class="p">{</span>
         <span class="k">case</span> <span class="nx">gr</span><span class="p">:</span>
             <span class="k">if</span> <span class="nx">r</span><span class="p">.</span><span class="nx">state</span> <span class="o">==</span> <span class="nx">StatePreCandidate</span> <span class="p">{</span>
-                <span class="nx">r</span><span class="p">.</span><span class="nx">campaign</span><span class="p">(</span><span class="nx">campaignElection</span><span class="p">)</span>
+                <span class="nx">r</span><span class="p">.</span><span class="nf">campaign</span><span class="p">(</span><span class="nx">campaignElection</span><span class="p">)</span>
             <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-                <span class="nx">r</span><span class="p">.</span><span class="nx">becomeLeader</span><span class="p">()</span>
-                <span class="nx">r</span><span class="p">.</span><span class="nx">bcastAppend</span><span class="p">()</span>
+                <span class="nx">r</span><span class="p">.</span><span class="nf">becomeLeader</span><span class="p">()</span>
+                <span class="nx">r</span><span class="p">.</span><span class="nf">bcastAppend</span><span class="p">()</span>
             <span class="p">}</span>
         <span class="k">case</span> <span class="nb">len</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">votes</span><span class="p">)</span> <span class="o">-</span> <span class="nx">gr</span><span class="p">:</span>
-            <span class="nx">r</span><span class="p">.</span><span class="nx">becomeFollower</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">Term</span><span class="p">,</span> <span class="nx">None</span><span class="p">)</span>
+            <span class="nx">r</span><span class="p">.</span><span class="nf">becomeFollower</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">Term</span><span class="p">,</span> <span class="nx">None</span><span class="p">)</span>
     <span class="p">}</span>
 <span class="p">}</span></code></pre></td></tr></table>
 </div>
@@ -1109,20 +1121,18 @@ if (!doNotTrack) {
 </span><span class="lnt">8
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nx">stepFollower</span><span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">,</span> <span class="nx">m</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">stepFollower</span><span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">,</span> <span class="nx">m</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
     <span class="k">switch</span> <span class="nx">m</span><span class="p">.</span><span class="nx">Type</span> <span class="p">{</span>
     <span class="k">case</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">MsgProp</span><span class="p">:</span>
         <span class="c1">//...
 </span><span class="c1"></span>        <span class="nx">m</span><span class="p">.</span><span class="nx">To</span> <span class="p">=</span> <span class="nx">r</span><span class="p">.</span><span class="nx">lead</span>
-        <span class="nx">r</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">m</span><span class="p">)</span>
+        <span class="nx">r</span><span class="p">.</span><span class="nf">send</span><span class="p">(</span><span class="nx">m</span><span class="p">)</span>
     <span class="p">}</span>
 <span class="p">}</span></code></pre></td></tr></table>
 </div>
-</div></li>
-
-<li><p>Leader收到这个消息后（不管是follower转发过来的还是自己内部产生的）会有两步操作：</p>
-
+</div>
 <ol>
+<li>Leader收到这个消息后（不管是follower转发过来的还是自己内部产生的）会有两步操作：</li>
 <li>将这个消息添加到自己的log里</li>
 <li>向其他follower广播这个消息</li>
 </ol>
@@ -1141,14 +1151,14 @@ if (!doNotTrack) {
 </span><span class="lnt">11
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nx">stepLeader</span><span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">,</span> <span class="nx">m</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">stepLeader</span><span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">,</span> <span class="nx">m</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
     <span class="k">switch</span> <span class="nx">m</span><span class="p">.</span><span class="nx">Type</span> <span class="p">{</span>
     <span class="k">case</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">MsgProp</span><span class="p">:</span>
         <span class="c1">//...
-</span><span class="c1"></span>        <span class="k">if</span> <span class="p">!</span><span class="nx">r</span><span class="p">.</span><span class="nx">appendEntry</span><span class="p">(</span><span class="nx">m</span><span class="p">.</span><span class="nx">Entries</span><span class="o">...</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="c1"></span>        <span class="k">if</span> <span class="p">!</span><span class="nx">r</span><span class="p">.</span><span class="nf">appendEntry</span><span class="p">(</span><span class="nx">m</span><span class="p">.</span><span class="nx">Entries</span><span class="o">...</span><span class="p">)</span> <span class="p">{</span>
             <span class="k">return</span> <span class="nx">ErrProposalDropped</span>
         <span class="p">}</span>
-        <span class="nx">r</span><span class="p">.</span><span class="nx">bcastAppend</span><span class="p">()</span>
+        <span class="nx">r</span><span class="p">.</span><span class="nf">bcastAppend</span><span class="p">()</span>
         <span class="k">return</span> <span class="kc">nil</span>
     <span class="p">}</span>
 <span class="p">}</span></code></pre></td></tr></table>
@@ -1187,12 +1197,12 @@ if (!doNotTrack) {
 </span><span class="lnt">25
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nx">stepLeader</span><span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">,</span> <span class="nx">m</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">stepLeader</span><span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">,</span> <span class="nx">m</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">Message</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
     <span class="k">switch</span> <span class="nx">m</span><span class="p">.</span><span class="nx">Type</span> <span class="p">{</span>
     <span class="k">case</span> <span class="nx">pb</span><span class="p">.</span><span class="nx">MsgAppResp</span><span class="p">:</span>
         <span class="c1">//...
-</span><span class="c1"></span>        <span class="k">if</span> <span class="nx">r</span><span class="p">.</span><span class="nx">maybeCommit</span><span class="p">()</span> <span class="p">{</span>
-            <span class="nx">r</span><span class="p">.</span><span class="nx">bcastAppend</span><span class="p">()</span>
+</span><span class="c1"></span>        <span class="k">if</span> <span class="nx">r</span><span class="p">.</span><span class="nf">maybeCommit</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nx">r</span><span class="p">.</span><span class="nf">bcastAppend</span><span class="p">()</span>
         <span class="p">}</span>
     <span class="p">}</span>
 <span class="p">}</span>
@@ -1200,7 +1210,7 @@ if (!doNotTrack) {
 <span class="c1">// maybeCommit attempts to advance the commit index. Returns true if
 </span><span class="c1">// the commit index changed (in which case the caller should call
 </span><span class="c1">// r.bcastAppend).
-</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">)</span> <span class="nx">maybeCommit</span><span class="p">()</span> <span class="kt">bool</span> <span class="p">{</span>
+</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">raft</span><span class="p">)</span> <span class="nf">maybeCommit</span><span class="p">()</span> <span class="kt">bool</span> <span class="p">{</span>
     <span class="c1">//...
 </span><span class="c1"></span>    <span class="nx">mis</span> <span class="o">:=</span> <span class="nx">r</span><span class="p">.</span><span class="nx">matchBuf</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">prs</span><span class="p">)]</span>
     <span class="nx">idx</span> <span class="o">:=</span> <span class="mi">0</span>
@@ -1208,19 +1218,18 @@ if (!doNotTrack) {
         <span class="nx">mis</span><span class="p">[</span><span class="nx">idx</span><span class="p">]</span> <span class="p">=</span> <span class="nx">p</span><span class="p">.</span><span class="nx">Match</span>
         <span class="nx">idx</span><span class="o">++</span>
     <span class="p">}</span>
-    <span class="nx">sort</span><span class="p">.</span><span class="nx">Sort</span><span class="p">(</span><span class="nx">mis</span><span class="p">)</span>
-    <span class="nx">mci</span> <span class="o">:=</span> <span class="nx">mis</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="nx">mis</span><span class="p">)</span><span class="o">-</span><span class="nx">r</span><span class="p">.</span><span class="nx">quorum</span><span class="p">()]</span>
-    <span class="k">return</span> <span class="nx">r</span><span class="p">.</span><span class="nx">raftLog</span><span class="p">.</span><span class="nx">maybeCommit</span><span class="p">(</span><span class="nx">mci</span><span class="p">,</span> <span class="nx">r</span><span class="p">.</span><span class="nx">Term</span><span class="p">)</span>
+    <span class="nx">sort</span><span class="p">.</span><span class="nf">Sort</span><span class="p">(</span><span class="nx">mis</span><span class="p">)</span>
+    <span class="nx">mci</span> <span class="o">:=</span> <span class="nx">mis</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="nx">mis</span><span class="p">)</span><span class="o">-</span><span class="nx">r</span><span class="p">.</span><span class="nf">quorum</span><span class="p">()]</span>
+    <span class="k">return</span> <span class="nx">r</span><span class="p">.</span><span class="nx">raftLog</span><span class="p">.</span><span class="nf">maybeCommit</span><span class="p">(</span><span class="nx">mci</span><span class="p">,</span> <span class="nx">r</span><span class="p">.</span><span class="nx">Term</span><span class="p">)</span>
 <span class="p">}</span></code></pre></td></tr></table>
 </div>
-</div></li>
-</ol>
-
+</div>
 <h1 id="conclusion">Conclusion</h1>
 
 <p>Etcd里的raft模块只实现了raft共识算法，而像消息的网络传输，数据存储都由上层应用来完成。这篇文章先介绍了基本的数据结构，然后在这些数据结构的基础上引入了raft算法。同时，这里还以一个投票请求和写请求为例，介绍了一个请求从接受到应答的完整处理过程。</p>
 
-<p>但到目前为止，我们还有很多细节没有涉及，比如说Linearizable Read，snapshot机制，WAL的存储与回放，所以希望你能以这篇文章为基础，顺藤摸瓜，继续深入研究下去。</p>
+<p>但到目前为止，我们还有很多细节没有涉及，比如说Linearizable Read，snapshot机制，WAL的存储与回放，所以希望你能以这篇文章为基础，顺藤摸瓜，继续深入研究下去。</p></li>
+</ol>
 <div class="footnotes">
 
 <hr />
@@ -1248,7 +1257,10 @@ if (!doNotTrack) {
   </p>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
-    <span class="item-content">2018-11-13</span>
+    <span class="item-content">
+      2018-11-13
+      
+    </span>
   </p>
   
   <p class="copyright-item">
@@ -1305,6 +1317,8 @@ if (!doNotTrack) {
   
 
   
+
+  
   
 
   
@@ -1312,17 +1326,15 @@ if (!doNotTrack) {
   
 
   
-  
+
     
-
-
 
         </div>
       </div>
     </main>
 
     <footer id="footer" class="footer">
-      <div class="social-links">
+      <div class="icon-links">
   
   
     <a href="/email.gif" rel="me noopener" class="iconfont"
@@ -1379,7 +1391,7 @@ if (!doNotTrack) {
 </svg>
 
   </a>
-  
+   
 </div>
 
 <div class="copyright">
@@ -1464,6 +1476,8 @@ if (!doNotTrack) {
     <script type="text/javascript" src="/lib/photoswipe/photoswipe.min.js"></script>
     <script type="text/javascript" src="/lib/photoswipe/photoswipe-ui-default.min.js"></script>
   
+
+
 
 
 

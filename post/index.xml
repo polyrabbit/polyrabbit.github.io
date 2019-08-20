@@ -6,13 +6,22 @@
     <description>Recent content in Posts on 喵叔没话说</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 15 Mar 2019 21:30:47 +0800</lastBuildDate>
+    <lastBuildDate>Wed, 24 Jul 2019 23:10:21 +0800</lastBuildDate>
     
 	<atom:link href="//blog.betacat.io/post/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>理解Go标准库中的atomic.Value类型</title>
+      <title>使用 Telepresence 在本地调试 Kubernetes 微服务</title>
+      <link>//blog.betacat.io/post/develop-and-debug-k8s-microservices-locally-using-telepresence/</link>
+      <pubDate>Wed, 24 Jul 2019 23:10:21 +0800</pubDate>
+      
+      <guid>//blog.betacat.io/post/develop-and-debug-k8s-microservices-locally-using-telepresence/</guid>
+      <description>微服务作为一种全新的软件架构现在正变得越来越火。基本原因我觉得有两点：一方面软件系统越做越复杂，通过拆分将一个大系统解耦成一个个独立的子系统</description>
+    </item>
+    
+    <item>
+      <title>理解 Go 标准库中的 atomic.Value 类型</title>
       <link>//blog.betacat.io/post/golang-atomic-value-exploration/</link>
       <pubDate>Fri, 15 Mar 2019 21:30:47 +0800</pubDate>
       

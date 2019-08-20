@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <?xml-stylesheet type="text/xsl" href="//blog.betacat.io/sitemap.xsl"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
@@ -7,6 +6,25 @@
     <lastmod>2018-12-15T23:04:52+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>//blog.betacat.io/post/</loc>
+    <lastmod>2019-07-24T23:10:21+08:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>//blog.betacat.io/post/develop-and-debug-k8s-microservices-locally-using-telepresence/</loc>
+    <lastmod>2019-07-24T23:10:21+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>//blog.betacat.io/</loc>
+    <lastmod>2019-07-24T23:10:21+08:00</lastmod>
+    <priority>0</priority>
   </url>
   
   <url>
@@ -60,27 +78,11 @@
   
   <url>
     <loc>//blog.betacat.io/categories/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>//blog.betacat.io/post/</loc>
-    <lastmod>2019-03-15T21:30:47+08:00</lastmod>
-    <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>//blog.betacat.io/tags/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>//blog.betacat.io/</loc>
-    <lastmod>2018-12-15T23:04:52+08:00</lastmod>
-    <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   

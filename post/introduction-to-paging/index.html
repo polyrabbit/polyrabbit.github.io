@@ -32,7 +32,7 @@
 
 
 
-<meta name="generator" content="Hugo 0.48" />
+<meta name="generator" content="Hugo 0.55.6" />
 
 
 <link rel="canonical" href="//blog.betacat.io/post/introduction-to-paging/" />
@@ -51,7 +51,7 @@
 
 
 
-<link rel="stylesheet" href="/sass/jane.min.28854364c052ec02eba4ee5867bc889d3a567cdf337ba3a355c33511d20bee1e.css" integrity="sha256-KIVDZMBS7ALrpO5YZ7yInTpWfN8ze6OjVcM1EdIL7h4=" media="screen" crossorigin="anonymous">
+<link rel="stylesheet" href="/sass/jane.min.31c4b7729c8d71cc152f8de4203d90bfd8a04f7eab69372de7234ebf55b7701b.css" integrity="sha256-McS3cpyNccwVL43kID2Qv9igT36raTct5yNOv1W3cBs=" media="screen" crossorigin="anonymous">
 
 
 
@@ -60,15 +60,17 @@
 <meta property="og:title" content="【译】分页技术简介" />
 <meta property="og:description" content="译注：这篇文章节选自《用Rust编写一个操作系统》系列。它由浅入深的介绍了分页技术（Paging）的历史由来，以及在现代操作系统中的实现。这" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="//blog.betacat.io/post/introduction-to-paging/" /><meta property="article:published_time" content="2019-02-10T11:31:31&#43;08:00"/>
+<meta property="og:url" content="//blog.betacat.io/post/introduction-to-paging/" />
+<meta property="article:published_time" content="2019-02-10T11:31:31&#43;08:00"/>
 <meta property="article:modified_time" content="2019-02-10T11:31:31&#43;08:00"/>
+
 <meta itemprop="name" content="【译】分页技术简介">
 <meta itemprop="description" content="译注：这篇文章节选自《用Rust编写一个操作系统》系列。它由浅入深的介绍了分页技术（Paging）的历史由来，以及在现代操作系统中的实现。这">
 
 
 <meta itemprop="datePublished" content="2019-02-10T11:31:31&#43;08:00" />
 <meta itemprop="dateModified" content="2019-02-10T11:31:31&#43;08:00" />
-<meta itemprop="wordCount" content="9940">
+<meta itemprop="wordCount" content="9933">
 
 
 
@@ -141,6 +143,8 @@ if (!doNotTrack) {
         
       </li>
     
+
+    
   </ul>
 </nav>
 
@@ -207,6 +211,8 @@ if (!doNotTrack) {
 
   
 
+  
+
   <header id="header" class="header container">
     <div class="logo-wrapper">
   <a href="/" class="logo">
@@ -253,6 +259,10 @@ if (!doNotTrack) {
 
       </li>
     
+
+    
+    
+
     
   </ul>
 </nav>
@@ -273,7 +283,7 @@ if (!doNotTrack) {
           2019-02-10
         </time>
         
-        <span class="more-meta"> 约 9940 字 </span>
+        <span class="more-meta"> 约 9933 字 </span>
           <span class="more-meta"> 预计阅读 20 分钟 </span>
 
         
@@ -499,14 +509,13 @@ if (!doNotTrack) {
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
-</span><span class="lnt">5
 </span></code></pre></td>
 <td class="lntd">
 <pre class="chroma"><code class="language-rust" data-lang="rust"><span class="cp">#[repr(align(4096))]</span><span class="w">
 </span><span class="w"></span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">PageTable</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span><span class="w">    </span><span class="n">entries</span>: <span class="p">[</span><span class="n">PageTableEntry</span><span class="p">;</span><span class="w"> </span><span class="mi">512</span><span class="p">],</span><span class="w">
 </span><span class="w"></span><span class="p">}</span><span class="w">
-</span><span class="w"></span></code></pre></td></tr></table>
+</span></code></pre></td></tr></table>
 </div>
 </div>
 <p>如<code>repr</code>属性所示，页表需要跟页面对齐，即在4KiB的边界上对齐。这可以确保一个页表始终填充满整个页面，并允许内部结构的空间优化。</p>
@@ -668,7 +677,6 @@ if (!doNotTrack) {
 </span><span class="lnt">26
 </span><span class="lnt">27
 </span><span class="lnt">28
-</span><span class="lnt">29
 </span></code></pre></td>
 <td class="lntd">
 <pre class="chroma"><code class="language-rust" data-lang="rust"><span class="c1">// in src/interrupts.rs
@@ -699,7 +707,7 @@ if (!doNotTrack) {
 </span><span class="w">    </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&#34;{:#?}&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">stack_frame</span><span class="p">);</span><span class="w">
 </span><span class="w">    </span><span class="n">hlt_loop</span><span class="p">();</span><span class="w">
 </span><span class="w"></span><span class="p">}</span><span class="w">
-</span><span class="w"></span></code></pre></td></tr></table>
+</span></code></pre></td></tr></table>
 </div>
 </div>
 <p>在发生缺页中断时，CPU会将引起该错误的虚拟地址放置到<a href="https://en.wikipedia.org/wiki/Control_register#CR2">CR2</a>寄存器中。我们使用x86_64包的<a href="https://docs.rs/x86_64/0.3.5/x86_64/registers/control/struct.Cr2.html#method.read">Cr2::read</a>函数来读取并打印它。通常，<a href="https://docs.rs/x86_64/0.3.4/x86_64/structures/idt/struct.PageFaultErrorCode.html">PageFaultErrorCode</a>会提供该错误的更多信息，但目前LLVM存在一个传递无效错误代码的<a href="https://github.com/rust-lang/rust/issues/57270">bug</a>，因此我们暂时忽略它。如果缺页中断不被解决，我们的代码就无法继续执行，因此最后我们进入了一个<a href="https://os.phil-opp.com/hardware-interrupts/#the">hlt_loop</a>的循环。</p>
@@ -730,7 +738,6 @@ if (!doNotTrack) {
 </span><span class="lnt">21
 </span><span class="lnt">22
 </span><span class="lnt">23
-</span><span class="lnt">24
 </span></code></pre></td>
 <td class="lntd">
 <pre class="chroma"><code class="language-rust" data-lang="rust"><span class="c1">// in src/main.rs
@@ -756,7 +763,7 @@ if (!doNotTrack) {
 </span><span class="w">    </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&#34;It did not crash!&#34;</span><span class="p">);</span><span class="w">
 </span><span class="w">    </span><span class="n">blog_os</span>::<span class="n">hlt_loop</span><span class="p">();</span><span class="w">
 </span><span class="w"></span><span class="p">}</span><span class="w">
-</span><span class="w"></span></code></pre></td></tr></table>
+</span></code></pre></td></tr></table>
 </div>
 </div>
 <p>运行之后，可以看到我们的缺页中断处理程序被调用了：</p>
@@ -775,7 +782,6 @@ if (!doNotTrack) {
 </span><span class="lnt">5
 </span><span class="lnt">6
 </span><span class="lnt">7
-</span><span class="lnt">8
 </span></code></pre></td>
 <td class="lntd">
 <pre class="chroma"><code class="language-rust" data-lang="rust"><span class="c1">// Note: The actual address might be different for you. Use the address that
@@ -785,7 +791,7 @@ if (!doNotTrack) {
 </span><span class="c1"></span><span class="k">unsafe</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="n">ptr</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">
 </span><span class="w"></span><span class="c1">// write to a code page -&gt; page fault
 </span><span class="c1"></span><span class="k">unsafe</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">*</span><span class="n">ptr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">
-</span><span class="w"></span></code></pre></td></tr></table>
+</span></code></pre></td></tr></table>
 </div>
 </div>
 <p>如果注释掉最后一行，我们看到读操作有效，但写操作会导致页错误。</p>
@@ -810,7 +816,6 @@ if (!doNotTrack) {
 </span><span class="lnt">13
 </span><span class="lnt">14
 </span><span class="lnt">15
-</span><span class="lnt">16
 </span></code></pre></td>
 <td class="lntd">
 <pre class="chroma"><code class="language-rust" data-lang="rust"><span class="c1">// in src/main.rs
@@ -828,7 +833,7 @@ if (!doNotTrack) {
 </span><span class="w">    </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&#34;It did not crash!&#34;</span><span class="p">);</span><span class="w">
 </span><span class="w">    </span><span class="n">blog_os</span>::<span class="n">hlt_loop</span><span class="p">();</span><span class="w">
 </span><span class="w"></span><span class="p">}</span><span class="w">
-</span><span class="w"></span></code></pre></td></tr></table>
+</span></code></pre></td></tr></table>
 </div>
 </div>
 <p>我们使用<code>x86_64</code>包的<a href="https://docs.rs/x86_64/0.3.4/x86_64/registers/control/struct.Cr3.html#method.read">Cr3::read</a>函数从<code>CR3</code>寄存器中读取当前活动的第4级页表，这个函数的返回值是一个二元组：<a href="https://docs.rs/x86_64/0.3.4/x86_64/structures/paging/struct.PhysFrame.html">PhysFrame</a>和<a href="https://docs.rs/x86_64/0.3.4/x86_64/registers/control/struct.Cr3Flags.html">Cr3Flags</a>，我们只关心页帧（frame），所以暂时忽略第二个返回值。</p>
@@ -865,7 +870,6 @@ if (!doNotTrack) {
 </span><span class="lnt">14
 </span><span class="lnt">15
 </span><span class="lnt">16
-</span><span class="lnt">17
 </span></code></pre></td>
 <td class="lntd">
 <pre class="chroma"><code class="language-rust" data-lang="rust"><span class="c1">// in src/main.rs
@@ -884,7 +888,7 @@ if (!doNotTrack) {
 </span><span class="w">    </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&#34;It did not crash!&#34;</span><span class="p">);</span><span class="w">
 </span><span class="w">    </span><span class="n">blog_os</span>::<span class="n">hlt_loop</span><span class="p">();</span><span class="w">
 </span><span class="w"></span><span class="p">}</span><span class="w">
-</span><span class="w"></span></code></pre></td></tr></table>
+</span></code></pre></td></tr></table>
 </div>
 </div>
 <p>首先，我们将这个地址强制转换为一个<code>u64</code>类型的指针，因为正如<a href="#页表结构">上一节</a>所提到的，每个页表项都是8个字节（64位），因此<code>u64</code>正巧可以装下一项。然后再使用<code>for</code>循环打印页表的前10项，在循环内部，我们使用unsafe块来读取原始指针，使用<a href="https://doc.rust-lang.org/std/primitive.pointer.html#method.offset"><code>offset</code>方法</a>来执行指针的偏移运算。</p>
@@ -916,7 +920,6 @@ if (!doNotTrack) {
 </span><span class="lnt">16
 </span><span class="lnt">17
 </span><span class="lnt">18
-</span><span class="lnt">19
 </span></code></pre></td>
 <td class="lntd">
 <pre class="chroma"><code class="language-rust" data-lang="rust"><span class="c1">// in src/main.rs
@@ -937,7 +940,7 @@ if (!doNotTrack) {
 </span><span class="w">    </span><span class="n">println</span><span class="o">!</span><span class="p">(</span><span class="s">&#34;It did not crash!&#34;</span><span class="p">);</span><span class="w">
 </span><span class="w">    </span><span class="n">blog_os</span>::<span class="n">hlt_loop</span><span class="p">();</span><span class="w">
 </span><span class="w"></span><span class="p">}</span><span class="w">
-</span><span class="w"></span></code></pre></td></tr></table>
+</span></code></pre></td></tr></table>
 </div>
 </div>
 <p>我们先将<code>0xffff_ffff_ffff_f000</code>转换为一个原始指针，然后再把它变为一个Rust的引用，这个操作仍然需要在<code>unsafe</code>块中进行，因为编译器并不知道能不能访问该地址。在转换完成之后，我们就有了一个安全的<code>&amp;PageTable</code>类型，它能让我们使用<a href="https://doc.rust-lang.org/core/ops/trait.Index.html">数组索引</a>的方式来访问各个页表项。</p>
@@ -971,7 +974,10 @@ if (!doNotTrack) {
   </p>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
-    <span class="item-content">2019-02-10</span>
+    <span class="item-content">
+      2019-02-10
+      
+    </span>
   </p>
   
   <p class="copyright-item">
@@ -1000,7 +1006,7 @@ if (!doNotTrack) {
 </svg>
 
             </i>
-            <span class="prev-text nav-default">理解Go标准库中的atomic.Value类型</span>
+            <span class="prev-text nav-default">理解 Go 标准库中的 atomic.Value 类型</span>
             <span class="prev-text nav-mobile">上一篇</span>
           </a>
         
@@ -1028,6 +1034,8 @@ if (!doNotTrack) {
   
 
   
+
+  
   
 
   
@@ -1035,17 +1043,15 @@ if (!doNotTrack) {
   
 
   
-  
+
     
-
-
 
         </div>
       </div>
     </main>
 
     <footer id="footer" class="footer">
-      <div class="social-links">
+      <div class="icon-links">
   
   
     <a href="/email.gif" rel="me noopener" class="iconfont"
@@ -1102,7 +1108,7 @@ if (!doNotTrack) {
 </svg>
 
   </a>
-  
+   
 </div>
 
 <div class="copyright">
@@ -1187,6 +1193,8 @@ if (!doNotTrack) {
     <script type="text/javascript" src="/lib/photoswipe/photoswipe.min.js"></script>
     <script type="text/javascript" src="/lib/photoswipe/photoswipe-ui-default.min.js"></script>
   
+
+
 
 
 

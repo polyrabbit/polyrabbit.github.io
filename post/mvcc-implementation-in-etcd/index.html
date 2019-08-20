@@ -32,7 +32,7 @@
 
 
 
-<meta name="generator" content="Hugo 0.48" />
+<meta name="generator" content="Hugo 0.55.6" />
 
 
 <link rel="canonical" href="//blog.betacat.io/post/mvcc-implementation-in-etcd/" />
@@ -51,7 +51,7 @@
 
 
 
-<link rel="stylesheet" href="/sass/jane.min.28854364c052ec02eba4ee5867bc889d3a567cdf337ba3a355c33511d20bee1e.css" integrity="sha256-KIVDZMBS7ALrpO5YZ7yInTpWfN8ze6OjVcM1EdIL7h4=" media="screen" crossorigin="anonymous">
+<link rel="stylesheet" href="/sass/jane.min.31c4b7729c8d71cc152f8de4203d90bfd8a04f7eab69372de7234ebf55b7701b.css" integrity="sha256-McS3cpyNccwVL43kID2Qv9igT36raTct5yNOv1W3cBs=" media="screen" crossorigin="anonymous">
 
 
 
@@ -60,15 +60,17 @@
 <meta property="og:title" content="MVCC在etcd中的实现" />
 <meta property="og:description" content="MVCC（Multi-version Cocurrent Control）即多版本并发控制技术，多用于数据库中的事务管理，其基本思想是保存一个数据的多个历史版本" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="//blog.betacat.io/post/mvcc-implementation-in-etcd/" /><meta property="article:published_time" content="2018-12-24T18:26:52&#43;08:00"/>
+<meta property="og:url" content="//blog.betacat.io/post/mvcc-implementation-in-etcd/" />
+<meta property="article:published_time" content="2018-12-24T18:26:52&#43;08:00"/>
 <meta property="article:modified_time" content="2018-12-24T18:26:52&#43;08:00"/>
+
 <meta itemprop="name" content="MVCC在etcd中的实现">
 <meta itemprop="description" content="MVCC（Multi-version Cocurrent Control）即多版本并发控制技术，多用于数据库中的事务管理，其基本思想是保存一个数据的多个历史版本">
 
 
 <meta itemprop="datePublished" content="2018-12-24T18:26:52&#43;08:00" />
 <meta itemprop="dateModified" content="2018-12-24T18:26:52&#43;08:00" />
-<meta itemprop="wordCount" content="3042">
+<meta itemprop="wordCount" content="3043">
 
 
 
@@ -141,6 +143,8 @@ if (!doNotTrack) {
         
       </li>
     
+
+    
   </ul>
 </nav>
 
@@ -207,6 +211,8 @@ if (!doNotTrack) {
 
   
 
+  
+
   <header id="header" class="header container">
     <div class="logo-wrapper">
   <a href="/" class="logo">
@@ -253,6 +259,10 @@ if (!doNotTrack) {
 
       </li>
     
+
+    
+    
+
     
   </ul>
 </nav>
@@ -273,7 +283,7 @@ if (!doNotTrack) {
           2018-12-24
         </time>
         
-        <span class="more-meta"> 约 3042 字 </span>
+        <span class="more-meta"> 约 3043 字 </span>
           <span class="more-meta"> 预计阅读 7 分钟 </span>
 
         
@@ -351,7 +361,7 @@ if (!doNotTrack) {
 <span class="p">}</span></code></pre></td></tr></table>
 </div>
 </div>
-<p>这里的main属性对应事务ID，全局递增不重复，它etcd中被当做一个逻辑时钟来使用。sub代表一次事务中不同的修改操作（如put和delete）编号，从0开始依次递增。所以在一次事务中，每一个修改操作所绑定的<code>revision</code>依次为<code>{txID, 0}</code>, <code>{txID, 1}</code>, <code>{txID, 2}</code>&hellip;</p>
+<p>这里的main属性对应事务ID，全局递增不重复，它在etcd中被当做一个逻辑时钟来使用。sub代表一次事务中不同的修改操作（如put和delete）编号，从0开始依次递增。所以在一次事务中，每一个修改操作所绑定的<code>revision</code>依次为<code>{txID, 0}</code>, <code>{txID, 1}</code>, <code>{txID, 2}</code>&hellip;</p>
 
 <h2 id="keyindex">keyIndex</h2>
 
@@ -372,7 +382,7 @@ if (!doNotTrack) {
 <span class="p">}</span></code></pre></td></tr></table>
 </div>
 </div>
-<p>它保存的是当前<code>key</code>的具体值（key），最近一次修改的版本号（modified），以及记录<code>key</code>生命周期的<code>generation</code>，一个<code>generation</code>代表了一个<code>key</code>从创建到被删除的过程。因为一个<code>key</code>可能会经历创建 =&gt; 删除 =&gt; 创建的好几个轮回，所以它有可能会有一个或多个<code>generation</code>。下面来看看一个<code>generation</code>包含哪些内容：</p>
+<p>它保存的是当前<code>key</code>的具体值（key），最近一次修改的版本号（modified），以及记录<code>key</code>生命周期的<code>generation</code>，一个<code>generation</code>代表了一个<code>key</code>从创建到被删除的过程。因为一个<code>key</code>可能会经历创建 -&gt; 删除 -&gt; 创建的好几个轮回，所以它有可能会有一个或多个<code>generation</code>。下面来看看一个<code>generation</code>包含哪些内容：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt">1
@@ -415,8 +425,8 @@ if (!doNotTrack) {
 </span><span class="lnt">2
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">ki</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nx">NewExample</span><span class="p">(),</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="c1">// 第一次变更发生在ID为2的事务中，且是第一次操作
-</span><span class="c1"></span><span class="nx">ki</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nx">NewExample</span><span class="p">(),</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">//</span> <span class="nx">第二次变更发生在ID为4的事务中</span><span class="err">，</span><span class="nx">且是第三次操作</span></code></pre></td></tr></table>
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">ki</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nf">NewExample</span><span class="p">(),</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="c1">// 第一次变更发生在ID为2的事务中，且是第一次操作
+</span><span class="c1"></span><span class="nx">ki</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nf">NewExample</span><span class="p">(),</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">//</span> <span class="nx">第二次变更发生在ID为4的事务中</span><span class="err">，</span><span class="nx">且是第三次操作</span></code></pre></td></tr></table>
 </div>
 </div>
 <ul>
@@ -446,9 +456,9 @@ if (!doNotTrack) {
 </span><span class="lnt">3
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">ki</span><span class="p">.</span><span class="nx">tombstone</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nx">NewExample</span><span class="p">(),</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1">// 在第6次事务中被删除
-</span><span class="c1"></span><span class="nx">ki</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nx">NewExample</span><span class="p">(),</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="nx">ki</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nx">NewExample</span><span class="p">(),</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></code></pre></td></tr></table>
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">ki</span><span class="p">.</span><span class="nf">tombstone</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nf">NewExample</span><span class="p">(),</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1">// 在第6次事务中被删除
+</span><span class="c1"></span><span class="nx">ki</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nf">NewExample</span><span class="p">(),</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="nx">ki</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nf">NewExample</span><span class="p">(),</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></code></pre></td></tr></table>
 </div>
 </div>
 <ul>
@@ -599,12 +609,12 @@ if (!doNotTrack) {
 </span></code></pre></td>
 <td class="lntd">
 <pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/kvstore_txn.go#L151
-</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">tw</span> <span class="o">*</span><span class="nx">storeTxnWrite</span><span class="p">)</span> <span class="nx">put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">,</span> <span class="nx">leaseID</span> <span class="nx">lease</span><span class="p">.</span><span class="nx">LeaseID</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">tw</span> <span class="o">*</span><span class="nx">storeTxnWrite</span><span class="p">)</span> <span class="nf">put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">,</span> <span class="nx">leaseID</span> <span class="nx">lease</span><span class="p">.</span><span class="nx">LeaseID</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">rev</span> <span class="o">:=</span> <span class="nx">tw</span><span class="p">.</span><span class="nx">beginRev</span> <span class="o">+</span> <span class="mi">1</span>
 
-    <span class="nx">ibytes</span> <span class="o">:=</span> <span class="nx">newRevBytes</span><span class="p">()</span>
+    <span class="nx">ibytes</span> <span class="o">:=</span> <span class="nf">newRevBytes</span><span class="p">()</span>
     <span class="nx">idxRev</span> <span class="o">:=</span> <span class="nx">revision</span><span class="p">{</span><span class="nx">main</span><span class="p">:</span> <span class="nx">rev</span><span class="p">,</span> <span class="nx">sub</span><span class="p">:</span> <span class="nb">int64</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nx">tw</span><span class="p">.</span><span class="nx">changes</span><span class="p">))}</span>
-    <span class="nx">revToBytes</span><span class="p">(</span><span class="nx">idxRev</span><span class="p">,</span> <span class="nx">ibytes</span><span class="p">)</span>
+    <span class="nf">revToBytes</span><span class="p">(</span><span class="nx">idxRev</span><span class="p">,</span> <span class="nx">ibytes</span><span class="p">)</span>
 
     <span class="nx">kv</span> <span class="o">:=</span> <span class="nx">mvccpb</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{</span>
         <span class="nx">Key</span><span class="p">:</span>            <span class="nx">key</span><span class="p">,</span>
@@ -614,10 +624,10 @@ if (!doNotTrack) {
         <span class="nx">Version</span><span class="p">:</span>        <span class="nx">ver</span><span class="p">,</span>
         <span class="nx">Lease</span><span class="p">:</span>          <span class="nb">int64</span><span class="p">(</span><span class="nx">leaseID</span><span class="p">),</span>
     <span class="p">}</span>
-    <span class="nx">d</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">Marshal</span><span class="p">()</span>
+    <span class="nx">d</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">Marshal</span><span class="p">()</span>
 
-    <span class="nx">tw</span><span class="p">.</span><span class="nx">tx</span><span class="p">.</span><span class="nx">UnsafeSeqPut</span><span class="p">(</span><span class="nx">keyBucketName</span><span class="p">,</span> <span class="nx">ibytes</span><span class="p">,</span> <span class="nx">d</span><span class="p">)</span>
-    <span class="nx">tw</span><span class="p">.</span><span class="nx">s</span><span class="p">.</span><span class="nx">kvindex</span><span class="p">.</span><span class="nx">Put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">idxRev</span><span class="p">)</span>
+    <span class="nx">tw</span><span class="p">.</span><span class="nx">tx</span><span class="p">.</span><span class="nf">UnsafeSeqPut</span><span class="p">(</span><span class="nx">keyBucketName</span><span class="p">,</span> <span class="nx">ibytes</span><span class="p">,</span> <span class="nx">d</span><span class="p">)</span>
+    <span class="nx">tw</span><span class="p">.</span><span class="nx">s</span><span class="p">.</span><span class="nx">kvindex</span><span class="p">.</span><span class="nf">Put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">idxRev</span><span class="p">)</span>
     <span class="nx">tw</span><span class="p">.</span><span class="nx">changes</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">tw</span><span class="p">.</span><span class="nx">changes</span><span class="p">,</span> <span class="nx">kv</span><span class="p">)</span>
 <span class="p">}</span></code></pre></td></tr></table>
 </div>
@@ -649,19 +659,19 @@ if (!doNotTrack) {
 </span></code></pre></td>
 <td class="lntd">
 <pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/kvstore_txn.go#L111
-</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">tr</span> <span class="o">*</span><span class="nx">storeTxnRead</span><span class="p">)</span> <span class="nx">rangeKeys</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">end</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">,</span> <span class="nx">curRev</span> <span class="kt">int64</span><span class="p">,</span> <span class="nx">ro</span> <span class="nx">RangeOptions</span><span class="p">)</span> <span class="p">(</span><span class="o">*</span><span class="nx">RangeResult</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">tr</span> <span class="o">*</span><span class="nx">storeTxnRead</span><span class="p">)</span> <span class="nf">rangeKeys</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">end</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">,</span> <span class="nx">curRev</span> <span class="kt">int64</span><span class="p">,</span> <span class="nx">ro</span> <span class="nx">RangeOptions</span><span class="p">)</span> <span class="p">(</span><span class="o">*</span><span class="nx">RangeResult</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">rev</span> <span class="o">:=</span> <span class="nx">ro</span><span class="p">.</span><span class="nx">Rev</span>
 
-    <span class="nx">revpairs</span> <span class="o">:=</span> <span class="nx">tr</span><span class="p">.</span><span class="nx">s</span><span class="p">.</span><span class="nx">kvindex</span><span class="p">.</span><span class="nx">Revisions</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">end</span><span class="p">,</span> <span class="nx">rev</span><span class="p">)</span>
+    <span class="nx">revpairs</span> <span class="o">:=</span> <span class="nx">tr</span><span class="p">.</span><span class="nx">s</span><span class="p">.</span><span class="nx">kvindex</span><span class="p">.</span><span class="nf">Revisions</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">end</span><span class="p">,</span> <span class="nx">rev</span><span class="p">)</span>
 
     <span class="nx">limit</span> <span class="o">:=</span> <span class="nb">int</span><span class="p">(</span><span class="nx">ro</span><span class="p">.</span><span class="nx">Limit</span><span class="p">)</span>
     <span class="nx">kvs</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="nx">mvccpb</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">,</span> <span class="nx">limit</span><span class="p">)</span>
-    <span class="nx">revBytes</span> <span class="o">:=</span> <span class="nx">newRevBytes</span><span class="p">()</span>
+    <span class="nx">revBytes</span> <span class="o">:=</span> <span class="nf">newRevBytes</span><span class="p">()</span>
 
     <span class="k">for</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">revpair</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">revpairs</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="nx">kvs</span><span class="p">)]</span> <span class="p">{</span>
-        <span class="nx">revToBytes</span><span class="p">(</span><span class="nx">revpair</span><span class="p">,</span> <span class="nx">revBytes</span><span class="p">)</span>
-        <span class="nx">_</span><span class="p">,</span> <span class="nx">vs</span> <span class="o">:=</span> <span class="nx">tr</span><span class="p">.</span><span class="nx">tx</span><span class="p">.</span><span class="nx">UnsafeRange</span><span class="p">(</span><span class="nx">keyBucketName</span><span class="p">,</span> <span class="nx">revBytes</span><span class="p">,</span> <span class="kc">nil</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="nx">kvs</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">Unmarshal</span><span class="p">(</span><span class="nx">vs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="nf">revToBytes</span><span class="p">(</span><span class="nx">revpair</span><span class="p">,</span> <span class="nx">revBytes</span><span class="p">)</span>
+        <span class="nx">_</span><span class="p">,</span> <span class="nx">vs</span> <span class="o">:=</span> <span class="nx">tr</span><span class="p">.</span><span class="nx">tx</span><span class="p">.</span><span class="nf">UnsafeRange</span><span class="p">(</span><span class="nx">keyBucketName</span><span class="p">,</span> <span class="nx">revBytes</span><span class="p">,</span> <span class="kc">nil</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="nx">kvs</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nf">Unmarshal</span><span class="p">(</span><span class="nx">vs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="p">}</span>
     <span class="k">return</span> <span class="o">&amp;</span><span class="nx">RangeResult</span><span class="p">{</span><span class="nx">KVs</span><span class="p">:</span> <span class="nx">kvs</span><span class="p">,</span> <span class="nx">Count</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="nx">revpairs</span><span class="p">),</span> <span class="nx">Rev</span><span class="p">:</span> <span class="nx">curRev</span><span class="p">},</span> <span class="kc">nil</span>
     <span class="p">}</span></code></pre></td></tr></table>
@@ -702,7 +712,10 @@ if (!doNotTrack) {
   </p>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
-    <span class="item-content">2018-12-24</span>
+    <span class="item-content">
+      2018-12-24
+      
+    </span>
   </p>
   
   <p class="copyright-item">
@@ -759,6 +772,8 @@ if (!doNotTrack) {
   
 
   
+
+  
   
 
   
@@ -766,17 +781,15 @@ if (!doNotTrack) {
   
 
   
-  
+
     
-
-
 
         </div>
       </div>
     </main>
 
     <footer id="footer" class="footer">
-      <div class="social-links">
+      <div class="icon-links">
   
   
     <a href="/email.gif" rel="me noopener" class="iconfont"
@@ -833,7 +846,7 @@ if (!doNotTrack) {
 </svg>
 
   </a>
-  
+   
 </div>
 
 <div class="copyright">
@@ -918,6 +931,8 @@ if (!doNotTrack) {
     <script type="text/javascript" src="/lib/photoswipe/photoswipe.min.js"></script>
     <script type="text/javascript" src="/lib/photoswipe/photoswipe-ui-default.min.js"></script>
   
+
+
 
 
 
