@@ -39,12 +39,12 @@
     </item>
     
     <item>
-      <title>MVCC在etcd中的实现</title>
+      <title>MVCC 在 etcd 中的实现</title>
       <link>//blog.betacat.io/post/mvcc-implementation-in-etcd/</link>
       <pubDate>Mon, 24 Dec 2018 18:26:52 +0800</pubDate>
       
       <guid>//blog.betacat.io/post/mvcc-implementation-in-etcd/</guid>
-      <description>MVCC（Multi-version Cocurrent Control）即多版本并发控制技术，多用于数据库中的事务管理，其基本思想是保存一个数据的多个历史版本</description>
+      <description>简介 在数据库领域，面对高并发环境下数据冲突的问题，业界常用的解决方案有两种： 想办法避免冲突。使用悲观锁来确保同一时刻只有一人能对数据进行更改</description>
     </item>
     
     <item>

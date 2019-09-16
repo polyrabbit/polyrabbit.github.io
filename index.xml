@@ -255,7 +255,7 @@ ca.crt  namespace  token&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tabl
 
 &lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
 
-&lt;p&gt;这篇文章里我先提出了微服务开发中一个常见的问题，然后介绍了  Telepresence 项目，并且举例说明了怎样用它来调试两种常见的微服务场景。当然，Telepresence  还在不断的演进，本文中使用的是&lt;a href=&#34;https://github.com/telepresenceio/telepresence/tree/0.101&#34;&gt;v0.101&lt;/a&gt;版本，后续版本很可能有些不一样的地方，也欢迎大家不断指正。&lt;/p&gt;
+&lt;p&gt;这篇文章里我先提出了微服务开发中一个常见的问题，然后介绍了 Telepresence 项目，并且举例说明了怎样用它来调试两种常见的微服务场景。当然，Telepresence 还在不断的演进，本文中使用的是&lt;a href=&#34;https://github.com/telepresenceio/telepresence/tree/0.101&#34;&gt;v0.101&lt;/a&gt;版本，后续版本很可能有些不一样的地方，也欢迎大家不断指正。&lt;/p&gt;
 &lt;div class=&#34;footnotes&#34;&gt;
 
 &lt;hr /&gt;
@@ -1284,7 +1284,7 @@ ca.crt  namespace  token&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tabl
     </item>
     
     <item>
-      <title>MVCC在etcd中的实现</title>
+      <title>MVCC 在 etcd 中的实现</title>
       <link>//blog.betacat.io/post/mvcc-implementation-in-etcd/</link>
       <pubDate>Mon, 24 Dec 2018 18:26:52 +0800</pubDate>
       
@@ -1292,19 +1292,29 @@ ca.crt  namespace  token&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tabl
       
         <description>
 
-&lt;p&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Multiversion_concurrency_control&#34;&gt;MVCC&lt;/a&gt;（Multi-version Cocurrent Control）即多版本并发控制技术，多用于数据库中的事务管理，其基本思想是保存一个数据的多个历史版本，从而解决事务管理中数据隔离的问题。&lt;/p&gt;
+&lt;h1 id=&#34;简介&#34;&gt;简介&lt;/h1&gt;
 
-&lt;p&gt;这里的版本一般选择使用时间戳或事务ID来标识。在处理一个写请求时，MVCC不是简单的用新值覆盖旧值，而是为这一项添加一个新版本的数据。在读取一个数据项时，要先确定一个要读取的版本，然后根据版本找到对应的数据。这种写操作创建新版本，读操作访问旧版本的方式使得读写操作彼此隔离，他们之间就不需要用锁来协调。换句话说，在MVCC里读操作永远不会被阻塞，因此它特别适合etcd这种读操作比较多的场景。&lt;/p&gt;
+&lt;p&gt;在数据库领域，面对高并发环境下数据冲突的问题，业界常用的解决方案有两种：&lt;/p&gt;
 
-&lt;p&gt;MVCC的基本原理就是这么简单，下面来结合具体代码，看看etcd是怎么实现的。跟&lt;a href=&#34;//blog.betacat.io/post/raft-implementation-in-etcd/&#34;&gt;上篇&lt;/a&gt;一样，这里的分析仍以etcd &lt;a href=&#34;https://github.com/etcd-io/etcd/tree/v3.3.10&#34;&gt;v3.3.10&lt;/a&gt;为例。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;想办法避免冲突。使用&lt;strong&gt;悲观锁&lt;/strong&gt;来确保同一时刻只有一人能对数据进行更改，常见的实现有读写锁（Read/Write Locks）、两阶段锁（Two-Phase Locking）等。&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;允许冲突，但发生冲突的时候，要有能力检测到。这种方法被称为&lt;strong&gt;乐观锁&lt;/strong&gt;，即先乐观的认为冲突不会发生，除非被证明（检测到）当前确实产生冲突了。常见的实现有逻辑时钟（Logical Clock）、&lt;a href=&#34;https://en.wikipedia.org/wiki/Multiversion_concurrency_control&#34;&gt;MVCC&lt;/a&gt;（Multi-version Cocurrent Control）等。&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;在这些解决方案中，MVCC 由于其出色的性能优势，而被越来越多的数据库所采用，比如Oracle、PostgreSQL、MySQL InnoDB、etcd。它的基本思想是保存一个数据的多个历史版本，从而解决事务管理中数据隔离的问题。&lt;/p&gt;
+
+&lt;p&gt;这里的版本一般选择使用时间戳或事务 ID 来标识。在处理一个写请求时，MVCC 不是简单的用新值覆盖旧值，而是为这一项添加一个新版本的数据。在读取一个数据项时，要先确定一个要读取的版本，然后根据版本找到对应的数据。这种写操作创建新版本，读操作访问旧版本的方式使得读写操作彼此隔离，他们之间就不需要用锁来协调。换句话说，在 MVCC 里读操作永远不会被阻塞，因此它特别适合 etcd 这种读操作比较多的场景。&lt;/p&gt;
+
+&lt;p&gt;MVCC 的基本原理就是这么简单，下面来结合具体代码，看看 etcd 是怎么实现的。跟&lt;a href=&#34;//blog.betacat.io/post/raft-implementation-in-etcd/&#34;&gt;上篇&lt;/a&gt;一样，这里的分析仍以etcd &lt;a href=&#34;https://github.com/etcd-io/etcd/tree/v3.3.10&#34;&gt;v3.3.10&lt;/a&gt; 为例。&lt;/p&gt;
 
 &lt;h1 id=&#34;数据结构&#34;&gt;数据结构&lt;/h1&gt;
 
-&lt;p&gt;etcd的代码中，有关MVCC的实现都在一个叫&lt;a href=&#34;https://github.com/etcd-io/etcd/tree/v3.3.10/mvcc&#34;&gt;mvcc&lt;/a&gt;的包里。在正式介绍读写流程之前，我们先来了解下这个包里面定义的几个基础数据结构。&lt;/p&gt;
+&lt;p&gt;etcd 的代码中，有关 MVCC 的实现都在一个叫 &lt;a href=&#34;https://github.com/etcd-io/etcd/tree/v3.3.10/mvcc&#34;&gt;mvcc&lt;/a&gt; 的包里。在正式介绍读写流程之前，我们先来了解下这个包里面定义的几个基础数据结构。&lt;/p&gt;
 
 &lt;h2 id=&#34;revision&#34;&gt;revision&lt;/h2&gt;
 
-&lt;p&gt;&lt;a href=&#34;https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/revision.go&#34;&gt;revision&lt;/a&gt;即对应到MVCC中的版本，etcd中的每一次&lt;code&gt;key-value&lt;/code&gt;的操作都会有一个相应的&lt;code&gt;revision&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/revision.go&#34;&gt;revision&lt;/a&gt; 即对应到MVCC中的版本，etcd 中的每一次&lt;code&gt;key-value&lt;/code&gt;的操作都会有一个相应的 &lt;code&gt;revision&lt;/code&gt;。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
 &lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
 &lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
@@ -1333,7 +1343,7 @@ ca.crt  namespace  token&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tabl
 &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;这里的main属性对应事务ID，全局递增不重复，它在etcd中被当做一个逻辑时钟来使用。sub代表一次事务中不同的修改操作（如put和delete）编号，从0开始依次递增。所以在一次事务中，每一个修改操作所绑定的&lt;code&gt;revision&lt;/code&gt;依次为&lt;code&gt;{txID, 0}&lt;/code&gt;, &lt;code&gt;{txID, 1}&lt;/code&gt;, &lt;code&gt;{txID, 2}&lt;/code&gt;&amp;hellip;&lt;/p&gt;
+&lt;p&gt;这里的 main 属性对应事务 ID，全局递增不重复，它在 etcd 中被当做一个逻辑时钟来使用。sub 代表一次事务中不同的修改操作（如put和delete）编号，从0开始依次递增。所以在一次事务中，每一个修改操作所绑定的&lt;code&gt;revision&lt;/code&gt;依次为&lt;code&gt;{txID, 0}&lt;/code&gt;, &lt;code&gt;{txID, 1}&lt;/code&gt;, &lt;code&gt;{txID, 2}&lt;/code&gt;&amp;hellip;&lt;/p&gt;
 
 &lt;h2 id=&#34;keyindex&#34;&gt;keyIndex&lt;/h2&gt;
 
@@ -1531,7 +1541,7 @@ ca.crt  namespace  token&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tabl
 &lt;span class=&#34;nv&#34;&gt;rev&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;={&lt;/span&gt;&lt;span class=&#34;m&#34;&gt;4&lt;/span&gt; &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;}&lt;/span&gt;, &lt;span class=&#34;nv&#34;&gt;key&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;key2&amp;#34;&lt;/span&gt;, &lt;span class=&#34;nv&#34;&gt;value&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;v22&amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;所以总的来说，内存btree维护的是key =&amp;gt; keyIndex的映射，keyIndex内维护多版本的revision信息，而revision可以映射到磁盘bbolt中具体的value。下面这个图很好的表示了这个过程&lt;sup class=&#34;footnote-ref&#34; id=&#34;fnref:lichuang&#34;&gt;&lt;a href=&#34;#fn:lichuang&#34;&gt;2&lt;/a&gt;&lt;/sup&gt;：&lt;/p&gt;
+&lt;p&gt;所以总的来说，内存 btree 维护的是 key 到 keyIndex 的映射，keyIndex 内维护多版本的 revision 信息，而 revision 可以映射到磁盘bbolt中具体的value。下面这个图很好的表示了这个过程&lt;sup class=&#34;footnote-ref&#34; id=&#34;fnref:lichuang&#34;&gt;&lt;a href=&#34;#fn:lichuang&#34;&gt;2&lt;/a&gt;&lt;/sup&gt;：&lt;/p&gt;
 
 
 
@@ -1653,14 +1663,14 @@ ca.crt  namespace  token&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tabl
 
 &lt;h1 id=&#34;小结&#34;&gt;小结&lt;/h1&gt;
 
-&lt;p&gt;可以看到，MVCC的实现还是比较简单直接的。但在阅读代码的过程中，我也有一些看不明白的地方，毕竟一段代码在演化的过程中，会多出各种各样的细节处理，比如边界情况，性能调优，这些细节会扰乱视线，让我们难以抓住主干。一般碰到这种情况，我会采用两种方法：&lt;/p&gt;
+&lt;p&gt;本文将乐观锁的原理及其在 etcd 中的实现 MVCC 梳理了一遍，希望对读者在理解和使用乐观锁上能有所帮助。&lt;/p&gt;
+
+&lt;p&gt;在 etcd 中，MVCC 的实现还是比较简单直接的。但在阅读代码的过程中，我也有一些看不明白的地方，毕竟一段代码在演化的过程中，会多出各种各样的细节处理，比如边界情况，性能调优等。这些细节会扰乱视线，让我们难以抓住主干。一般碰到这种情况，我会采用两种方法：&lt;/p&gt;
 
 &lt;ol&gt;
 &lt;li&gt;阅读UT，看他们都在测试什么。一般UT的输入输出都比较确定，它能够向我们揭示这段代码的作者期望完成的功能是什么。有了这个目标后我们再去看实现，就能剔出哪些是跟主干功能有关的，哪些是细节处理。&lt;/li&gt;
-&lt;li&gt;查找较早的提交。既然代码是演进出来的，那它刚开始的几个版本一般都比较粗糙，有很多细节没有处理，但那也是这个功能最简单的实现。通过阅读作者早期的实现，也能帮助我们快速抓住主干。&lt;/li&gt;
+&lt;li&gt;查找较早的提交。既然代码是演进出来的，那它刚开始的几个版本一般都比较粗糙，有很多细节没有处理，但那也是这个功能最直接的实现。通过阅读作者早期的实现，也能帮助我们快速抓住主干。&lt;/li&gt;
 &lt;/ol&gt;
-
-&lt;!-- 本文将Lease机制的本质及在分布式系统中的主要应用梳理出来了，希望对读者在分布式系统中使用lease机制有帮助。 --&gt;
 &lt;div class=&#34;footnotes&#34;&gt;
 
 &lt;hr /&gt;
@@ -1668,7 +1678,7 @@ ca.crt  namespace  token&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tabl
 &lt;ol&gt;
 &lt;li id=&#34;fn:pluggable-backend&#34;&gt;&lt;a href=&#34;https://github.com/etcd-io/etcd/issues/10321&#34;&gt;Meta issue: Pluggable backend #10321&lt;/a&gt;
  &lt;a class=&#34;footnote-return&#34; href=&#34;#fnref:pluggable-backend&#34;&gt;&lt;sup&gt;[return]&lt;/sup&gt;&lt;/a&gt;&lt;/li&gt;
-&lt;li id=&#34;fn:lichuang&#34;&gt;&lt;a href=&#34;https://lichuang.github.io/post/20181125-etcd-server/&#34;&gt;Etcd存储的实现&lt;/a&gt;
+&lt;li id=&#34;fn:lichuang&#34;&gt;&lt;a href=&#34;https://lichuang.github.io/post/20181125-etcd-server/&#34;&gt;etcd存储的实现&lt;/a&gt;
  &lt;a class=&#34;footnote-return&#34; href=&#34;#fnref:lichuang&#34;&gt;&lt;sup&gt;[return]&lt;/sup&gt;&lt;/a&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;/div&gt;

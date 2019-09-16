@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>MVCC在etcd中的实现 - 喵叔没话说</title>
+  <title>MVCC 在 etcd 中的实现 - 喵叔没话说</title>
   
 
 <meta name="renderer" content="webkit" />
@@ -23,7 +23,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 
 <meta name="author" content="喵叔" />
-  <meta name="description" content="MVCC（Multi-version Cocurrent Control）即多版本并发控制技术，多用于数据库中的事务管理，其基本思想是保存一个数据的多个历史版本" />
+  <meta name="description" content="简介 在数据库领域，面对高并发环境下数据冲突的问题，业界常用的解决方案有两种： 想办法避免冲突。使用悲观锁来确保同一时刻只有一人能对数据进行更改" />
 <meta name="keywords" content="mvcc, etcd, 数据库, 事务, 多版本并发控制" />
 
 
@@ -57,27 +57,27 @@
 
 
 
-<meta property="og:title" content="MVCC在etcd中的实现" />
-<meta property="og:description" content="MVCC（Multi-version Cocurrent Control）即多版本并发控制技术，多用于数据库中的事务管理，其基本思想是保存一个数据的多个历史版本" />
+<meta property="og:title" content="MVCC 在 etcd 中的实现" />
+<meta property="og:description" content="简介 在数据库领域，面对高并发环境下数据冲突的问题，业界常用的解决方案有两种： 想办法避免冲突。使用悲观锁来确保同一时刻只有一人能对数据进行更改" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="//blog.betacat.io/post/mvcc-implementation-in-etcd/" />
 <meta property="article:published_time" content="2018-12-24T18:26:52&#43;08:00"/>
 <meta property="article:modified_time" content="2018-12-24T18:26:52&#43;08:00"/>
 
-<meta itemprop="name" content="MVCC在etcd中的实现">
-<meta itemprop="description" content="MVCC（Multi-version Cocurrent Control）即多版本并发控制技术，多用于数据库中的事务管理，其基本思想是保存一个数据的多个历史版本">
+<meta itemprop="name" content="MVCC 在 etcd 中的实现">
+<meta itemprop="description" content="简介 在数据库领域，面对高并发环境下数据冲突的问题，业界常用的解决方案有两种： 想办法避免冲突。使用悲观锁来确保同一时刻只有一人能对数据进行更改">
 
 
 <meta itemprop="datePublished" content="2018-12-24T18:26:52&#43;08:00" />
 <meta itemprop="dateModified" content="2018-12-24T18:26:52&#43;08:00" />
-<meta itemprop="wordCount" content="3043">
+<meta itemprop="wordCount" content="3288">
 
 
 
 <meta itemprop="keywords" content="" />
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="MVCC在etcd中的实现"/>
-<meta name="twitter:description" content="MVCC（Multi-version Cocurrent Control）即多版本并发控制技术，多用于数据库中的事务管理，其基本思想是保存一个数据的多个历史版本"/>
+<meta name="twitter:title" content="MVCC 在 etcd 中的实现"/>
+<meta name="twitter:description" content="简介 在数据库领域，面对高并发环境下数据冲突的问题，业界常用的解决方案有两种： 想办法避免冲突。使用悲观锁来确保同一时刻只有一人能对数据进行更改"/>
 
 <!--[if lte IE 9]>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
@@ -276,14 +276,14 @@ if (!doNotTrack) {
           <article class="post bg-white">
     
     <header class="post-header">
-      <h1 class="post-title">MVCC在etcd中的实现</h1>
+      <h1 class="post-title">MVCC 在 etcd 中的实现</h1>
       
       <div class="post-meta">
         <time datetime="2018-12-24" class="post-time">
           2018-12-24
         </time>
         
-        <span class="more-meta"> 约 3043 字 </span>
+        <span class="more-meta"> 约 3288 字 </span>
           <span class="more-meta"> 预计阅读 7 分钟 </span>
 
         
@@ -301,6 +301,7 @@ if (!doNotTrack) {
   <div class="post-toc-content">
     <nav id="TableOfContents">
 <ul>
+<li><a href="#简介">简介</a></li>
 <li><a href="#数据结构">数据结构</a>
 <ul>
 <li><a href="#revision">revision</a></li>
@@ -320,19 +321,29 @@ if (!doNotTrack) {
     <div class="post-content">
       
 
-<p><a href="https://en.wikipedia.org/wiki/Multiversion_concurrency_control">MVCC</a>（Multi-version Cocurrent Control）即多版本并发控制技术，多用于数据库中的事务管理，其基本思想是保存一个数据的多个历史版本，从而解决事务管理中数据隔离的问题。</p>
+<h1 id="简介">简介</h1>
 
-<p>这里的版本一般选择使用时间戳或事务ID来标识。在处理一个写请求时，MVCC不是简单的用新值覆盖旧值，而是为这一项添加一个新版本的数据。在读取一个数据项时，要先确定一个要读取的版本，然后根据版本找到对应的数据。这种写操作创建新版本，读操作访问旧版本的方式使得读写操作彼此隔离，他们之间就不需要用锁来协调。换句话说，在MVCC里读操作永远不会被阻塞，因此它特别适合etcd这种读操作比较多的场景。</p>
+<p>在数据库领域，面对高并发环境下数据冲突的问题，业界常用的解决方案有两种：</p>
 
-<p>MVCC的基本原理就是这么简单，下面来结合具体代码，看看etcd是怎么实现的。跟<a href="//blog.betacat.io/post/raft-implementation-in-etcd/">上篇</a>一样，这里的分析仍以etcd <a href="https://github.com/etcd-io/etcd/tree/v3.3.10">v3.3.10</a>为例。</p>
+<ol>
+<li><p>想办法避免冲突。使用<strong>悲观锁</strong>来确保同一时刻只有一人能对数据进行更改，常见的实现有读写锁（Read/Write Locks）、两阶段锁（Two-Phase Locking）等。</p></li>
+
+<li><p>允许冲突，但发生冲突的时候，要有能力检测到。这种方法被称为<strong>乐观锁</strong>，即先乐观的认为冲突不会发生，除非被证明（检测到）当前确实产生冲突了。常见的实现有逻辑时钟（Logical Clock）、<a href="https://en.wikipedia.org/wiki/Multiversion_concurrency_control">MVCC</a>（Multi-version Cocurrent Control）等。</p></li>
+</ol>
+
+<p>在这些解决方案中，MVCC 由于其出色的性能优势，而被越来越多的数据库所采用，比如Oracle、PostgreSQL、MySQL InnoDB、etcd。它的基本思想是保存一个数据的多个历史版本，从而解决事务管理中数据隔离的问题。</p>
+
+<p>这里的版本一般选择使用时间戳或事务 ID 来标识。在处理一个写请求时，MVCC 不是简单的用新值覆盖旧值，而是为这一项添加一个新版本的数据。在读取一个数据项时，要先确定一个要读取的版本，然后根据版本找到对应的数据。这种写操作创建新版本，读操作访问旧版本的方式使得读写操作彼此隔离，他们之间就不需要用锁来协调。换句话说，在 MVCC 里读操作永远不会被阻塞，因此它特别适合 etcd 这种读操作比较多的场景。</p>
+
+<p>MVCC 的基本原理就是这么简单，下面来结合具体代码，看看 etcd 是怎么实现的。跟<a href="//blog.betacat.io/post/raft-implementation-in-etcd/">上篇</a>一样，这里的分析仍以etcd <a href="https://github.com/etcd-io/etcd/tree/v3.3.10">v3.3.10</a> 为例。</p>
 
 <h1 id="数据结构">数据结构</h1>
 
-<p>etcd的代码中，有关MVCC的实现都在一个叫<a href="https://github.com/etcd-io/etcd/tree/v3.3.10/mvcc">mvcc</a>的包里。在正式介绍读写流程之前，我们先来了解下这个包里面定义的几个基础数据结构。</p>
+<p>etcd 的代码中，有关 MVCC 的实现都在一个叫 <a href="https://github.com/etcd-io/etcd/tree/v3.3.10/mvcc">mvcc</a> 的包里。在正式介绍读写流程之前，我们先来了解下这个包里面定义的几个基础数据结构。</p>
 
 <h2 id="revision">revision</h2>
 
-<p><a href="https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/revision.go">revision</a>即对应到MVCC中的版本，etcd中的每一次<code>key-value</code>的操作都会有一个相应的<code>revision</code>。</p>
+<p><a href="https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/revision.go">revision</a> 即对应到MVCC中的版本，etcd 中的每一次<code>key-value</code>的操作都会有一个相应的 <code>revision</code>。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt"> 1
@@ -361,7 +372,7 @@ if (!doNotTrack) {
 <span class="p">}</span></code></pre></td></tr></table>
 </div>
 </div>
-<p>这里的main属性对应事务ID，全局递增不重复，它在etcd中被当做一个逻辑时钟来使用。sub代表一次事务中不同的修改操作（如put和delete）编号，从0开始依次递增。所以在一次事务中，每一个修改操作所绑定的<code>revision</code>依次为<code>{txID, 0}</code>, <code>{txID, 1}</code>, <code>{txID, 2}</code>&hellip;</p>
+<p>这里的 main 属性对应事务 ID，全局递增不重复，它在 etcd 中被当做一个逻辑时钟来使用。sub 代表一次事务中不同的修改操作（如put和delete）编号，从0开始依次递增。所以在一次事务中，每一个修改操作所绑定的<code>revision</code>依次为<code>{txID, 0}</code>, <code>{txID, 1}</code>, <code>{txID, 2}</code>&hellip;</p>
 
 <h2 id="keyindex">keyIndex</h2>
 
@@ -559,7 +570,7 @@ if (!doNotTrack) {
 <span class="nv">rev</span><span class="o">={</span><span class="m">4</span> <span class="m">1</span><span class="o">}</span>, <span class="nv">key</span><span class="o">=</span><span class="s2">&#34;key2&#34;</span>, <span class="nv">value</span><span class="o">=</span><span class="s2">&#34;v22&#34;</span></code></pre></td></tr></table>
 </div>
 </div>
-<p>所以总的来说，内存btree维护的是key =&gt; keyIndex的映射，keyIndex内维护多版本的revision信息，而revision可以映射到磁盘bbolt中具体的value。下面这个图很好的表示了这个过程<sup class="footnote-ref" id="fnref:lichuang"><a href="#fn:lichuang">2</a></sup>：</p>
+<p>所以总的来说，内存 btree 维护的是 key 到 keyIndex 的映射，keyIndex 内维护多版本的 revision 信息，而 revision 可以映射到磁盘bbolt中具体的value。下面这个图很好的表示了这个过程<sup class="footnote-ref" id="fnref:lichuang"><a href="#fn:lichuang">2</a></sup>：</p>
 
 
 
@@ -681,14 +692,14 @@ if (!doNotTrack) {
 
 <h1 id="小结">小结</h1>
 
-<p>可以看到，MVCC的实现还是比较简单直接的。但在阅读代码的过程中，我也有一些看不明白的地方，毕竟一段代码在演化的过程中，会多出各种各样的细节处理，比如边界情况，性能调优，这些细节会扰乱视线，让我们难以抓住主干。一般碰到这种情况，我会采用两种方法：</p>
+<p>本文将乐观锁的原理及其在 etcd 中的实现 MVCC 梳理了一遍，希望对读者在理解和使用乐观锁上能有所帮助。</p>
+
+<p>在 etcd 中，MVCC 的实现还是比较简单直接的。但在阅读代码的过程中，我也有一些看不明白的地方，毕竟一段代码在演化的过程中，会多出各种各样的细节处理，比如边界情况，性能调优等。这些细节会扰乱视线，让我们难以抓住主干。一般碰到这种情况，我会采用两种方法：</p>
 
 <ol>
 <li>阅读UT，看他们都在测试什么。一般UT的输入输出都比较确定，它能够向我们揭示这段代码的作者期望完成的功能是什么。有了这个目标后我们再去看实现，就能剔出哪些是跟主干功能有关的，哪些是细节处理。</li>
-<li>查找较早的提交。既然代码是演进出来的，那它刚开始的几个版本一般都比较粗糙，有很多细节没有处理，但那也是这个功能最简单的实现。通过阅读作者早期的实现，也能帮助我们快速抓住主干。</li>
+<li>查找较早的提交。既然代码是演进出来的，那它刚开始的几个版本一般都比较粗糙，有很多细节没有处理，但那也是这个功能最直接的实现。通过阅读作者早期的实现，也能帮助我们快速抓住主干。</li>
 </ol>
-
-<!-- 本文将Lease机制的本质及在分布式系统中的主要应用梳理出来了，希望对读者在分布式系统中使用lease机制有帮助。 -->
 <div class="footnotes">
 
 <hr />
@@ -696,7 +707,7 @@ if (!doNotTrack) {
 <ol>
 <li id="fn:pluggable-backend"><a href="https://github.com/etcd-io/etcd/issues/10321">Meta issue: Pluggable backend #10321</a>
  <a class="footnote-return" href="#fnref:pluggable-backend"><sup>[return]</sup></a></li>
-<li id="fn:lichuang"><a href="https://lichuang.github.io/post/20181125-etcd-server/">Etcd存储的实现</a>
+<li id="fn:lichuang"><a href="https://lichuang.github.io/post/20181125-etcd-server/">etcd存储的实现</a>
  <a class="footnote-return" href="#fnref:lichuang"><sup>[return]</sup></a></li>
 </ol>
 </div>
@@ -708,7 +719,7 @@ if (!doNotTrack) {
 <div class="post-copyright">
   <p class="copyright-item">
     <span class="item-title">文章作者</span>
-    <span class="item-content">喵叔</span>
+    <span class="item-content"><a href="//blog.betacat.io">喵叔</a></span>
   </p>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
@@ -875,7 +886,7 @@ if (!doNotTrack) {
 
       </i>
     </span><span class="author">
-        喵叔
+        <a href="//blog.betacat.io">喵叔</a>
         
       </span></span>
 
