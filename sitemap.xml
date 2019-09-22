@@ -10,8 +10,21 @@
   
   <url>
     <loc>//blog.betacat.io/post/</loc>
-    <lastmod>2019-07-24T23:10:21+08:00</lastmod>
+    <lastmod>2019-08-29T10:17:24+08:00</lastmod>
     <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>//blog.betacat.io/</loc>
+    <lastmod>2019-08-29T10:17:24+08:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>//blog.betacat.io/post/2019/08/learn-transaction-isolation-levels-from-etcd/</loc>
+    <lastmod>2019-08-29T10:17:24+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
   </url>
   
   <url>
@@ -19,12 +32,6 @@
     <lastmod>2019-07-24T23:10:21+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>//blog.betacat.io/</loc>
-    <lastmod>2019-07-24T23:10:21+08:00</lastmod>
-    <priority>0</priority>
   </url>
   
   <url>

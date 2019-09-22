@@ -6,10 +6,19 @@
     <description>Recent content in Posts on 喵叔没话说</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 24 Jul 2019 23:10:21 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 29 Aug 2019 10:17:24 +0800</lastBuildDate>
     
 	<atom:link href="//blog.betacat.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>跟 etcd 学习数据库中事务隔离的实现</title>
+      <link>//blog.betacat.io/post/2019/08/learn-transaction-isolation-levels-from-etcd/</link>
+      <pubDate>Thu, 29 Aug 2019 10:17:24 +0800</pubDate>
+      
+      <guid>//blog.betacat.io/post/2019/08/learn-transaction-isolation-levels-from-etcd/</guid>
+      <description>众所周知，etcd 的数据模型是建立在 MVCC 基础上的（如果你不知，那一定是没看过我的这篇博客🙃）。在当前的实现中1，etcd 不仅提供了原子性的事务</description>
+    </item>
     
     <item>
       <title>使用 Telepresence 在本地调试 Kubernetes 微服务</title>
@@ -48,7 +57,7 @@
     </item>
     
     <item>
-      <title>Raft在etcd中的实现</title>
+      <title>Raft 在 etcd 中的实现</title>
       <link>//blog.betacat.io/post/raft-implementation-in-etcd/</link>
       <pubDate>Tue, 13 Nov 2018 19:47:17 +0800</pubDate>
       

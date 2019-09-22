@@ -301,9 +301,10 @@ if (!doNotTrack) {
   <div class="post-toc-content">
     <nav id="TableOfContents">
 <ul>
-<li><a href="#简介">简介</a></li>
-<li><a href="#安装">安装</a>
+<li>
 <ul>
+<li><a href="#简介">简介</a></li>
+<li><a href="#安装">安装</a></li>
 <li><a href="#使用场景">使用场景</a>
 <ul>
 <li><a href="#调试服务-a">调试服务 A</a></li>
@@ -379,7 +380,7 @@ if (!doNotTrack) {
 </div>
 <p>另一种解决方案就是我这里要介绍的 Telepresence 了，它能够在不修改程序代码的情况下，让本地应用程序无感的接入到 Kubernetes 集群中，这样你就可以直接在本地开发调试微服务了。</p>
 
-<h1 id="简介">简介</h1>
+<h2 id="简介">简介</h2>
 
 <p><a href="https://www.telepresence.io/">Telepresence</a> 是一个 CNCF <sup class="footnote-ref" id="fnref:CNCF"><a href="#fn:CNCF">1</a></sup> 基金会下的项目。它的工作原理是在本地和 Kubernetes 集群中搭建一个透明的双向代理，这使得我们可以在本地用熟悉的 IDE 和调试工具来运行一个微服务，同时该服务还可以无缝的与 Kubernetes 集群中的其他服务进行交互，好像它就运行在这个集群中一样。</p>
 
@@ -395,7 +396,7 @@ if (!doNotTrack) {
 <li>甚至集群中的服务还能直接访问到本地暴露出来的接口</li>
 </ol>
 
-<h1 id="安装">安装</h1>
+<h2 id="安装">安装</h2>
 
 <p>macOS:</p>
 <div class="highlight"><div class="chroma">
@@ -569,6 +570,19 @@ ca.crt  namespace  token</code></pre></td></tr></table>
       
       <nav class="post-nav">
         
+          <a class="prev" href="/post/2019/08/learn-transaction-isolation-levels-from-etcd/">
+            
+            <i class="iconfont">
+              <svg  class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M691.908486 949.511495l75.369571-89.491197c10.963703-12.998035 10.285251-32.864502-1.499144-44.378743L479.499795 515.267417 757.434875 204.940602c11.338233-12.190647 11.035334-32.285311-0.638543-44.850487l-80.46666-86.564541c-11.680017-12.583596-30.356378-12.893658-41.662889-0.716314L257.233596 494.235404c-11.332093 12.183484-11.041474 32.266891 0.657986 44.844348l80.46666 86.564541c1.772366 1.910513 3.706415 3.533476 5.750981 4.877077l306.620399 321.703933C662.505829 963.726242 680.945807 962.528973 691.908486 949.511495z"></path>
+</svg>
+
+            </i>
+            <span class="prev-text nav-default">跟 etcd 学习数据库中事务隔离的实现</span>
+            <span class="prev-text nav-mobile">上一篇</span>
+          </a>
         
           <a class="next" href="/post/golang-atomic-value-exploration/">
             <span class="next-text nav-default">理解 Go 标准库中的 atomic.Value 类型</span>

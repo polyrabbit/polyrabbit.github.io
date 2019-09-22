@@ -301,6 +301,8 @@ if (!doNotTrack) {
   <div class="post-toc-content">
     <nav id="TableOfContents">
 <ul>
+<li>
+<ul>
 <li><a href="#历史起源">历史起源</a>
 <ul>
 <li><a href="#原子性">原子性</a></li>
@@ -316,6 +318,7 @@ if (!doNotTrack) {
 <li><a href="#读取-load-操作">读取（Load）操作</a></li>
 </ul></li>
 <li><a href="#总结">总结</a></li>
+</ul></li>
 </ul>
 </nav>
   </div>
@@ -327,7 +330,7 @@ if (!doNotTrack) {
 
 <p>在 Go 语言标准库中，<code>sync/atomic</code>包将底层硬件提供的原子操作封装成了 Go 的函数。但这些操作只支持几种基本数据类型，因此为了扩大原子操作的适用范围，Go 语言在 1.4 版本的时候向<code>sync/atomic</code>包中添加了一个新的类型<code>Value</code>。此类型的值相当于一个容器，可以被用来“原子地&rdquo;存储（Store）和加载（Load）<strong>任意类型</strong>的值。</p>
 
-<h1 id="历史起源">历史起源</h1>
+<h2 id="历史起源">历史起源</h2>
 
 <p>我在<code>golang-dev</code>邮件列表中翻到了14年的<a href="https://groups.google.com/forum/#!msg/golang-dev/SBmIen68ys0/WGfYQQSO4nAJ">这段讨论</a>，有用户报告了<code>encoding/gob</code>包在多核机器上（80-core）上的性能问题，认为<code>encoding/gob</code>之所以不能完全利用到多核的特性是因为它里面使用了大量的互斥锁（mutex），如果把这些互斥锁换成用<code>atomic.LoadPointer/StorePointer</code>来做并发控制，那性能将能提升20倍。</p>
 
@@ -343,7 +346,7 @@ if (!doNotTrack) {
 
 <p>好了，说了这么多的原子操作，我们先来看看什么样的操作能被叫做<em>原子操作</em> 。</p>
 
-<h2 id="原子性">原子性</h2>
+<h3 id="原子性">原子性</h3>
 
 <p>一个或者多个操作在 CPU 执行的过程中不被中断的特性，称为<em>原子性（atomicity）</em> 。这些操作对外表现成一个不可分割的整体，他们要么都执行，要么都不执行，外界不会看到他们只执行到一半的状态。而在现实世界中，CPU 不可能不中断的执行一系列操作，但如果我们在执行多个操作时，能让他们的<strong>中间状态对外不可见</strong>，那我们就可以宣称他们拥有了&rdquo;不可分割”的原子性。</p>
 
@@ -357,7 +360,7 @@ if (!doNotTrack) {
 
 <p>面对这种多线程下变量的读写问题，我们的主角——<code>atomic.Value</code>登场了，它使得我们可以不依赖于不保证兼容性的<code>unsafe.Pointer</code>类型，同时又能将任意数据类型的读写操作封装成原子性操作（让中间状态对外不可见）。</p>
 
-<h1 id="使用姿势">使用姿势</h1>
+<h2 id="使用姿势">使用姿势</h2>
 
 <p><code>atomic.Value</code>类型对外暴露的方法就两个：</p>
 
@@ -461,7 +464,7 @@ if (!doNotTrack) {
 <span class="p">}</span></code></pre></td></tr></table>
 </div>
 </div>
-<h1 id="内部实现">内部实现</h1>
+<h2 id="内部实现">内部实现</h2>
 
 <p><a href="https://zh.wikipedia.org/wiki/罗永浩">罗永浩浩</a>曾说过：</p>
 
@@ -471,7 +474,7 @@ if (!doNotTrack) {
 
 <p>我们来看看在简单的外表下，它到底有哪些 hidden complexity。</p>
 
-<h2 id="数据结构">数据结构</h2>
+<h3 id="数据结构">数据结构</h3>
 
 <p><code>atomic.Value</code>被设计用来存储任意类型的数据，所以它内部的字段是一个<code>interface{}</code>类型，非常的简单粗暴。</p>
 <div class="highlight"><div class="chroma">
@@ -501,11 +504,11 @@ if (!doNotTrack) {
 <span class="p">}</span></code></pre></td></tr></table>
 </div>
 </div>
-<h2 id="写入-store-操作">写入（Store）操作</h2>
+<h3 id="写入-store-操作">写入（Store）操作</h3>
 
 <p>在介绍写入之前，我们先来看一下 Go 语言内部的<code>unsafe.Pointer</code>类型。</p>
 
-<h3 id="unsafe-pointer">unsafe.Pointer</h3>
+<h4 id="unsafe-pointer">unsafe.Pointer</h4>
 
 <p>出于安全考虑，Go 语言并不支持直接操作内存，但它的标准库中又提供一种<em>不安全（不保证向后兼容性）</em> 的指针类型<code>unsafe.Pointer</code>，让程序可以灵活的操作内存。</p>
 
@@ -639,7 +642,7 @@ if (!doNotTrack) {
 
 <p><img src="/image/golang-atomic-value/atomic-value-store.svg" alt="atomic.Value Store 流程" /></p>
 
-<h2 id="读取-load-操作">读取（Load）操作</h2>
+<h3 id="读取-load-操作">读取（Load）操作</h3>
 
 <p>先上代码：</p>
 <div class="highlight"><div class="chroma">
@@ -681,7 +684,7 @@ if (!doNotTrack) {
 <li>否则，根据当前看到的<code>typ</code>和<code>data</code>构造出一个新的<code>interface{}</code>返回出去。</li>
 </ol>
 
-<h1 id="总结">总结</h1>
+<h2 id="总结">总结</h2>
 
 <p>本文从邮件列表中的一段讨论开始，介绍了<code>atomic.Value</code>的被提出来的历史缘由。然后由浅入深的介绍了它的使用姿势，以及内部实现。让大家不仅知其然，还能知其所以然。</p>
 

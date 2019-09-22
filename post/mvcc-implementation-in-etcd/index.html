@@ -70,7 +70,7 @@
 
 <meta itemprop="datePublished" content="2018-12-24T18:26:52&#43;08:00" />
 <meta itemprop="dateModified" content="2018-12-24T18:26:52&#43;08:00" />
-<meta itemprop="wordCount" content="3288">
+<meta itemprop="wordCount" content="3289">
 
 
 
@@ -283,7 +283,7 @@ if (!doNotTrack) {
           2018-12-24
         </time>
         
-        <span class="more-meta"> 约 3288 字 </span>
+        <span class="more-meta"> 约 3289 字 </span>
           <span class="more-meta"> 预计阅读 7 分钟 </span>
 
         
@@ -301,6 +301,8 @@ if (!doNotTrack) {
   <div class="post-toc-content">
     <nav id="TableOfContents">
 <ul>
+<li>
+<ul>
 <li><a href="#简介">简介</a></li>
 <li><a href="#数据结构">数据结构</a>
 <ul>
@@ -312,6 +314,7 @@ if (!doNotTrack) {
 <li><a href="#写操作">写操作</a></li>
 <li><a href="#读操作">读操作</a></li>
 <li><a href="#小结">小结</a></li>
+</ul></li>
 </ul>
 </nav>
   </div>
@@ -321,7 +324,7 @@ if (!doNotTrack) {
     <div class="post-content">
       
 
-<h1 id="简介">简介</h1>
+<h2 id="简介">简介</h2>
 
 <p>在数据库领域，面对高并发环境下数据冲突的问题，业界常用的解决方案有两种：</p>
 
@@ -331,17 +334,17 @@ if (!doNotTrack) {
 <li><p>允许冲突，但发生冲突的时候，要有能力检测到。这种方法被称为<strong>乐观锁</strong>，即先乐观的认为冲突不会发生，除非被证明（检测到）当前确实产生冲突了。常见的实现有逻辑时钟（Logical Clock）、<a href="https://en.wikipedia.org/wiki/Multiversion_concurrency_control">MVCC</a>（Multi-version Cocurrent Control）等。</p></li>
 </ol>
 
-<p>在这些解决方案中，MVCC 由于其出色的性能优势，而被越来越多的数据库所采用，比如Oracle、PostgreSQL、MySQL InnoDB、etcd。它的基本思想是保存一个数据的多个历史版本，从而解决事务管理中数据隔离的问题。</p>
+<p>在这些解决方案中，MVCC 由于其出色的性能优势，而被越来越多的数据库所采用，比如Oracle、PostgreSQL、MySQL InnoDB、etcd 等。它的基本思想是保存一个数据的多个历史版本，从而解决事务管理中数据隔离的问题。</p>
 
 <p>这里的版本一般选择使用时间戳或事务 ID 来标识。在处理一个写请求时，MVCC 不是简单的用新值覆盖旧值，而是为这一项添加一个新版本的数据。在读取一个数据项时，要先确定一个要读取的版本，然后根据版本找到对应的数据。这种写操作创建新版本，读操作访问旧版本的方式使得读写操作彼此隔离，他们之间就不需要用锁来协调。换句话说，在 MVCC 里读操作永远不会被阻塞，因此它特别适合 etcd 这种读操作比较多的场景。</p>
 
 <p>MVCC 的基本原理就是这么简单，下面来结合具体代码，看看 etcd 是怎么实现的。跟<a href="//blog.betacat.io/post/raft-implementation-in-etcd/">上篇</a>一样，这里的分析仍以etcd <a href="https://github.com/etcd-io/etcd/tree/v3.3.10">v3.3.10</a> 为例。</p>
 
-<h1 id="数据结构">数据结构</h1>
+<h2 id="数据结构">数据结构</h2>
 
 <p>etcd 的代码中，有关 MVCC 的实现都在一个叫 <a href="https://github.com/etcd-io/etcd/tree/v3.3.10/mvcc">mvcc</a> 的包里。在正式介绍读写流程之前，我们先来了解下这个包里面定义的几个基础数据结构。</p>
 
-<h2 id="revision">revision</h2>
+<h3 id="revision">revision</h3>
 
 <p><a href="https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/revision.go">revision</a> 即对应到MVCC中的版本，etcd 中的每一次<code>key-value</code>的操作都会有一个相应的 <code>revision</code>。</p>
 <div class="highlight"><div class="chroma">
@@ -374,7 +377,7 @@ if (!doNotTrack) {
 </div>
 <p>这里的 main 属性对应事务 ID，全局递增不重复，它在 etcd 中被当做一个逻辑时钟来使用。sub 代表一次事务中不同的修改操作（如put和delete）编号，从0开始依次递增。所以在一次事务中，每一个修改操作所绑定的<code>revision</code>依次为<code>{txID, 0}</code>, <code>{txID, 1}</code>, <code>{txID, 2}</code>&hellip;</p>
 
-<h2 id="keyindex">keyIndex</h2>
+<h3 id="keyindex">keyIndex</h3>
 
 <p><a href="https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/key_index.go">keyIndex</a>用来记录一个key的生命周期中所涉及过的版本（revision）。</p>
 <div class="highlight"><div class="chroma">
@@ -493,7 +496,7 @@ if (!doNotTrack) {
 </div>
 <p>好了，在知道了key的版本信息及相应的操作后，我们来看看怎么把它们组织起来：</p>
 
-<h2 id="treeindex">treeIndex</h2>
+<h3 id="treeindex">treeIndex</h3>
 
 <p><a href="https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/index.go">treeIndex</a>顾名思义就是一个树状索引，它通过在内存中维护一个<a href="https://github.com/google/btree">BTree</a>，来达到加速查询key的功能（不明白为啥这里选用了BTree，BTree似乎更适合磁盘的场景，内存中的树一般不都使用红黑树等来实现么？）。</p>
 
@@ -519,7 +522,7 @@ if (!doNotTrack) {
 
 <p>看完了key以及key在内存中的组织结构，我们再来看看value是怎么处理的。</p>
 
-<h2 id="backend">backend</h2>
+<h3 id="backend">backend</h3>
 
 <p>backend封装了etcd中的存储，按照设计，backend可以对接多种存储，当前使用的是<a href="https://github.com/etcd-io/bbolt">boltdb</a>，但作为一个CNCF项目，官方也在考虑接入更多的存储引擎<sup class="footnote-ref" id="fnref:pluggable-backend"><a href="#fn:pluggable-backend">1</a></sup>。boltdb是一个单机的支持事务的KV存储，etcd的事务是基于boltdb的事务实现的。</p>
 
@@ -590,7 +593,7 @@ if (!doNotTrack) {
 
 <p>基本概念就介绍到这里了，下面我们把这些概念串起来，看看读写操作的完整流程是怎样的。</p>
 
-<h1 id="写操作">写操作</h1>
+<h2 id="写操作">写操作</h2>
 
 <p>首先写操作的入口是applierV3的<a href="https://github.com/etcd-io/etcd/blob/v3.3.10/etcdserver/apply.go#L50">Put函数</a>，它开启一个写事务，然后进过层层封装，最后干活的是写事务的<code>put</code>函数，精简后的逻辑大概是这样的：</p>
 <div class="highlight"><div class="chroma">
@@ -645,7 +648,7 @@ if (!doNotTrack) {
 </div>
 <p>正如前面所分析的，这里的<code>put</code>操作首先获取了当前事务的ID（tw.beginRev），以及当前事务中已经进行过的更改数（tw.changes），然后以此为基础生成了<code>revision</code>，并向<code>boltdb</code>和<code>treeIndex</code>分别执行了两次写入操作。</p>
 
-<h1 id="读操作">读操作</h1>
+<h2 id="读操作">读操作</h2>
 
 <p>读操作的入口是applierV3的<a href="https://github.com/etcd-io/etcd/blob/v3.3.10/etcdserver/apply.go#L51">Range函数</a>，跟写操作一样，它开启了一个只读事务，然后一路调用到<code>rangeKeys</code>函数：</p>
 <div class="highlight"><div class="chroma">
@@ -690,7 +693,7 @@ if (!doNotTrack) {
 </div>
 <p>这里函数的参数<code>curRev</code>代表当前事务ID。拿到这个ID后，我们去<code>treeIndex</code>中查询，满足指定条件的<code>revision</code>有哪些，然后再根据这些<code>revision</code>去<code>boltdb</code>中查询当时存的<code>key-value</code>是什么。</p>
 
-<h1 id="小结">小结</h1>
+<h2 id="小结">小结</h2>
 
 <p>本文将乐观锁的原理及其在 etcd 中的实现 MVCC 梳理了一遍，希望对读者在理解和使用乐观锁上能有所帮助。</p>
 
@@ -760,7 +763,7 @@ if (!doNotTrack) {
           </a>
         
           <a class="next" href="/post/raft-implementation-in-etcd/">
-            <span class="next-text nav-default">Raft在etcd中的实现</span>
+            <span class="next-text nav-default">Raft 在 etcd 中的实现</span>
             <span class="prev-text nav-mobile">下一篇</span>
             
             <i class="iconfont">

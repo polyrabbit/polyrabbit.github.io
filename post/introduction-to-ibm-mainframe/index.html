@@ -301,6 +301,8 @@ if (!doNotTrack) {
   <div class="post-toc-content">
     <nav id="TableOfContents">
 <ul>
+<li>
+<ul>
 <li><a href="#历史及现状">历史及现状</a></li>
 <li><a href="#硬件">硬件</a></li>
 <li><a href="#操作系统">操作系统</a>
@@ -310,6 +312,7 @@ if (!doNotTrack) {
 <li><a href="#其他组件">其他组件</a></li>
 </ul></li>
 <li><a href="#总结">总结</a></li>
+</ul></li>
 </ul>
 </nav>
   </div>
@@ -322,7 +325,7 @@ if (!doNotTrack) {
 <p>我目前的工作主要是跟IBM主机打交道，但每次向别人介绍主机时，总觉得对方很难get到它的价值。一方面是因为主机这个系统太古老，又相对封闭，它从芯片，到存储，再到操作系统都是IBM一手包办的，外界很难接触到这个系统，另一方面一直以来主机的努力方向都是希望一台机器就能满足用户高性能，高可用的需求，这跟现在用廉价机器搭建分布式集群的哲学是相对的，所以在这样的时代背景下，主机就更显得格格不入了。
 我打算用这篇博客来介绍一下我所了解的主机，也顺带整理一下这些零零碎碎的知识。当然由于我并没有接受过系统的主机培训，掌握的技能都是由同事传授，外加查资料摸索出来的，所以这里如有疏漏或者描述不当的地方，欢迎指正。</p>
 
-<h1 id="历史及现状">历史及现状</h1>
+<h2 id="历史及现状">历史及现状</h2>
 
 <p>IBM主机又称大型机（Mainframe），最早可以追溯到上世纪60年代IBM研发的<a href="https://zh.wikipedia.org/wiki/IBM_System/360">S/360系统</a>，经过半个多世纪的不断更新，IBM的主机产品线已经从当初的S/360、S/370、S/390，发展到后来的z9、z10系列，现在（2018）已经GA的最新版本是<a href="https://www.ibm.com/us-en/marketplace/z14">z14</a>：</p>
 
@@ -354,7 +357,7 @@ if (!doNotTrack) {
 </div>
 
 
-<h1 id="硬件">硬件</h1>
+<h2 id="硬件">硬件</h2>
 
 <p>我对硬件不是很了解，只能列举一些数据来说明主机的硬件性能（以最新的 z14 为例）<sup class="footnote-ref" id="fnref:performance"><a href="#fn:performance">2</a></sup>：</p>
 
@@ -408,7 +411,7 @@ if (!doNotTrack) {
 
 <p>除此之外，主机还将一些常用的软件模块用硬件实现了，比如硬件压缩卡（zEDC），排序指令，加密指令，向量运算指令等。这些原本需要通过软件模拟来实现的功能，直接有了对应的硬件支持，这种霸气的设计方法，对年轻的我造成了巨大的冲击。</p>
 
-<h1 id="操作系统">操作系统</h1>
+<h2 id="操作系统">操作系统</h2>
 
 <p>主机上的操作系统叫做<a href="https://en.wikipedia.org/wiki/Z/OS">z/OS</a>，<code>z</code>代表终极的意思。我们需要通过一个叫<a href="https://en.wikipedia.org/wiki/3270_emulator">3270</a>的终端来连接它，由于这个终端的配色以绿色为主，所以我们又叫它<code>小绿屏</code>。这个小绿屏实在太显眼了，有同事曾在宜家的收银台一眼认出来过，不过我很好奇，宜家的收银员难道还要懂怎么操作底层的z/OS？</p>
 
@@ -430,7 +433,7 @@ if (!doNotTrack) {
 
 <p>与z/OS的交互跟现代系统很不一样，它是一个用文本画出来的界面（如上图），可以在界面的不同位置输入不同的命令来完成不同的功能。比如这里我可以在<code>Option ===&gt;</code>那一栏通过输入menu之前的数字或者字母来进入相应menu。另外的一些功能则需要通过<code>fn</code>键来完成，比如<code>F3</code>是返回，<code>F8</code>是向下滚屏，<code>F7</code>是向上滚屏。</p>
 
-<h2 id="文件系统">文件系统</h2>
+<h3 id="文件系统">文件系统</h3>
 
 <p>在z/OS里，文件叫做<code>DataSet</code>，它也有好多种类，其中最常见的是这3种：</p>
 
@@ -462,7 +465,7 @@ if (!doNotTrack) {
 
 <p><code>Migrate</code>是另一个有趣的特性。z/OS会定期<code>Migrate</code>掉长期不用的DataSet，这些DataSet会被移到一个容量比较大的Tape上，以节约当前文件系统的空间，当下次需要使用这个DataSet的时候，要先把他<code>Recall</code>回来。这就有点类似<code>Page Cache</code>和磁盘的关系，<code>Page Cache</code>总量就那么大，只能用来存热点数据，那些冷数据就让它呆在磁盘，到用的时候再加载进来好了。</p>
 
-<h2 id="向后兼容性">向后兼容性</h2>
+<h3 id="向后兼容性">向后兼容性</h3>
 
 <p>z/OS的向后兼容性简直可以用典范来形容<sup class="footnote-ref" id="fnref:quote-of-john"><a href="#fn:quote-of-john">4</a></sup>，据说一个上世纪80年代编译出来的程序，在现在的主机上依然可以运行。但也正是这种严苛的向后兼容性让主机背上了沉重的历史包袱，比如主机上使用的字符集是<a href="https://zh.wikipedia.org/wiki/EBCDIC">EBCDIC</a>，它跟ASCII是不兼容的（比ASCII标准出来的要早）。用现在的眼光看，EBCDIC是一种奇怪的编码格式，它的<code>I</code>和<code>J</code>、<code>R</code>和<code>S</code>是不连续的。这个格式源自于<a href="https://zh.wikipedia.org/wiki/%E6%89%93%E5%AD%94%E5%8D%A1">打孔卡</a>时代，那个时代，IBM是计算机领域的头号玩家，所以他们制定的编码标准也希望能与自己的<code>打孔卡</code>相兼容<sup class="footnote-ref" id="fnref:quote-of-john"><a href="#fn:quote-of-john">4</a></sup>。</p>
 
@@ -470,7 +473,7 @@ if (!doNotTrack) {
 
 <p>这个在当时看来无比正确的决定却给现在的我们带来无数的坑，在移植x86平台的程序到主机时，最大的麻烦就在于字符集的处理。但这种备受开发人员吐槽的向后兼容性却很受客户的欢迎，因为客户的诉求就是稳定可靠，他们希望应用程序开发完了之后，不应该因为操作系统的升级而需要重新开发，从这点也可以看出IBM<code>客户至上</code>的理念。</p>
 
-<h2 id="其他组件">其他组件</h2>
+<h3 id="其他组件">其他组件</h3>
 
 <p>z/OS是一个非常庞大的系统，它里面包含了非常多的组件，其中大家比较熟知的可能有<a href="https://en.wikipedia.org/wiki/CICS">CICS</a>和<a href="https://en.wikipedia.org/wiki/IBM_Db2_Family">DB2</a>。这里，我只介绍几个我比较熟悉又非常基础的组件：</p>
 
@@ -496,7 +499,7 @@ if (!doNotTrack) {
 <li>FTP - z/OS上的FTP功能相当强大，它的操作对象不仅可以是DataSet，也可以是USS下的文件系统，甚至还可以向JES提交Job，向DB2提交SQL语句。因此，在我们的一个项目中，为了使Node.js能与z/OS交互，我们用Node.js封装了FTP的这些特性，并开源出来一个库：<a href="https://github.com/IBM/zos-node-accessor/">z/OS Node Accessor</a>，希望它能成为Node.js社区与z/OS连接的桥梁。</li>
 </ul>
 
-<h1 id="总结">总结</h1>
+<h2 id="总结">总结</h2>
 
 <p>写了半天才发觉我还只介绍了主机的冰山一角，主机经过半个多世纪的发展，它的复杂程度远远不是一篇博客就能介绍完的。所以这只能算是一个入门级别的介绍，希望读完之后能让你对主机有个大致的了解。</p></li>
 </ul>
@@ -559,7 +562,7 @@ if (!doNotTrack) {
 </svg>
 
             </i>
-            <span class="prev-text nav-default">Raft在etcd中的实现</span>
+            <span class="prev-text nav-default">Raft 在 etcd 中的实现</span>
             <span class="prev-text nav-mobile">上一篇</span>
           </a>
         
