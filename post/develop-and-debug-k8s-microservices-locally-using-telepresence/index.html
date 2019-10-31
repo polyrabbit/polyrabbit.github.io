@@ -39,6 +39,8 @@
 
 
 
+
+
 <link rel="icon" href="/favicon.ico" />
 
 
@@ -51,7 +53,7 @@
 
 
 
-<link rel="stylesheet" href="/sass/jane.min.31c4b7729c8d71cc152f8de4203d90bfd8a04f7eab69372de7234ebf55b7701b.css" integrity="sha256-McS3cpyNccwVL43kID2Qv9igT36raTct5yNOv1W3cBs=" media="screen" crossorigin="anonymous">
+<link rel="stylesheet" href="/sass/jane.min.af20b78e95c84de86b00a0242a4a77bd2601700e1b250edf27537d957ac0041d.css" integrity="sha256-ryC3jpXITehrAKAkKkp3vSYBcA4bJQ7fJ1N9lXrABB0=" media="screen" crossorigin="anonymous">
 
 
 
@@ -62,15 +64,15 @@
 <meta property="og:type" content="article" />
 <meta property="og:url" content="//blog.betacat.io/post/develop-and-debug-k8s-microservices-locally-using-telepresence/" />
 <meta property="article:published_time" content="2019-07-24T23:10:21&#43;08:00"/>
-<meta property="article:modified_time" content="2019-07-24T23:10:21&#43;08:00"/>
+<meta property="article:modified_time" content="2019-11-11T23:07:23&#43;08:00"/>
 
 <meta itemprop="name" content="使用 Telepresence 在本地调试 Kubernetes 微服务">
 <meta itemprop="description" content="微服务作为一种全新的软件架构现在正变得越来越火。基本原因我觉得有两点：一方面软件系统越做越复杂，通过拆分将一个大系统解耦成一个个独立的子系统">
 
 
 <meta itemprop="datePublished" content="2019-07-24T23:10:21&#43;08:00" />
-<meta itemprop="dateModified" content="2019-07-24T23:10:21&#43;08:00" />
-<meta itemprop="wordCount" content="2521">
+<meta itemprop="dateModified" content="2019-11-11T23:07:23&#43;08:00" />
+<meta itemprop="wordCount" content="2711">
 
 
 
@@ -102,8 +104,14 @@ if (!doNotTrack) {
 
 <script type="text/javascript">
     
-    if (window != top)
-            top.location.href = window.location.href;
+    if (window != top) top.location.href = window.location.href
+</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script>
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: "ca-pub-9393129008813908",
+    enable_page_level_ads: true
+  });
 </script>
 
 </head>
@@ -283,7 +291,7 @@ if (!doNotTrack) {
           2019-07-24
         </time>
         
-        <span class="more-meta"> 约 2521 字 </span>
+        <span class="more-meta"> 约 2711 字 </span>
           <span class="more-meta"> 预计阅读 6 分钟 </span>
 
         
@@ -307,8 +315,8 @@ if (!doNotTrack) {
 <li><a href="#安装">安装</a></li>
 <li><a href="#使用场景">使用场景</a>
 <ul>
-<li><a href="#调试服务-a">调试服务 A</a></li>
-<li><a href="#调试服务-b">调试服务 B</a></li>
+<li><a href="#调试服务-a-本地与远端服务联调">调试服务 A - 本地与远端服务联调</a></li>
+<li><a href="#调试服务-b-集群内服务与本地联调">调试服务 B - 集群内服务与本地联调</a></li>
 </ul></li>
 <li><a href="#总结">总结</a></li>
 </ul></li>
@@ -327,7 +335,7 @@ if (!doNotTrack) {
 
 <p><img src="/image/telepresence/dependency-hell.svg" alt="Microservices Dependency Hell" /></p>
 
-<p>业界有朋友用 <code>docker-compose</code> 来模拟集群中的场景。这个方案的不足之处在于它需要把 Kubernetes 的那一套逻辑用 <code>docker-compose.yml</code> 文件重写一遍，这给我们带来了维护成本。另一方面，有的时候依赖树太大，本地机器完全无法同时运行这么多服务。</p>
+<p>业界有朋友用 <code>docker-compose</code> 来模拟集群中的场景。这个方案的不足之处在于它需要把 Kubernetes 的那一套逻辑用 <code>docker-compose.yml</code> 文件重写一遍，这给我们带来了维护成本。另一方面，本地机器很可能不具备某些微服务所依赖的资源。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="lnt"> 1
@@ -378,7 +386,7 @@ if (!doNotTrack) {
 </span><span class="w">  </span>monocular-data<span class="p">:</span></code></pre></td></tr></table>
 </div>
 </div>
-<p>另一种解决方案就是我这里要介绍的 Telepresence 了，它能够在不修改程序代码的情况下，让本地应用程序无感的接入到 Kubernetes 集群中，这样你就可以直接在本地开发调试微服务了。</p>
+<p>另一种解决方案就是我这里要介绍的 Telepresence 了，它能够在不修改程序代码的情况下，让本地应用程序无感的接入到 Kubernetes 集群中，这样我们就可以直接在本地开发调试微服务了。</p>
 
 <h2 id="简介">简介</h2>
 
@@ -391,7 +399,7 @@ if (!doNotTrack) {
 <p>有了这些代理之后：</p>
 
 <ol>
-<li>本地的服务就可以完整的访问到远程集群中的其他服务</li>
+<li>本地的服务就可以直接使用域名访问到远程集群中的其他服务</li>
 <li>本地的服务直接访问到 Kubernetes 里的各种资源，包括环境变量、secrets、config map等</li>
 <li>甚至集群中的服务还能直接访问到本地暴露出来的接口</li>
 </ol>
@@ -415,11 +423,11 @@ brew install datawire/blackbird/telepresence</code></pre></td></tr></table>
 
 <h2 id="使用场景">使用场景</h2>
 
-<p>假设我们有两个服务 A 和 B，服务 A 是依赖于服务 B 的。下面分两个场景来看看如何用 Telepresence  来调试 A 和 B。</p>
+<p>假设我们有两个服务 A 和 B，服务 A 是依赖于服务 B 的。下面分两个场景来看看如何用 Telepresence  分别调试 A 和 B。</p>
 
 <p><img src="/image/telepresence/service-a-b.svg" alt="Service A&amp;B" /></p>
 
-<h3 id="调试服务-a">调试服务 A</h3>
+<h3 id="调试服务-a-本地与远端服务联调">调试服务 A - 本地与远端服务联调</h3>
 
 <p>服务 A 在本地运行，服务 B 运行在远端集群中。借助 Telepresence 搭建的代理，A 就能直接访问到 B。比方说我们的服务 B 是这样一个程序，它监听在8000端口上。每当有人访问时它就返回<code>Hello, world!</code>。</p>
 <div class="highlight"><div class="chroma">
@@ -481,12 +489,16 @@ Hello, world!</code></pre></td></tr></table>
 <p>这里要说明一下这背后发生的事情：</p>
 
 <ol>
-<li>当运行 Telepresence 命令的时候，它创建了一个<code>Deployment</code>，这个<code>Deployment</code>又创建了一个用来做代理的 Pod ，我们可以这样查看到它 <code>kubectl get pod -l telepresence</code>。</li>
+<li>当运行 Telepresence 命令的时候，它创建了一个<code>Deployment</code>，这个<code>Deployment</code>的 Spec 是一个转发流量的代理容器，我们可以这样查看到它 <code>kubectl get pod -l telepresence</code>。</li>
 <li>同时它还在本地创建了一个全局的 VPN，使得本地的所有程序都可以访问到集群中的服务。 Telepresence 其实还支持其他的网络代理模式（使用<code>--method</code>切换），<code>vpn-tcp</code>是默认的方式，其他的好像用处不大，<code>inject-tcp</code>甚至要在后续的版本中<a href="https://www.youtube.com/watch?v=k9lh4ZuKsiQ">取消掉</a>。</li>
-<li>当本地的<code>curl</code>访问<code>http://service-b:8000/</code>时，对应的 DNS 查询和 HTTP 请求都被 VPN 路由到集群中刚刚创建的 Pod 去处理。</li>
+<li>当本地的<code>curl</code>访问<code>http://service-b:8000/</code>时，对应的 DNS 查询和 HTTP 请求都被 VPN 路由到集群中刚刚创建的容器中处理。如果域名解析不了 (Could not resolve host)，可以试试加上 search 后缀：<code>service-b.&lt;NAMESPACE&gt;.svc.cluster.local</code>。</li>
 </ol>
 
-<p>除此之外 Telepresence 还将远端的文件系统通过<code>sshfs</code>挂载到本地<code>$TELEPRESENCE_ROOT</code>下面（你也可以用参数<code>--mount &lt;MOUNT_PATH&gt;</code>指定挂载的路径）。这样，我们的应用程序就可以在本地访问到远程的文件系统：</p>
+<p>新的拓扑结构为：</p>
+
+<p><img src="/image/telepresence/local-service-a.svg" alt="Local Service A" /></p>
+
+<p>除此之外 Telepresence 还将远端的文件系统通过<code>sshfs</code>挂载到本地<code>$TELEPRESENCE_ROOT</code>下面（也支持通过参数<code>--mount &lt;MOUNT_PATH&gt;</code>指定挂载的路径）。这样，我们的应用程序就可以在本地访问到远端的文件系统：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
@@ -499,7 +511,7 @@ ca.crt  namespace  token</code></pre></td></tr></table>
 </div>
 <p>如果我们退出 Telepresence 对应的 Shell，它也会做一些清理工作，比如取消本地 VPN、删除刚刚创建的<code>Deployment</code>等。</p>
 
-<h3 id="调试服务-b">调试服务 B</h3>
+<h3 id="调试服务-b-集群内服务与本地联调">调试服务 B - 集群内服务与本地联调</h3>
 
 <p>服务 B 与刚才的不同之处在于，它是被别人访问的，要调试它，首先得要有真实的访问流量。我们如何才能做到将别人对它的访问路由到本地来，从而实现在本地捕捉到集群中的流量呢？</p>
 
@@ -512,21 +524,23 @@ ca.crt  namespace  token</code></pre></td></tr></table>
 <pre class="chroma"><code class="language-bash" data-lang="bash">$ telepresence --swap-deployment service-b --expose <span class="m">8000</span>:8000</code></pre></td></tr></table>
 </div>
 </div>
-<p>这个时候集群中的服务 A 再想访问服务 B 的8000端口时，Telepresence 就会将这个请求转发到本地的8000端口。它的工作原理就是将集群中的<code>service-b</code>替换为 Telepresence 创建的 proxy ，然后这个 proxy 再将请求转发到本地客户端。</p>
+<p>这个时候集群中的服务 A 再想访问服务 B 的8000端口时，Telepresence 就会将这个请求转发到本地的8000端口。即新的拓扑结构变成：</p>
 
-<p>即，将原始的网络：</p>
+<p><img src="/image/telepresence/local-service-b.svg" alt="Local Service B" /></p>
 
-<p><img src="/image/telepresence/service-on-8000-remote.svg" alt="Service Listening on 8000" /></p>
+<p>它的工作原理概述如下：</p>
 
-<p>替换为这个结构：</p>
+<ol>
+<li>在集群中创建一个代理<code>Deployment</code>，并复制<code>service-b</code>的所有<code>Label</code>。</li>
+<li>建立一个路由通道，将代理容器的所有流量转发到本地 8000 端口。</li>
+<li>将<code>service-b</code>的 replicas 数设为0，这样 K8S <code>Service</code> 的 selector 就只能匹配到刚刚创建的代理容器上。</li>
+</ol>
 
-<p><img src="/image/telepresence/service-on-8000-local.svg" alt="Service Listening on Local 8000" /></p>
-
-<p>这样我们就有机会在本地查看具体的请求数据，调试逻辑，以及生成新的回复。</p>
+<p>通过这样的方法，我们就有机会将集群中的请求转发到本地，然后在本地查看到具体的请求数据，调试逻辑，以及生成新的回复。</p>
 
 <h2 id="总结">总结</h2>
 
-<p>这篇文章里我先提出了微服务开发中一个常见的问题，然后介绍了 Telepresence 项目，并且举例说明了怎样用它来调试两种常见的微服务场景。当然，Telepresence 还在不断的演进，本文中使用的是<a href="https://github.com/telepresenceio/telepresence/tree/0.101">v0.101</a>版本，后续版本很可能有些不一样的地方，也欢迎大家不断指正。</p>
+<p>这篇文章里我先提出了微服务开发中一个常见的问题，然后介绍了 Telepresence 项目，并且举例说明了怎样用它来调试两种常见的微服务场景。当然，Telepresence 还在不断的演进，本文中使用的是<a href="https://github.com/telepresenceio/telepresence/tree/0.103">v0.103</a>版本，后续版本很可能有些不一样的地方，也欢迎大家不断指正。</p>
 <div class="footnotes">
 
 <hr />
@@ -549,7 +563,7 @@ ca.crt  namespace  token</code></pre></td></tr></table>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
     <span class="item-content">
-      2019-07-24
+      2019-11-11
       
     </span>
   </p>
@@ -619,6 +633,8 @@ ca.crt  namespace  token</code></pre></td></tr></table>
   
 
     
+
+  
 
         </div>
       </div>
@@ -747,6 +763,12 @@ ca.crt  namespace  token</code></pre></td></tr></table>
 
 
 <script type="text/javascript" src="/js/main.638251f4230630f0335d8c6748e53a96f94b72670920b60c09a56fdc8bece214.js" integrity="sha256-Y4JR9CMGMPAzXYxnSOU6lvlLcmcJILYMCaVv3Ivs4hQ=" crossorigin="anonymous"></script>
+
+
+
+
+
+
 <script id="baidu_analytics">
   var _hmt = _hmt || [];
   (function() {
