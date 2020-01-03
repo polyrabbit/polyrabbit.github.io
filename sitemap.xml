@@ -10,19 +10,21 @@
   
   <url>
     <loc>//blog.betacat.io/post/</loc>
-    <lastmod>2019-11-11T23:07:23+08:00</lastmod>
-    <priority>0</priority>
+    <lastmod>2020-02-10T21:32:23+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
   </url>
   
   <url>
     <loc>//blog.betacat.io/</loc>
-    <lastmod>2019-11-11T23:07:23+08:00</lastmod>
-    <priority>0</priority>
+    <lastmod>2020-02-10T21:32:23+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
   </url>
   
   <url>
     <loc>//blog.betacat.io/post/2019/08/learn-transaction-isolation-levels-from-etcd/</loc>
-    <lastmod>2019-08-29T10:17:24+08:00</lastmod>
+    <lastmod>2020-01-03T22:56:24+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -36,7 +38,7 @@
   
   <url>
     <loc>//blog.betacat.io/post/golang-atomic-value-exploration/</loc>
-    <lastmod>2019-03-15T21:30:47+08:00</lastmod>
+    <lastmod>2020-02-10T21:32:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -50,7 +52,7 @@
   
   <url>
     <loc>//blog.betacat.io/post/mvcc-implementation-in-etcd/</loc>
-    <lastmod>2018-12-24T18:26:52+08:00</lastmod>
+    <lastmod>2020-01-15T17:16:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -85,12 +87,14 @@
   
   <url>
     <loc>//blog.betacat.io/categories/</loc>
-    <priority>0</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
   </url>
   
   <url>
     <loc>//blog.betacat.io/tags/</loc>
-    <priority>0</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
   </url>
   
 </urlset>

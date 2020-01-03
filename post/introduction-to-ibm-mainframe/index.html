@@ -32,7 +32,7 @@
 
 
 
-<meta name="generator" content="Hugo 0.55.6" />
+<meta name="generator" content="Hugo 0.64.0" />
 
 
 <link rel="canonical" href="//blog.betacat.io/post/introduction-to-ibm-mainframe/" />
@@ -53,7 +53,7 @@
 
 
 
-<link rel="stylesheet" href="/sass/jane.min.af20b78e95c84de86b00a0242a4a77bd2601700e1b250edf27537d957ac0041d.css" integrity="sha256-ryC3jpXITehrAKAkKkp3vSYBcA4bJQ7fJ1N9lXrABB0=" media="screen" crossorigin="anonymous">
+<link rel="stylesheet" href="/sass/jane.min.0995afa14b62cd93e93cfc066b646c4c17a3eddca0e9d52a1d9dcf5d90aaacd3.css" integrity="sha256-CZWvoUtizZPpPPwGa2RsTBej7dyg6dUqHZ3PXZCqrNM=" media="screen" crossorigin="anonymous">
 
 
 
@@ -63,21 +63,17 @@
 <meta property="og:description" content="我目前的工作主要是跟IBM主机打交道，但每次向别人介绍主机时，总觉得对方很难get到它的价值。一方面是因为主机这个系统太古老，又相对封闭，它" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="//blog.betacat.io/post/introduction-to-ibm-mainframe/" />
-<meta property="article:published_time" content="2018-10-16T17:16:09&#43;08:00"/>
-<meta property="article:modified_time" content="2018-10-16T17:16:09&#43;08:00"/>
-
+<meta property="article:published_time" content="2018-10-16T17:16:09+08:00" />
+<meta property="article:modified_time" content="2018-10-16T17:16:09+08:00" />
 <meta itemprop="name" content="我所了解的IBM主机">
 <meta itemprop="description" content="我目前的工作主要是跟IBM主机打交道，但每次向别人介绍主机时，总觉得对方很难get到它的价值。一方面是因为主机这个系统太古老，又相对封闭，它">
-
-
 <meta itemprop="datePublished" content="2018-10-16T17:16:09&#43;08:00" />
 <meta itemprop="dateModified" content="2018-10-16T17:16:09&#43;08:00" />
 <meta itemprop="wordCount" content="3543">
 
 
 
-<meta itemprop="keywords" content="" />
-<meta name="twitter:card" content="summary"/>
+<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="我所了解的IBM主机"/>
 <meta name="twitter:description" content="我目前的工作主要是跟IBM主机打交道，但每次向别人介绍主机时，总觉得对方很难get到它的价值。一方面是因为主机这个系统太古老，又相对封闭，它"/>
 
@@ -308,37 +304,29 @@ if (!doNotTrack) {
   <h2 class="post-toc-title">文章目录</h2>
   <div class="post-toc-content">
     <nav id="TableOfContents">
-<ul>
-<li>
-<ul>
-<li><a href="#历史及现状">历史及现状</a></li>
-<li><a href="#硬件">硬件</a></li>
-<li><a href="#操作系统">操作系统</a>
-<ul>
-<li><a href="#文件系统">文件系统</a></li>
-<li><a href="#向后兼容性">向后兼容性</a></li>
-<li><a href="#其他组件">其他组件</a></li>
-</ul></li>
-<li><a href="#总结">总结</a></li>
-</ul></li>
-</ul>
+  <ul>
+    <li><a href="#历史及现状">历史及现状</a></li>
+    <li><a href="#硬件">硬件</a></li>
+    <li><a href="#操作系统">操作系统</a>
+      <ul>
+        <li><a href="#文件系统">文件系统</a></li>
+        <li><a href="#向后兼容性">向后兼容性</a></li>
+        <li><a href="#其他组件">其他组件</a></li>
+      </ul>
+    </li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
 </nav>
   </div>
 </div>
 
     
     <div class="post-content">
-      
-
-<p>我目前的工作主要是跟IBM主机打交道，但每次向别人介绍主机时，总觉得对方很难get到它的价值。一方面是因为主机这个系统太古老，又相对封闭，它从芯片，到存储，再到操作系统都是IBM一手包办的，外界很难接触到这个系统，另一方面一直以来主机的努力方向都是希望一台机器就能满足用户高性能，高可用的需求，这跟现在用廉价机器搭建分布式集群的哲学是相对的，所以在这样的时代背景下，主机就更显得格格不入了。
+      <p>我目前的工作主要是跟IBM主机打交道，但每次向别人介绍主机时，总觉得对方很难get到它的价值。一方面是因为主机这个系统太古老，又相对封闭，它从芯片，到存储，再到操作系统都是IBM一手包办的，外界很难接触到这个系统，另一方面一直以来主机的努力方向都是希望一台机器就能满足用户高性能，高可用的需求，这跟现在用廉价机器搭建分布式集群的哲学是相对的，所以在这样的时代背景下，主机就更显得格格不入了。
 我打算用这篇博客来介绍一下我所了解的主机，也顺带整理一下这些零零碎碎的知识。当然由于我并没有接受过系统的主机培训，掌握的技能都是由同事传授，外加查资料摸索出来的，所以这里如有疏漏或者描述不当的地方，欢迎指正。</p>
-
 <h2 id="历史及现状">历史及现状</h2>
-
 <p>IBM主机又称大型机（Mainframe），最早可以追溯到上世纪60年代IBM研发的<a href="https://zh.wikipedia.org/wiki/IBM_System/360">S/360系统</a>，经过半个多世纪的不断更新，IBM的主机产品线已经从当初的S/360、S/370、S/390，发展到后来的z9、z10系列，现在（2018）已经GA的最新版本是<a href="https://www.ibm.com/us-en/marketplace/z14">z14</a>：</p>
-
-<!-- ![z14(zMidas)](/ibm-mainframe/ibm_z14-large.jpg) -->
-
+<!-- raw HTML omitted -->
 
 <link rel="stylesheet" href="/css/hugo-easy-gallery.css" />
 <div class="box">
@@ -354,21 +342,15 @@ if (!doNotTrack) {
   </figure>
 </div>
 
-
-<p>IBM主机相比于其他计算机系统，其主要特点在于它的 <a href="https://zh.wikipedia.org/wiki/%E5%8F%AF%E9%9D%A0%E6%80%A7%E3%80%81%E5%8F%AF%E7%94%A8%E6%80%A7%E5%92%8C%E5%8F%AF%E7%B6%AD%E8%AD%B7%E6%80%A7">RAS</a> (Reliability, Availability, Serviceability 高可靠性、高可用性、高可维护性)。曾经有用户反馈，在使用主机的数十年时间内，从未发生过异常停机事件。正是因为这些方面的优点和强大的处理能力，到现在为止还没有其他的系统可以替代它。但由于成本巨大（一台主机通常以亿为计价单位），使用主机系统的一般以政府、银行、保险公司和大型制造企业为主，因为这些机构对信息的稳定性和安全性要求很高。全球财富500强企业中的71%是IBM主机用户，全球企业级数据有80%驻留在IBM主机上<sup class="footnote-ref" id="fnref:market-share"><a href="#fn:market-share">1</a></sup>。在我国，从央行到工农中建四大商业银行，其核心业务平台都是跑在IBM主机上的（希望银行能给点力，早日摆脱对国外技术的依赖）。</p>
-
+<p>IBM主机相比于其他计算机系统，其主要特点在于它的 <a href="https://zh.wikipedia.org/wiki/%E5%8F%AF%E9%9D%A0%E6%80%A7%E3%80%81%E5%8F%AF%E7%94%A8%E6%80%A7%E5%92%8C%E5%8F%AF%E7%B6%AD%E8%AD%B7%E6%80%A7">RAS</a> (Reliability, Availability, Serviceability 高可靠性、高可用性、高可维护性)。曾经有用户反馈，在使用主机的数十年时间内，从未发生过异常停机事件。正是因为这些方面的优点和强大的处理能力，到现在为止还没有其他的系统可以替代它。但由于成本巨大（一台主机通常以亿为计价单位），使用主机系统的一般以政府、银行、保险公司和大型制造企业为主，因为这些机构对信息的稳定性和安全性要求很高。全球财富500强企业中的71%是IBM主机用户，全球企业级数据有80%驻留在IBM主机上<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>。在我国，从央行到工农中建四大商业银行，其核心业务平台都是跑在IBM主机上的（希望银行能给点力，早日摆脱对国外技术的依赖）。</p>
 <p>这里有一个 z14 的宣传视频，希望能给大家带来一定的感性认识：</p>
 
-
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
-  <iframe src="//www.youtube.com/embed/iCinf0v44Y4" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen title="YouTube Video"></iframe>
+  <iframe src="https://www.youtube.com/embed/iCinf0v44Y4" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen title="YouTube Video"></iframe>
 </div>
 
-
 <h2 id="硬件">硬件</h2>
-
-<p>我对硬件不是很了解，只能列举一些数据来说明主机的硬件性能（以最新的 z14 为例）<sup class="footnote-ref" id="fnref:performance"><a href="#fn:performance">2</a></sup>：</p>
-
+<p>我对硬件不是很了解，只能列举一些数据来说明主机的硬件性能（以最新的 z14 为例）<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>：</p>
 <ul>
 <li>14nm 制造工艺</li>
 <li>5.2GHz 主频</li>
@@ -381,7 +363,6 @@ if (!doNotTrack) {
 <li>支持8000个虚拟机</li>
 <li>可以横向扩展（scale out）到2百万个Docker容器</li>
 </ul>
-
 
 
 <div class="box">
@@ -397,9 +378,7 @@ if (!doNotTrack) {
   </figure>
 </div>
 
-
-<p>主机的一个鲜明的特色就是采用了中央处理器（<code>CP</code>）与系统辅助处理器（<code>SAP</code>，System Assist Processor）组成，其所采用的CP既不是IBM自家的POWER，也不是x86，而是一个“IBM独立自主”的，基于z/Architecture主机架构而开发的处理器，其采用复杂指令集架构（CISC），有一些复杂指令负责微码（millicode）执行，也有一些被分解为类似于RISC的操作，因此虽然在总体架构上是CISC，但也兼具了RISC的优点。<sup class="footnote-ref" id="fnref:cpu-architecture"><a href="#fn:cpu-architecture">3</a></sup></p>
-
+<p>主机的一个鲜明的特色就是采用了中央处理器（<code>CP</code>）与系统辅助处理器（<code>SAP</code>，System Assist Processor）组成，其所采用的CP既不是IBM自家的POWER，也不是x86，而是一个“IBM独立自主”的，基于z/Architecture主机架构而开发的处理器，其采用复杂指令集架构（CISC），有一些复杂指令负责微码（millicode）执行，也有一些被分解为类似于RISC的操作，因此虽然在总体架构上是CISC，但也兼具了RISC的优点。<sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup></p>
 
 
 <div class="box">
@@ -416,13 +395,9 @@ if (!doNotTrack) {
   </figure>
 </div>
 
-
 <p>除此之外，主机还将一些常用的软件模块用硬件实现了，比如硬件压缩卡（zEDC），排序指令，加密指令，向量运算指令等。这些原本需要通过软件模拟来实现的功能，直接有了对应的硬件支持，这种霸气的设计方法，对年轻的我造成了巨大的冲击。</p>
-
 <h2 id="操作系统">操作系统</h2>
-
 <p>主机上的操作系统叫做<a href="https://en.wikipedia.org/wiki/Z/OS">z/OS</a>，<code>z</code>代表终极的意思。我们需要通过一个叫<a href="https://en.wikipedia.org/wiki/3270_emulator">3270</a>的终端来连接它，由于这个终端的配色以绿色为主，所以我们又叫它<code>小绿屏</code>。这个小绿屏实在太显眼了，有同事曾在宜家的收银台一眼认出来过，不过我很好奇，宜家的收银员难道还要懂怎么操作底层的z/OS？</p>
-
 
 
 <div class="box">
@@ -438,21 +413,15 @@ if (!doNotTrack) {
   </figure>
 </div>
 
-
 <p>与z/OS的交互跟现代系统很不一样，它是一个用文本画出来的界面（如上图），可以在界面的不同位置输入不同的命令来完成不同的功能。比如这里我可以在<code>Option ===&gt;</code>那一栏通过输入menu之前的数字或者字母来进入相应menu。另外的一些功能则需要通过<code>fn</code>键来完成，比如<code>F3</code>是返回，<code>F8</code>是向下滚屏，<code>F7</code>是向上滚屏。</p>
-
 <h3 id="文件系统">文件系统</h3>
-
 <p>在z/OS里，文件叫做<code>DataSet</code>，它也有好多种类，其中最常见的是这3种：</p>
-
 <ul>
 <li>Sequential - 有点类似数据结构里的<code>Array</code>，按顺序排放的数据集，顺序读写效率高，但随机读写效率就不行了。</li>
 <li>Partitioned - 有点类似文件夹的概念，它里面的数据集叫做member。</li>
 <li>VSAM - 有点类似<code>map</code>，支持通过<code>key</code>来建立访问索引。</li>
 </ul>
-
 <p>同样与现代的流式文件系统不一样，DataSet是基于record的，每次读和写都只能以record为单位，这里就有一个很容易碰到的坑，如果一次写操作的数据量超过了一个record的长度，那超过部分会被截掉，并且没有任何提示的，如果总的写入量超过了这个DataSet创建时分配的大小，那超过部分也会被无情的截掉😪。所以每次创建DataSet的时候，我们都要预先设好它的各种属性（这其中的大部分细节都被现代的文件系统用<a href="https://zh.wikipedia.org/wiki/Inode">inode</a>给隐藏起来了）。</p>
-
 
 
 <div class="box">
@@ -468,64 +437,58 @@ if (!doNotTrack) {
   </figure>
 </div>
 
-
 <p>DataSet的名字用点(<code>.</code>)作为分隔符，一般来说整个z/OS的文件系统都是扁平化的，即不会出现一个文件夹里面嵌套好几层文件夹的情况，为了方便在这种结构下组织文件，z/OS支持用<code>?</code>或者<code>*</code>来模糊匹配一部分文件路径。还有一点值得提及的是，带单引号(<code>'</code>)的DataSet是绝对路径，不带单引号的是相对路径，相对于当前用户的HOME（z里面叫HLQ），所以如果我说要访问<code>COBLOG0.JCL</code>，其实我访问的是<code>'MYUSER.COBLOG0.JCL'</code>。</p>
-
 <p><code>Migrate</code>是另一个有趣的特性。z/OS会定期<code>Migrate</code>掉长期不用的DataSet，这些DataSet会被移到一个容量比较大的Tape上，以节约当前文件系统的空间，当下次需要使用这个DataSet的时候，要先把他<code>Recall</code>回来。这就有点类似<code>Page Cache</code>和磁盘的关系，<code>Page Cache</code>总量就那么大，只能用来存热点数据，那些冷数据就让它呆在磁盘，到用的时候再加载进来好了。</p>
-
 <h3 id="向后兼容性">向后兼容性</h3>
-
-<p>z/OS的向后兼容性简直可以用典范来形容<sup class="footnote-ref" id="fnref:quote-of-john"><a href="#fn:quote-of-john">4</a></sup>，据说一个上世纪80年代编译出来的程序，在现在的主机上依然可以运行。但也正是这种严苛的向后兼容性让主机背上了沉重的历史包袱，比如主机上使用的字符集是<a href="https://zh.wikipedia.org/wiki/EBCDIC">EBCDIC</a>，它跟ASCII是不兼容的（比ASCII标准出来的要早）。用现在的眼光看，EBCDIC是一种奇怪的编码格式，它的<code>I</code>和<code>J</code>、<code>R</code>和<code>S</code>是不连续的。这个格式源自于<a href="https://zh.wikipedia.org/wiki/%E6%89%93%E5%AD%94%E5%8D%A1">打孔卡</a>时代，那个时代，IBM是计算机领域的头号玩家，所以他们制定的编码标准也希望能与自己的<code>打孔卡</code>相兼容<sup class="footnote-ref" id="fnref:quote-of-john"><a href="#fn:quote-of-john">4</a></sup>。</p>
-
-<p><img src="/image/ibm-mainframe/ebcdic.png" alt="EBCDIC Standard" /></p>
-
+<p>z/OS的向后兼容性简直可以用典范来形容<sup id="fnref:4"><a href="#fn:4" class="footnote-ref" role="doc-noteref">4</a></sup>，据说一个上世纪80年代编译出来的程序，在现在的主机上依然可以运行。但也正是这种严苛的向后兼容性让主机背上了沉重的历史包袱，比如主机上使用的字符集是<a href="https://zh.wikipedia.org/wiki/EBCDIC">EBCDIC</a>，它跟ASCII是不兼容的（比ASCII标准出来的要早）。用现在的眼光看，EBCDIC是一种奇怪的编码格式，它的<code>I</code>和<code>J</code>、<code>R</code>和<code>S</code>是不连续的。这个格式源自于<a href="https://zh.wikipedia.org/wiki/%E6%89%93%E5%AD%94%E5%8D%A1">打孔卡</a>时代，那个时代，IBM是计算机领域的头号玩家，所以他们制定的编码标准也希望能与自己的<code>打孔卡</code>相兼容<sup id="fnref:4"><a href="#fn:4" class="footnote-ref" role="doc-noteref">4</a></sup>。</p>
+<p><img src="/image/ibm-mainframe/ebcdic.png" alt="EBCDIC Standard"></p>
 <p>这个在当时看来无比正确的决定却给现在的我们带来无数的坑，在移植x86平台的程序到主机时，最大的麻烦就在于字符集的处理。但这种备受开发人员吐槽的向后兼容性却很受客户的欢迎，因为客户的诉求就是稳定可靠，他们希望应用程序开发完了之后，不应该因为操作系统的升级而需要重新开发，从这点也可以看出IBM<code>客户至上</code>的理念。</p>
-
 <h3 id="其他组件">其他组件</h3>
-
 <p>z/OS是一个非常庞大的系统，它里面包含了非常多的组件，其中大家比较熟知的可能有<a href="https://en.wikipedia.org/wiki/CICS">CICS</a>和<a href="https://en.wikipedia.org/wiki/IBM_Db2_Family">DB2</a>。这里，我只介绍几个我比较熟悉又非常基础的组件：</p>
-
 <ul>
-<li><p>USS - z/OS Unix System Services，这是IBM开发的一个兼容POSIX的子系统，它给其他Unix平台的程序在z/OS上的运行带来了可能性。一家叫<a href="http://www.rocketsoftware.com/ported-tools">Rocket</a>的软件公司就是通过给z/OS移植外界的应用程序而起家的。有了USS的支持后，我们就可以通过<code>ssh</code>登上z/OS，用<code>bash</code>操作一些原本需要小绿屏才能完成的操作了。</p></li>
-
-<li><p>JES - Job Entry Subsystem，在小绿屏上的操作其实是叫做前台操作，这对一些简单或者需要人机交互的任务来说很有必要。但如果一个任务需要长时间的运行，肯定不能让用户一直在前台干等，所以z/OS里有JES这个子系统，它可以让用户将需要长时间运行的程序通过Job的形式提交进来，然后在后台跑这个Job，并通知用户最终的结果。这里提交Job的形式就是写一个<code>JCL</code>（Job Control Language），它提供了类似shell脚本的功能，可以让用户使用各种循环及判断语句。这里是一个简单的批处理JCL：</p>
+<li>
+<p>USS - z/OS Unix System Services，这是IBM开发的一个兼容POSIX的子系统，它给其他Unix平台的程序在z/OS上的运行带来了可能性。一家叫<a href="http://www.rocketsoftware.com/ported-tools">Rocket</a>的软件公司就是通过给z/OS移植外界的应用程序而起家的。有了USS的支持后，我们就可以通过<code>ssh</code>登上z/OS，用<code>bash</code>操作一些原本需要小绿屏才能完成的操作了。</p>
+</li>
+<li>
+<p>JES - Job Entry Subsystem，在小绿屏上的操作其实是叫做前台操作，这对一些简单或者需要人机交互的任务来说很有必要。但如果一个任务需要长时间的运行，肯定不能让用户一直在前台干等，所以z/OS里有JES这个子系统，它可以让用户将需要长时间运行的程序通过Job的形式提交进来，然后在后台跑这个Job，并通知用户最终的结果。这里提交Job的形式就是写一个<code>JCL</code>（Job Control Language），它提供了类似shell脚本的功能，可以让用户使用各种循环及判断语句。这里是一个简单的批处理JCL：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-jcl" data-lang="jcl"><span class="lnt">1
+<pre class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-jcl" data-lang="jcl">//MYJOB JOB ,NOTIFY=&amp;SYSUID
+<pre class="chroma"><code class="language-fallback" data-lang="fallback">//MYJOB JOB ,NOTIFY=&amp;SYSUID
 //STEP1 EXEC PGM=MYPGM
 //STEP2 EXEC PGM=MYPGM2
-//STEP3 EXEC PGM=MYPGM3</code></pre></td></tr></table>
+//STEP3 EXEC PGM=MYPGM3
+</code></pre></td></tr></table>
 </div>
-</div>
-<ul>
-<li>FTP - z/OS上的FTP功能相当强大，它的操作对象不仅可以是DataSet，也可以是USS下的文件系统，甚至还可以向JES提交Job，向DB2提交SQL语句。因此，在我们的一个项目中，为了使Node.js能与z/OS交互，我们用Node.js封装了FTP的这些特性，并开源出来一个库：<a href="https://github.com/IBM/zos-node-accessor/">z/OS Node Accessor</a>，希望它能成为Node.js社区与z/OS连接的桥梁。</li>
+</div></li>
+<li>
+<p>FTP - z/OS上的FTP功能相当强大，它的操作对象不仅可以是DataSet，也可以是USS下的文件系统，甚至还可以向JES提交Job，向DB2提交SQL语句。因此，在我们的一个项目中，为了使Node.js能与z/OS交互，我们用Node.js封装了FTP的这些特性，并开源出来一个库：<a href="https://github.com/IBM/zos-node-accessor/">z/OS Node Accessor</a>，希望它能成为Node.js社区与z/OS连接的桥梁。</p>
+</li>
 </ul>
-
 <h2 id="总结">总结</h2>
-
-<p>写了半天才发觉我还只介绍了主机的冰山一角，主机经过半个多世纪的发展，它的复杂程度远远不是一篇博客就能介绍完的。所以这只能算是一个入门级别的介绍，希望读完之后能让你对主机有个大致的了解。</p></li>
-</ul>
-<div class="footnotes">
-
-<hr />
-
+<p>写了半天才发觉我还只介绍了主机的冰山一角，主机经过半个多世纪的发展，它的复杂程度远远不是一篇博客就能介绍完的。所以这只能算是一个入门级别的介绍，希望读完之后能让你对主机有个大致的了解。</p>
+<section class="footnotes" role="doc-endnotes">
+<hr>
 <ol>
-<li id="fn:market-share"><a href="https://servers.pconline.com.cn/gc/1202/2679853_3.html">大型机市场现状</a>
- <a class="footnote-return" href="#fnref:market-share"><sup>[return]</sup></a></li>
-<li id="fn:performance"><a href="https://cloud.tencent.com/developer/news/268909">新一代IBM z14主机技术介绍</a>
- <a class="footnote-return" href="#fnref:performance"><sup>[return]</sup></a></li>
-<li id="fn:cpu-architecture"><a href="https://mainframecn.com/article-71-1.html">浅析IBM新一代zEnterprise System大型主机的设计</a>
- <a class="footnote-return" href="#fnref:cpu-architecture"><sup>[return]</sup></a></li>
-<li id="fn:quote-of-john"><a href="https://groups.google.com/d/msg/golang-dev/f6IC8Dm7weI/4Vzs9EY9CAAJ">John McKown on glang-dev mail-list</a>
- <a class="footnote-return" href="#fnref:quote-of-john"><sup>[return]</sup></a></li>
+<li id="fn:1" role="doc-endnote">
+<p><a href="https://servers.pconline.com.cn/gc/1202/2679853_3.html">大型机市场现状</a> <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2" role="doc-endnote">
+<p><a href="https://cloud.tencent.com/developer/news/268909">新一代IBM z14主机技术介绍</a> <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3" role="doc-endnote">
+<p><a href="https://mainframecn.com/article-71-1.html">浅析IBM新一代zEnterprise System大型主机的设计</a> <a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:4" role="doc-endnote">
+<p><a href="https://groups.google.com/d/msg/golang-dev/f6IC8Dm7weI/4Vzs9EY9CAAJ">John McKown on glang-dev mail-list</a> <a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
 </ol>
-</div>
+</section>
 
     </div>
 
@@ -690,7 +653,7 @@ if (!doNotTrack) {
     &copy;
     
       2018 -
-    2019
+    2020
     <span class="heart">
       
       <i class="iconfont">
@@ -712,7 +675,7 @@ if (!doNotTrack) {
 
   
     <span>
-      沪ICP备17033881号-1
+      <a class="beian" href="http://www.beian.miit.gov.cn/" target="_blank">沪ICP备17033881号-1</a>
     </span>
   
 </div>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>理解 Go 标准库中的 atomic.Value 类型 - 喵叔没话说</title>
+  <title>Go 语言标准库中 atomic.Value 的前世今生 - 喵叔没话说</title>
   
 
 <meta name="renderer" content="webkit" />
@@ -32,7 +32,7 @@
 
 
 
-<meta name="generator" content="Hugo 0.55.6" />
+<meta name="generator" content="Hugo 0.64.0" />
 
 
 <link rel="canonical" href="//blog.betacat.io/post/golang-atomic-value-exploration/" />
@@ -53,32 +53,28 @@
 
 
 
-<link rel="stylesheet" href="/sass/jane.min.af20b78e95c84de86b00a0242a4a77bd2601700e1b250edf27537d957ac0041d.css" integrity="sha256-ryC3jpXITehrAKAkKkp3vSYBcA4bJQ7fJ1N9lXrABB0=" media="screen" crossorigin="anonymous">
+<link rel="stylesheet" href="/sass/jane.min.0995afa14b62cd93e93cfc066b646c4c17a3eddca0e9d52a1d9dcf5d90aaacd3.css" integrity="sha256-CZWvoUtizZPpPPwGa2RsTBej7dyg6dUqHZ3PXZCqrNM=" media="screen" crossorigin="anonymous">
 
 
 
 
 
-<meta property="og:title" content="理解 Go 标准库中的 atomic.Value 类型" />
+<meta property="og:title" content="Go 语言标准库中 atomic.Value 的前世今生" />
 <meta property="og:description" content="在 Go 语言标准库中，sync/atomic包将底层硬件提供的原子操作封装成了 Go 的函数。但这些操作只支持几种基本数据类型，因此为了扩大原子操作的" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="//blog.betacat.io/post/golang-atomic-value-exploration/" />
-<meta property="article:published_time" content="2019-03-15T21:30:47&#43;08:00"/>
-<meta property="article:modified_time" content="2019-03-15T21:30:47&#43;08:00"/>
-
-<meta itemprop="name" content="理解 Go 标准库中的 atomic.Value 类型">
+<meta property="article:published_time" content="2019-03-15T21:30:47+08:00" />
+<meta property="article:modified_time" content="2020-02-10T21:32:23+08:00" />
+<meta itemprop="name" content="Go 语言标准库中 atomic.Value 的前世今生">
 <meta itemprop="description" content="在 Go 语言标准库中，sync/atomic包将底层硬件提供的原子操作封装成了 Go 的函数。但这些操作只支持几种基本数据类型，因此为了扩大原子操作的">
-
-
 <meta itemprop="datePublished" content="2019-03-15T21:30:47&#43;08:00" />
-<meta itemprop="dateModified" content="2019-03-15T21:30:47&#43;08:00" />
-<meta itemprop="wordCount" content="4415">
+<meta itemprop="dateModified" content="2020-02-10T21:32:23&#43;08:00" />
+<meta itemprop="wordCount" content="4417">
 
 
 
-<meta itemprop="keywords" content="" />
-<meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="理解 Go 标准库中的 atomic.Value 类型"/>
+<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Go 语言标准库中 atomic.Value 的前世今生"/>
 <meta name="twitter:description" content="在 Go 语言标准库中，sync/atomic包将底层硬件提供的原子操作封装成了 Go 的函数。但这些操作只支持几种基本数据类型，因此为了扩大原子操作的"/>
 
 <!--[if lte IE 9]>
@@ -284,14 +280,14 @@ if (!doNotTrack) {
           <article class="post bg-white">
     
     <header class="post-header">
-      <h1 class="post-title">理解 Go 标准库中的 atomic.Value 类型</h1>
+      <h1 class="post-title">Go 语言标准库中 atomic.Value 的前世今生</h1>
       
       <div class="post-meta">
         <time datetime="2019-03-15" class="post-time">
           2019-03-15
         </time>
         
-        <span class="more-meta"> 约 4415 字 </span>
+        <span class="more-meta"> 约 4417 字 </span>
           <span class="more-meta"> 预计阅读 9 分钟 </span>
 
         
@@ -308,81 +304,56 @@ if (!doNotTrack) {
   <h2 class="post-toc-title">文章目录</h2>
   <div class="post-toc-content">
     <nav id="TableOfContents">
-<ul>
-<li>
-<ul>
-<li><a href="#历史起源">历史起源</a>
-<ul>
-<li><a href="#原子性">原子性</a></li>
-</ul></li>
-<li><a href="#使用姿势">使用姿势</a></li>
-<li><a href="#内部实现">内部实现</a>
-<ul>
-<li><a href="#数据结构">数据结构</a></li>
-<li><a href="#写入-store-操作">写入（Store）操作</a>
-<ul>
-<li><a href="#unsafe-pointer">unsafe.Pointer</a></li>
-</ul></li>
-<li><a href="#读取-load-操作">读取（Load）操作</a></li>
-</ul></li>
-<li><a href="#总结">总结</a></li>
-</ul></li>
-</ul>
+  <ul>
+    <li><a href="#历史起源">历史起源</a>
+      <ul>
+        <li><a href="#原子性">原子性</a></li>
+      </ul>
+    </li>
+    <li><a href="#使用姿势">使用姿势</a></li>
+    <li><a href="#内部实现">内部实现</a>
+      <ul>
+        <li><a href="#数据结构">数据结构</a></li>
+        <li><a href="#写入store操作">写入（Store）操作</a></li>
+        <li><a href="#读取load操作">读取（Load）操作</a></li>
+      </ul>
+    </li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
 </nav>
   </div>
 </div>
 
     
     <div class="post-content">
-      
-
-<p>在 Go 语言标准库中，<code>sync/atomic</code>包将底层硬件提供的原子操作封装成了 Go 的函数。但这些操作只支持几种基本数据类型，因此为了扩大原子操作的适用范围，Go 语言在 1.4 版本的时候向<code>sync/atomic</code>包中添加了一个新的类型<code>Value</code>。此类型的值相当于一个容器，可以被用来“原子地&rdquo;存储（Store）和加载（Load）<strong>任意类型</strong>的值。</p>
-
+      <p>在 Go 语言标准库中，<code>sync/atomic</code>包将底层硬件提供的原子操作封装成了 Go 的函数。但这些操作只支持几种基本数据类型，因此为了扩大原子操作的适用范围，Go 语言在 1.4 版本的时候向<code>sync/atomic</code>包中添加了一个新的类型<code>Value</code>。此类型的值相当于一个容器，可以被用来“原子地&quot;存储（Store）和加载（Load）<strong>任意类型</strong>的值。</p>
 <h2 id="历史起源">历史起源</h2>
-
 <p>我在<code>golang-dev</code>邮件列表中翻到了14年的<a href="https://groups.google.com/forum/#!msg/golang-dev/SBmIen68ys0/WGfYQQSO4nAJ">这段讨论</a>，有用户报告了<code>encoding/gob</code>包在多核机器上（80-core）上的性能问题，认为<code>encoding/gob</code>之所以不能完全利用到多核的特性是因为它里面使用了大量的互斥锁（mutex），如果把这些互斥锁换成用<code>atomic.LoadPointer/StorePointer</code>来做并发控制，那性能将能提升20倍。</p>
-
 <p>针对这个问题，有人提议在已有的<code>atomic</code>包的基础上封装出一个<code>atomic.Value</code>类型，这样用户就可以在不依赖 Go 内部类型<code>unsafe.Pointer</code>的情况下使用到<code>atomic</code>提供的原子操作。所以我们现在看到的<code>atomic</code>包中除了<code>atomic.Value</code>外，其余都是早期由汇编写成的，并且<code>atomic.Value</code>类型的底层实现也是建立在已有的<code>atomic</code>包的基础上。</p>
-
 <p>那为什么在上面的场景中，<code>atomic</code>会比<code>mutex</code>性能好很多呢？作者 <a href="https://github.com/dvyukov">Dmitry Vyukov</a> 总结了这两者的一个区别：</p>
-
 <blockquote>
 <p>Mutexes do no scale. Atomic loads do.</p>
 </blockquote>
-
 <p><code>Mutex</code>由<strong>操作系统</strong>实现，而<code>atomic</code>包中的原子操作则由<strong>底层硬件</strong>直接提供支持。在 CPU 实现的指令集里，有一些指令被封装进了<code>atomic</code>包，这些指令在执行的过程中是不允许中断（interrupt）的，因此原子操作可以在<code>lock-free</code>的情况下保证并发安全，并且它的性能也能做到随 CPU 个数的增多而线性扩展。</p>
-
 <p>好了，说了这么多的原子操作，我们先来看看什么样的操作能被叫做<em>原子操作</em> 。</p>
-
 <h3 id="原子性">原子性</h3>
-
-<p>一个或者多个操作在 CPU 执行的过程中不被中断的特性，称为<em>原子性（atomicity）</em> 。这些操作对外表现成一个不可分割的整体，他们要么都执行，要么都不执行，外界不会看到他们只执行到一半的状态。而在现实世界中，CPU 不可能不中断的执行一系列操作，但如果我们在执行多个操作时，能让他们的<strong>中间状态对外不可见</strong>，那我们就可以宣称他们拥有了&rdquo;不可分割”的原子性。</p>
-
+<p>一个或者多个操作在 CPU 执行的过程中不被中断的特性，称为<em>原子性（atomicity）</em> 。这些操作对外表现成一个不可分割的整体，他们要么都执行，要么都不执行，外界不会看到他们只执行到一半的状态。而在现实世界中，CPU 不可能不中断的执行一系列操作，但如果我们在执行多个操作时，能让他们的<strong>中间状态对外不可见</strong>，那我们就可以宣称他们拥有了&quot;不可分割”的原子性。</p>
 <p>有些朋友可能不知道，在 Go（甚至是大部分语言）中，一条普通的赋值语句其实不是一个原子操作。例如，在32位机器上写<code>int64</code>类型的变量就会有中间状态，因为它会被拆成两次写操作（<code>MOV</code>）——写低 32 位和写高 32 位，如下图所示：</p>
-
-<p><img src="/image/golang-atomic-value/64-bit-write.svg" alt="64位变量的赋值操作" /></p>
-
+<p><img src="/image/golang-atomic-value/64-bit-write.svg" alt="64位变量的赋值操作"></p>
 <p>如果一个线程刚写完低32位，还没来得及写高32位时，另一个线程读取了这个变量，那它得到的就是一个毫无逻辑的中间变量，这很有可能使我们的程序出现诡异的 Bug。</p>
-
 <p>这还只是一个基础类型，如果我们对一个结构体进行赋值，那它出现并发问题的概率就更高了。很可能写线程刚写完一小半的字段，读线程就来读取这个变量，那么就只能读到仅修改了一部分的值。这显然破坏了变量的完整性，读出来的值也是完全错误的。</p>
-
 <p>面对这种多线程下变量的读写问题，我们的主角——<code>atomic.Value</code>登场了，它使得我们可以不依赖于不保证兼容性的<code>unsafe.Pointer</code>类型，同时又能将任意数据类型的读写操作封装成原子性操作（让中间状态对外不可见）。</p>
-
 <h2 id="使用姿势">使用姿势</h2>
-
 <p><code>atomic.Value</code>类型对外暴露的方法就两个：</p>
-
 <ul>
 <li><code>v.Store(c)</code> - 写操作，将原始的变量<code>c</code>存放到一个<code>atomic.Value</code>类型的<code>v</code>里。</li>
 <li><code>c = v.Load()</code> - 读操作，从线程安全的<code>v</code>中读取上一步存放的内容。</li>
 </ul>
-
 <p>简洁的接口使得它的使用也很简单，只需将需要作并发保护的变量读取和赋值操作用<code>Load()</code>和<code>Store()</code>代替就行了。</p>
-
 <p>下面是一个常见的使用场景：应用程序定期的从外界获取最新的配置信息，然后更改自己内存中维护的配置变量。工作线程根据最新的配置来处理请求。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt"> 1
+<pre class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -434,73 +405,68 @@ if (!doNotTrack) {
   <span class="s">&#34;time&#34;</span>
 <span class="p">)</span>
 
-<span class="kd">func</span> <span class="nf">loadConfig</span><span class="p">()</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span> <span class="p">{</span>
+<span class="kd">func</span> <span class="nf">loadConfig</span><span class="p">(</span><span class="p">)</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span> <span class="p">{</span>
   <span class="c1">// 从数据库或者文件系统中读取配置信息，然后以map的形式存放在内存里
 </span><span class="c1"></span>  <span class="k">return</span> <span class="nb">make</span><span class="p">(</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="kd">func</span> <span class="nf">requests</span><span class="p">()</span> <span class="kd">chan</span> <span class="kt">int</span> <span class="p">{</span>
+<span class="kd">func</span> <span class="nf">requests</span><span class="p">(</span><span class="p">)</span> <span class="kd">chan</span> <span class="kt">int</span> <span class="p">{</span>
   <span class="c1">// 将从外界中接受到的请求放入到channel里
 </span><span class="c1"></span>  <span class="k">return</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">int</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+<span class="kd">func</span> <span class="nf">main</span><span class="p">(</span><span class="p">)</span> <span class="p">{</span>
   <span class="c1">// config变量用来存放该服务的配置信息
 </span><span class="c1"></span>  <span class="kd">var</span> <span class="nx">config</span> <span class="nx">atomic</span><span class="p">.</span><span class="nx">Value</span>
   <span class="c1">// 初始化时从别的地方加载配置文件，并存到config变量里
-</span><span class="c1"></span>  <span class="nx">config</span><span class="p">.</span><span class="nf">Store</span><span class="p">(</span><span class="nf">loadConfig</span><span class="p">())</span>
-  <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="c1"></span>  <span class="nx">config</span><span class="p">.</span><span class="nf">Store</span><span class="p">(</span><span class="nf">loadConfig</span><span class="p">(</span><span class="p">)</span><span class="p">)</span>
+  <span class="k">go</span> <span class="kd">func</span><span class="p">(</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// 每10秒钟定时的拉取最新的配置信息，并且更新到config变量里
 </span><span class="c1"></span>    <span class="k">for</span> <span class="p">{</span>
       <span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
       <span class="c1">// 对应于赋值操作 config = loadConfig()
-</span><span class="c1"></span>      <span class="nx">config</span><span class="p">.</span><span class="nf">Store</span><span class="p">(</span><span class="nf">loadConfig</span><span class="p">())</span>
+</span><span class="c1"></span>      <span class="nx">config</span><span class="p">.</span><span class="nf">Store</span><span class="p">(</span><span class="nf">loadConfig</span><span class="p">(</span><span class="p">)</span><span class="p">)</span>
     <span class="p">}</span>
-  <span class="p">}()</span>
+  <span class="p">}</span><span class="p">(</span><span class="p">)</span>
   <span class="c1">// 创建工作线程，每个工作线程都会根据它所读取到的最新的配置信息来处理请求
 </span><span class="c1"></span>  <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
-    <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
-      <span class="k">for</span> <span class="nx">r</span> <span class="o">:=</span> <span class="k">range</span> <span class="nf">requests</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">go</span> <span class="kd">func</span><span class="p">(</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">for</span> <span class="nx">r</span> <span class="o">:=</span> <span class="k">range</span> <span class="nf">requests</span><span class="p">(</span><span class="p">)</span> <span class="p">{</span>
         <span class="c1">// 对应于取值操作 c := config
 </span><span class="c1"></span>        <span class="c1">// 由于Load()返回的是一个interface{}类型，所以我们要先强制转换一下
-</span><span class="c1"></span>        <span class="nx">c</span> <span class="o">:=</span> <span class="nx">config</span><span class="p">.</span><span class="nf">Load</span><span class="p">().(</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">)</span>
+</span><span class="c1"></span>        <span class="nx">c</span> <span class="o">:=</span> <span class="nx">config</span><span class="p">.</span><span class="nf">Load</span><span class="p">(</span><span class="p">)</span><span class="p">.</span><span class="p">(</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">)</span>
         <span class="c1">// 这里是根据配置信息处理请求的逻辑...
 </span><span class="c1"></span>        <span class="nx">_</span><span class="p">,</span> <span class="nx">_</span> <span class="p">=</span> <span class="nx">r</span><span class="p">,</span> <span class="nx">c</span>
       <span class="p">}</span>
-    <span class="p">}()</span>
+    <span class="p">}</span><span class="p">(</span><span class="p">)</span>
   <span class="p">}</span>
-<span class="p">}</span></code></pre></td></tr></table>
+<span class="p">}</span>
+</code></pre></td></tr></table>
 </div>
-</div>
-<h2 id="内部实现">内部实现</h2>
-
-<p><a href="https://zh.wikipedia.org/wiki/罗永浩">罗永浩浩</a>曾说过：</p>
-
+</div><h2 id="内部实现">内部实现</h2>
+<p><a href="https://zh.wikipedia.org/wiki/%E7%BD%97%E6%B0%B8%E6%B5%A9">罗永浩浩</a>曾说过：</p>
 <blockquote>
 <p>Simplicity is the hidden complexity</p>
 </blockquote>
-
 <p>我们来看看在简单的外表下，它到底有哪些 hidden complexity。</p>
-
 <h3 id="数据结构">数据结构</h3>
-
 <p><code>atomic.Value</code>被设计用来存储任意类型的数据，所以它内部的字段是一个<code>interface{}</code>类型，非常的简单粗暴。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt">1
+<pre class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span></code></pre></td>
 <td class="lntd">
 <pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">Value</span> <span class="kd">struct</span> <span class="p">{</span>
-  <span class="nx">v</span> <span class="kd">interface</span><span class="p">{}</span>
-<span class="p">}</span></code></pre></td></tr></table>
+  <span class="nx">v</span> <span class="kd">interface</span><span class="p">{</span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
 </div>
-</div>
-<p>除了<code>Value</code>外，这个文件里还定义了一个<code>ifaceWords</code>类型，这其实是一个空interface (<code>interface{}</code>）的内部表示格式（参见runtime/runtime2.go中eface的定义）。它的作用是将<code>interface{}</code>类型分解，得到其中的两个字段。</p>
+</div><p>除了<code>Value</code>外，这个文件里还定义了一个<code>ifaceWords</code>类型，这其实是一个空interface (<code>interface{}</code>）的内部表示格式（参见runtime/runtime2.go中eface的定义）。它的作用是将<code>interface{}</code>类型分解，得到其中的两个字段。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt">1
+<pre class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
@@ -509,40 +475,35 @@ if (!doNotTrack) {
 <pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">ifaceWords</span> <span class="kd">struct</span> <span class="p">{</span>
   <span class="nx">typ</span>  <span class="nx">unsafe</span><span class="p">.</span><span class="nx">Pointer</span>
   <span class="nx">data</span> <span class="nx">unsafe</span><span class="p">.</span><span class="nx">Pointer</span>
-<span class="p">}</span></code></pre></td></tr></table>
+<span class="p">}</span>
+</code></pre></td></tr></table>
 </div>
-</div>
-<h3 id="写入-store-操作">写入（Store）操作</h3>
-
+</div><h3 id="写入store操作">写入（Store）操作</h3>
 <p>在介绍写入之前，我们先来看一下 Go 语言内部的<code>unsafe.Pointer</code>类型。</p>
-
-<h4 id="unsafe-pointer">unsafe.Pointer</h4>
-
+<h4 id="unsafepointer">unsafe.Pointer</h4>
 <p>出于安全考虑，Go 语言并不支持直接操作内存，但它的标准库中又提供一种<em>不安全（不保证向后兼容性）</em> 的指针类型<code>unsafe.Pointer</code>，让程序可以灵活的操作内存。</p>
-
 <p><code>unsafe.Pointer</code>的特别之处在于，它可以绕过 Go 语言类型系统的检查，与任意的指针类型互相转换。也就是说，如果两种类型具有相同的内存结构（layout），我们可以将<code>unsafe.Pointer</code>当做桥梁，让这两种类型的指针相互转换，从而实现同一份内存拥有两种不同的<strong>解读</strong>方式。</p>
-
 <p>比如说，<code>[]byte</code>和<code>string</code>其实内部的存储结构都是一样的，但 Go 语言的类型系统禁止他俩互换。如果借助<code>unsafe.Pointer</code>，我们就可以实现在零拷贝的情况下，将<code>[]byte</code>数组直接转换成<code>string</code>类型。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt">1
+<pre class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
 </span><span class="lnt">5
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">bytes</span> <span class="o">:=</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">{</span><span class="mi">104</span><span class="p">,</span> <span class="mi">101</span><span class="p">,</span> <span class="mi">108</span><span class="p">,</span> <span class="mi">108</span><span class="p">,</span> <span class="mi">111</span><span class="p">}</span>
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">bytes</span> <span class="o">:=</span> <span class="p">[</span><span class="p">]</span><span class="kt">byte</span><span class="p">{</span><span class="mi">104</span><span class="p">,</span> <span class="mi">101</span><span class="p">,</span> <span class="mi">108</span><span class="p">,</span> <span class="mi">108</span><span class="p">,</span> <span class="mi">111</span><span class="p">}</span>
 
 <span class="nx">p</span> <span class="o">:=</span> <span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">bytes</span><span class="p">)</span> <span class="c1">//强制转换成unsafe.Pointer，编译器不会报错
-</span><span class="c1"></span><span class="nx">str</span> <span class="o">:=</span> <span class="o">*</span><span class="p">(</span><span class="o">*</span><span class="kt">string</span><span class="p">)(</span><span class="nx">p</span><span class="p">)</span> <span class="c1">//然后强制转换成string类型的指针，再将这个指针的值当做string类型取出来
-</span><span class="c1"></span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="nx">str</span><span class="p">)</span> <span class="o">//</span><span class="nx">输出</span> <span class="s">&#34;hello&#34;</span></code></pre></td></tr></table>
+</span><span class="c1"></span><span class="nx">str</span> <span class="o">:=</span> <span class="o">*</span><span class="p">(</span><span class="o">*</span><span class="kt">string</span><span class="p">)</span><span class="p">(</span><span class="nx">p</span><span class="p">)</span> <span class="c1">//然后强制转换成string类型的指针，再将这个指针的值当做string类型取出来
+</span><span class="c1"></span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="nx">str</span><span class="p">)</span> <span class="c1">//输出 &#34;hello&#34;
+</span></code></pre></td></tr></table>
 </div>
-</div>
-<p>知道了<code>unsafe.Pointer</code>的作用，我们可以直接来看代码了：</p>
+</div><p>知道了<code>unsafe.Pointer</code>的作用，我们可以直接来看代码了：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt"> 1
+<pre class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -582,12 +543,12 @@ if (!doNotTrack) {
 </span><span class="lnt">38
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">v</span> <span class="o">*</span><span class="nx">Value</span><span class="p">)</span> <span class="nf">Store</span><span class="p">(</span><span class="nx">x</span> <span class="kd">interface</span><span class="p">{})</span> <span class="p">{</span>
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">v</span> <span class="o">*</span><span class="nx">Value</span><span class="p">)</span> <span class="nf">Store</span><span class="p">(</span><span class="nx">x</span> <span class="kd">interface</span><span class="p">{</span><span class="p">}</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">if</span> <span class="nx">x</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
     <span class="nb">panic</span><span class="p">(</span><span class="s">&#34;sync/atomic: store of nil value into Value&#34;</span><span class="p">)</span>
   <span class="p">}</span>
-  <span class="nx">vp</span> <span class="o">:=</span> <span class="p">(</span><span class="o">*</span><span class="nx">ifaceWords</span><span class="p">)(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(</span><span class="nx">v</span><span class="p">))</span>  <span class="c1">// Old value
-</span><span class="c1"></span>  <span class="nx">xp</span> <span class="o">:=</span> <span class="p">(</span><span class="o">*</span><span class="nx">ifaceWords</span><span class="p">)(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">x</span><span class="p">))</span> <span class="c1">// New value
+  <span class="nx">vp</span> <span class="o">:=</span> <span class="p">(</span><span class="o">*</span><span class="nx">ifaceWords</span><span class="p">)</span><span class="p">(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(</span><span class="nx">v</span><span class="p">)</span><span class="p">)</span>  <span class="c1">// Old value
+</span><span class="c1"></span>  <span class="nx">xp</span> <span class="o">:=</span> <span class="p">(</span><span class="o">*</span><span class="nx">ifaceWords</span><span class="p">)</span><span class="p">(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">x</span><span class="p">)</span><span class="p">)</span> <span class="c1">// New value
 </span><span class="c1"></span>  <span class="k">for</span> <span class="p">{</span>
     <span class="nx">typ</span> <span class="o">:=</span> <span class="nf">LoadPointer</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">vp</span><span class="p">.</span><span class="nx">typ</span><span class="p">)</span>
     <span class="k">if</span> <span class="nx">typ</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
@@ -595,15 +556,15 @@ if (!doNotTrack) {
 </span><span class="c1"></span>      <span class="c1">// Disable preemption so that other goroutines can use
 </span><span class="c1"></span>      <span class="c1">// active spin wait to wait for completion; and so that
 </span><span class="c1"></span>      <span class="c1">// GC does not see the fake type accidentally.
-</span><span class="c1"></span>      <span class="nf">runtime_procPin</span><span class="p">()</span>
-      <span class="k">if</span> <span class="p">!</span><span class="nf">CompareAndSwapPointer</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">vp</span><span class="p">.</span><span class="nx">typ</span><span class="p">,</span> <span class="kc">nil</span><span class="p">,</span> <span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(^</span><span class="nb">uintptr</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span> <span class="p">{</span>
-        <span class="nf">runtime_procUnpin</span><span class="p">()</span>
+</span><span class="c1"></span>      <span class="nf">runtime_procPin</span><span class="p">(</span><span class="p">)</span>
+      <span class="k">if</span> <span class="p">!</span><span class="nf">CompareAndSwapPointer</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">vp</span><span class="p">.</span><span class="nx">typ</span><span class="p">,</span> <span class="kc">nil</span><span class="p">,</span> <span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(</span><span class="p">^</span><span class="nb">uintptr</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="p">)</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">runtime_procUnpin</span><span class="p">(</span><span class="p">)</span>
         <span class="k">continue</span>
       <span class="p">}</span>
       <span class="c1">// Complete first store.
 </span><span class="c1"></span>      <span class="nf">StorePointer</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">vp</span><span class="p">.</span><span class="nx">data</span><span class="p">,</span> <span class="nx">xp</span><span class="p">.</span><span class="nx">data</span><span class="p">)</span>
       <span class="nf">StorePointer</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">vp</span><span class="p">.</span><span class="nx">typ</span><span class="p">,</span> <span class="nx">xp</span><span class="p">.</span><span class="nx">typ</span><span class="p">)</span>
-      <span class="nf">runtime_procUnpin</span><span class="p">()</span>
+      <span class="nf">runtime_procUnpin</span><span class="p">(</span><span class="p">)</span>
       <span class="k">return</span>
     <span class="p">}</span>
     <span class="k">if</span> <span class="nb">uintptr</span><span class="p">(</span><span class="nx">typ</span><span class="p">)</span> <span class="o">==</span> <span class="p">^</span><span class="nb">uintptr</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
@@ -619,43 +580,34 @@ if (!doNotTrack) {
     <span class="nf">StorePointer</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">vp</span><span class="p">.</span><span class="nx">data</span><span class="p">,</span> <span class="nx">xp</span><span class="p">.</span><span class="nx">data</span><span class="p">)</span>
     <span class="k">return</span>
   <span class="p">}</span>
-<span class="p">}</span></code></pre></td></tr></table>
+<span class="p">}</span>
+</code></pre></td></tr></table>
 </div>
-</div>
-<p>大概的逻辑：</p>
-
+</div><p>大概的逻辑：</p>
 <ul>
 <li>第5~6行 - 通过<code>unsafe.Pointer</code>将<strong>现有的</strong>和<strong>要写入的</strong>值分别转成<code>ifaceWords</code>类型，这样我们下一步就可以得到这两个<code>interface{}</code>的原始类型（typ）和真正的值（data）。</li>
 <li>从第7行开始就是一个无限 for 循环。配合<code>CompareAndSwap</code>食用，可以达到乐观锁的功效。</li>
-<li>第8行，我们可以通过<code>LoadPointer</code>这个原子操作拿到当前<code>Value</code>中存储的类型。下面根据这个类型的不同，分3种情况处理。
-
-<br /></li>
+<li>第8行，我们可以通过<code>LoadPointer</code>这个原子操作拿到当前<code>Value</code>中存储的类型。下面根据这个类型的不同，分3种情况处理。</li>
 </ul>
-
 <ol>
 <li>第一次写入（第9~24行） - 一个<code>Value</code>实例被初始化后，它的<code>typ</code>字段会被设置为指针的零值 nil，所以第9行先判断如果<code>typ</code>是 nil 那就证明这个<code>Value</code>还未被写入过数据。那之后就是一段初始写入的操作：
-
 <ul>
 <li><code>runtime_procPin()</code>这是runtime中的一段函数，具体的功能我不是特别清楚，也没有找到相关的文档。这里猜测一下，一方面它禁止了调度器对当前 goroutine 的抢占（preemption），使得它在执行当前逻辑的时候不被打断，以便可以尽快地完成工作，因为别人一直在等待它。另一方面，在禁止抢占期间，GC 线程也无法被启用，这样可以防止 GC 线程看到一个莫名其妙的指向<code>^uintptr(0)</code>的类型（这是赋值过程中的中间状态）。</li>
 <li>使用<code>CAS</code>操作，先尝试将<code>typ</code>设置为<code>^uintptr(0)</code>这个中间状态。如果失败，则证明已经有别的线程抢先完成了赋值操作，那它就解除抢占锁，然后重新回到 for 循环第一步。</li>
-<li>如果设置成功，那证明当前线程抢到了这个&rdquo;乐观锁&rdquo;，它可以安全的把<code>v</code>设为传入的新值了（19~23行）。注意，这里是先写<code>data</code>字段，然后再写<code>typ</code>字段。因为我们是以<code>typ</code>字段的值作为写入完成与否的判断依据的。</li>
-</ul></li>
-<li>第一次写入还未完成（第25~30行）- 如果看到<code>typ</code>字段还是<code>^uintptr(0)</code>这个中间类型，证明刚刚的第一次写入还没有完成，所以它会继续循环，&rdquo;忙等&rdquo;到第一次写入完成。</li>
+<li>如果设置成功，那证明当前线程抢到了这个&quot;乐观锁&rdquo;，它可以安全的把<code>v</code>设为传入的新值了（19~23行）。注意，这里是先写<code>data</code>字段，然后再写<code>typ</code>字段。因为我们是以<code>typ</code>字段的值作为写入完成与否的判断依据的。</li>
+</ul>
+</li>
+<li>第一次写入还未完成（第25~30行）- 如果看到<code> typ</code>字段还是<code>^uintptr(0)</code>这个中间类型，证明刚刚的第一次写入还没有完成，所以它会继续循环，&ldquo;忙等&quot;到第一次写入完成。</li>
 <li>第一次写入已完成（第31行及之后） - 首先检查上一次写入的类型与这一次要写入的类型是否一致，如果不一致则抛出异常。反之，则直接把这一次要写入的值写入到<code>data</code>字段。</li>
 </ol>
-
 <p>这个逻辑的主要思想就是，为了完成多个字段的原子性写入，我们可以抓住其中的一个字段，以它的状态来标志整个原子写入的状态。这个想法我在<a href="https://pingcap.com/blog-cn/percolator-and-txn/"> TiDB 的事务</a>实现中看到过类似的，他们那边叫<code>Percolator</code>模型，主要思想也是先选出一个<code>primaryRow</code>，然后所有的操作也是以<code>primaryRow</code>的成功与否作为标志。嗯，果然是太阳底下没有新东西。</p>
-
 <p>如果没有耐心看代码，没关系，这儿还有个简化版的流程图：</p>
-
-<p><img src="/image/golang-atomic-value/atomic-value-store.svg" alt="atomic.Value Store 流程" /></p>
-
-<h3 id="读取-load-操作">读取（Load）操作</h3>
-
+<p><img src="/image/golang-atomic-value/atomic-value-store.svg" alt="atomic.Value Store 流程"></p>
+<h3 id="读取load操作">读取（Load）操作</h3>
 <p>先上代码：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt"> 1
+<pre class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -670,33 +622,29 @@ if (!doNotTrack) {
 </span><span class="lnt">13
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">v</span> <span class="o">*</span><span class="nx">Value</span><span class="p">)</span> <span class="nf">Load</span><span class="p">()</span> <span class="p">(</span><span class="nx">x</span> <span class="kd">interface</span><span class="p">{})</span> <span class="p">{</span>
-  <span class="nx">vp</span> <span class="o">:=</span> <span class="p">(</span><span class="o">*</span><span class="nx">ifaceWords</span><span class="p">)(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(</span><span class="nx">v</span><span class="p">))</span>
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">v</span> <span class="o">*</span><span class="nx">Value</span><span class="p">)</span> <span class="nf">Load</span><span class="p">(</span><span class="p">)</span> <span class="p">(</span><span class="nx">x</span> <span class="kd">interface</span><span class="p">{</span><span class="p">}</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">vp</span> <span class="o">:=</span> <span class="p">(</span><span class="o">*</span><span class="nx">ifaceWords</span><span class="p">)</span><span class="p">(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(</span><span class="nx">v</span><span class="p">)</span><span class="p">)</span>
   <span class="nx">typ</span> <span class="o">:=</span> <span class="nf">LoadPointer</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">vp</span><span class="p">.</span><span class="nx">typ</span><span class="p">)</span>
   <span class="k">if</span> <span class="nx">typ</span> <span class="o">==</span> <span class="kc">nil</span> <span class="o">||</span> <span class="nb">uintptr</span><span class="p">(</span><span class="nx">typ</span><span class="p">)</span> <span class="o">==</span> <span class="p">^</span><span class="nb">uintptr</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// First store not yet completed.
 </span><span class="c1"></span>    <span class="k">return</span> <span class="kc">nil</span>
   <span class="p">}</span>
   <span class="nx">data</span> <span class="o">:=</span> <span class="nf">LoadPointer</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">vp</span><span class="p">.</span><span class="nx">data</span><span class="p">)</span>
-  <span class="nx">xp</span> <span class="o">:=</span> <span class="p">(</span><span class="o">*</span><span class="nx">ifaceWords</span><span class="p">)(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">x</span><span class="p">))</span>
+  <span class="nx">xp</span> <span class="o">:=</span> <span class="p">(</span><span class="o">*</span><span class="nx">ifaceWords</span><span class="p">)</span><span class="p">(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">x</span><span class="p">)</span><span class="p">)</span>
   <span class="nx">xp</span><span class="p">.</span><span class="nx">typ</span> <span class="p">=</span> <span class="nx">typ</span>
   <span class="nx">xp</span><span class="p">.</span><span class="nx">data</span> <span class="p">=</span> <span class="nx">data</span>
   <span class="k">return</span>
-<span class="p">}</span></code></pre></td></tr></table>
+<span class="p">}</span>
+</code></pre></td></tr></table>
 </div>
-</div>
-<p>读取相对就简单很多了，它有两个分支：</p>
-
+</div><p>读取相对就简单很多了，它有两个分支：</p>
 <ol>
 <li>如果当前的<code>typ</code>是 nil 或者<code>^uintptr(0)</code>，那就证明第一次写入还没有开始，或者还没完成，那就直接返回 nil （不对外暴露中间状态）。</li>
 <li>否则，根据当前看到的<code>typ</code>和<code>data</code>构造出一个新的<code>interface{}</code>返回出去。</li>
 </ol>
-
 <h2 id="总结">总结</h2>
-
 <p>本文从邮件列表中的一段讨论开始，介绍了<code>atomic.Value</code>的被提出来的历史缘由。然后由浅入深的介绍了它的使用姿势，以及内部实现。让大家不仅知其然，还能知其所以然。</p>
-
-<p>另外，再强调一遍，原子操作由<strong>底层硬件</strong>支持，而锁则由<strong>操作系统</strong>提供的 API 实现。若实现相同的功能，前者通常会更有效率，并且更能利用计算机多核的优势。所以，以后当我们想并发安全的更新一些变量的时候，我们应该优先选择用<code>atomic.Value</code>来实现。</p>
+<p>另外，再强调一遍，原子操作由<strong>底层硬件</strong>支持，而锁则由<strong>操作系统</strong>的调度器实现。锁应当用来保护一段逻辑，对于一个变量更新的保护，原子操作通常会更有效率，并且更能利用计算机多核的优势，如果要更新的是一个复合对象，则应当使用<code>atomic.Value</code>封装好的实现。</p>
 
     </div>
 
@@ -710,7 +658,7 @@ if (!doNotTrack) {
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
     <span class="item-content">
-      2019-03-15
+      2020-02-10
       
     </span>
   </p>
@@ -861,7 +809,7 @@ if (!doNotTrack) {
     &copy;
     
       2018 -
-    2019
+    2020
     <span class="heart">
       
       <i class="iconfont">
@@ -883,7 +831,7 @@ if (!doNotTrack) {
 
   
     <span>
-      沪ICP备17033881号-1
+      <a class="beian" href="http://www.beian.miit.gov.cn/" target="_blank">沪ICP备17033881号-1</a>
     </span>
   
 </div>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on 喵叔没话说</title>
@@ -30,7 +30,7 @@
     </item>
     
     <item>
-      <title>理解 Go 标准库中的 atomic.Value 类型</title>
+      <title>Go 语言标准库中 atomic.Value 的前世今生</title>
       <link>//blog.betacat.io/post/golang-atomic-value-exploration/</link>
       <pubDate>Fri, 15 Mar 2019 21:30:47 +0800</pubDate>
       

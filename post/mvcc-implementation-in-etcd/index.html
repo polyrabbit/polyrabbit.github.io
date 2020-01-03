@@ -32,7 +32,7 @@
 
 
 
-<meta name="generator" content="Hugo 0.55.6" />
+<meta name="generator" content="Hugo 0.64.0" />
 
 
 <link rel="canonical" href="//blog.betacat.io/post/mvcc-implementation-in-etcd/" />
@@ -53,7 +53,7 @@
 
 
 
-<link rel="stylesheet" href="/sass/jane.min.af20b78e95c84de86b00a0242a4a77bd2601700e1b250edf27537d957ac0041d.css" integrity="sha256-ryC3jpXITehrAKAkKkp3vSYBcA4bJQ7fJ1N9lXrABB0=" media="screen" crossorigin="anonymous">
+<link rel="stylesheet" href="/sass/jane.min.0995afa14b62cd93e93cfc066b646c4c17a3eddca0e9d52a1d9dcf5d90aaacd3.css" integrity="sha256-CZWvoUtizZPpPPwGa2RsTBej7dyg6dUqHZ3PXZCqrNM=" media="screen" crossorigin="anonymous">
 
 
 
@@ -63,21 +63,17 @@
 <meta property="og:description" content="简介 在数据库领域，面对高并发环境下数据冲突的问题，业界常用的解决方案有两种： 想办法避免冲突。使用悲观锁来确保同一时刻只有一人能对数据进行更改" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="//blog.betacat.io/post/mvcc-implementation-in-etcd/" />
-<meta property="article:published_time" content="2018-12-24T18:26:52&#43;08:00"/>
-<meta property="article:modified_time" content="2018-12-24T18:26:52&#43;08:00"/>
-
+<meta property="article:published_time" content="2018-12-24T18:26:52+08:00" />
+<meta property="article:modified_time" content="2020-01-15T17:16:23+08:00" />
 <meta itemprop="name" content="MVCC 在 etcd 中的实现">
 <meta itemprop="description" content="简介 在数据库领域，面对高并发环境下数据冲突的问题，业界常用的解决方案有两种： 想办法避免冲突。使用悲观锁来确保同一时刻只有一人能对数据进行更改">
-
-
 <meta itemprop="datePublished" content="2018-12-24T18:26:52&#43;08:00" />
-<meta itemprop="dateModified" content="2018-12-24T18:26:52&#43;08:00" />
-<meta itemprop="wordCount" content="3289">
+<meta itemprop="dateModified" content="2020-01-15T17:16:23&#43;08:00" />
+<meta itemprop="wordCount" content="3315">
 
 
 
-<meta itemprop="keywords" content="" />
-<meta name="twitter:card" content="summary"/>
+<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="MVCC 在 etcd 中的实现"/>
 <meta name="twitter:description" content="简介 在数据库领域，面对高并发环境下数据冲突的问题，业界常用的解决方案有两种： 想办法避免冲突。使用悲观锁来确保同一时刻只有一人能对数据进行更改"/>
 
@@ -291,7 +287,7 @@ if (!doNotTrack) {
           2018-12-24
         </time>
         
-        <span class="more-meta"> 约 3289 字 </span>
+        <span class="more-meta"> 约 3315 字 </span>
           <span class="more-meta"> 预计阅读 7 分钟 </span>
 
         
@@ -308,56 +304,46 @@ if (!doNotTrack) {
   <h2 class="post-toc-title">文章目录</h2>
   <div class="post-toc-content">
     <nav id="TableOfContents">
-<ul>
-<li>
-<ul>
-<li><a href="#简介">简介</a></li>
-<li><a href="#数据结构">数据结构</a>
-<ul>
-<li><a href="#revision">revision</a></li>
-<li><a href="#keyindex">keyIndex</a></li>
-<li><a href="#treeindex">treeIndex</a></li>
-<li><a href="#backend">backend</a></li>
-</ul></li>
-<li><a href="#写操作">写操作</a></li>
-<li><a href="#读操作">读操作</a></li>
-<li><a href="#小结">小结</a></li>
-</ul></li>
-</ul>
+  <ul>
+    <li><a href="#简介">简介</a></li>
+    <li><a href="#数据结构">数据结构</a>
+      <ul>
+        <li><a href="#revision">revision</a></li>
+        <li><a href="#keyindex">keyIndex</a></li>
+        <li><a href="#treeindex">treeIndex</a></li>
+        <li><a href="#backend">backend</a></li>
+      </ul>
+    </li>
+    <li><a href="#写操作">写操作</a></li>
+    <li><a href="#读操作">读操作</a></li>
+    <li><a href="#小结">小结</a></li>
+  </ul>
 </nav>
   </div>
 </div>
 
     
     <div class="post-content">
-      
-
-<h2 id="简介">简介</h2>
-
+      <h2 id="简介">简介</h2>
 <p>在数据库领域，面对高并发环境下数据冲突的问题，业界常用的解决方案有两种：</p>
-
 <ol>
-<li><p>想办法避免冲突。使用<strong>悲观锁</strong>来确保同一时刻只有一人能对数据进行更改，常见的实现有读写锁（Read/Write Locks）、两阶段锁（Two-Phase Locking）等。</p></li>
-
-<li><p>允许冲突，但发生冲突的时候，要有能力检测到。这种方法被称为<strong>乐观锁</strong>，即先乐观的认为冲突不会发生，除非被证明（检测到）当前确实产生冲突了。常见的实现有逻辑时钟（Logical Clock）、<a href="https://en.wikipedia.org/wiki/Multiversion_concurrency_control">MVCC</a>（Multi-version Cocurrent Control）等。</p></li>
+<li>
+<p>想办法避免冲突。使用<strong>悲观锁</strong>来确保同一时刻只有一人能对数据进行更改，常见的实现有读写锁（Read/Write Locks）、两阶段锁（Two-Phase Locking）等。</p>
+</li>
+<li>
+<p>允许冲突，但发生冲突的时候，要有能力检测到。这种方法被称为<strong>乐观锁</strong>，即先乐观的认为冲突不会发生，除非被证明（检测到）当前确实产生冲突了。常见的实现有逻辑时钟（Logical Clock）、<a href="https://en.wikipedia.org/wiki/Multiversion_concurrency_control">MVCC</a>（Multi-version Cocurrent Control）等。</p>
+</li>
 </ol>
-
 <p>在这些解决方案中，MVCC 由于其出色的性能优势，而被越来越多的数据库所采用，比如Oracle、PostgreSQL、MySQL InnoDB、etcd 等。它的基本思想是保存一个数据的多个历史版本，从而解决事务管理中数据隔离的问题。</p>
-
 <p>这里的版本一般选择使用时间戳或事务 ID 来标识。在处理一个写请求时，MVCC 不是简单的用新值覆盖旧值，而是为这一项添加一个新版本的数据。在读取一个数据项时，要先确定一个要读取的版本，然后根据版本找到对应的数据。这种写操作创建新版本，读操作访问旧版本的方式使得读写操作彼此隔离，他们之间就不需要用锁来协调。换句话说，在 MVCC 里读操作永远不会被阻塞，因此它特别适合 etcd 这种读操作比较多的场景。</p>
-
 <p>MVCC 的基本原理就是这么简单，下面来结合具体代码，看看 etcd 是怎么实现的。跟<a href="//blog.betacat.io/post/raft-implementation-in-etcd/">上篇</a>一样，这里的分析仍以etcd <a href="https://github.com/etcd-io/etcd/tree/v3.3.10">v3.3.10</a> 为例。</p>
-
 <h2 id="数据结构">数据结构</h2>
-
 <p>etcd 的代码中，有关 MVCC 的实现都在一个叫 <a href="https://github.com/etcd-io/etcd/tree/v3.3.10/mvcc">mvcc</a> 的包里。在正式介绍读写流程之前，我们先来了解下这个包里面定义的几个基础数据结构。</p>
-
 <h3 id="revision">revision</h3>
-
 <p><a href="https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/revision.go">revision</a> 即对应到MVCC中的版本，etcd 中的每一次<code>key-value</code>的操作都会有一个相应的 <code>revision</code>。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt"> 1
+<pre class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -371,7 +357,7 @@ if (!doNotTrack) {
 </span></code></pre></td>
 <td class="lntd">
 <pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// A revision indicates modification of the key-value space.
-</span><span class="c1">// The set of changes that share same main revision changes the key-value space atomically.
+</span><span class="c1"></span><span class="c1">// The set of changes that share same main revision changes the key-value space atomically.
 </span><span class="c1"></span><span class="kd">type</span> <span class="nx">revision</span> <span class="kd">struct</span> <span class="p">{</span>
     <span class="c1">// main is the main revision of a set of changes that happen atomically.
 </span><span class="c1"></span>    <span class="nx">main</span> <span class="kt">int64</span>
@@ -380,17 +366,15 @@ if (!doNotTrack) {
 </span><span class="c1"></span>    <span class="c1">// atomically. Each change has different increasing sub revision in that
 </span><span class="c1"></span>    <span class="c1">// set.
 </span><span class="c1"></span>    <span class="nx">sub</span> <span class="kt">int64</span>
-<span class="p">}</span></code></pre></td></tr></table>
+<span class="p">}</span>
+</code></pre></td></tr></table>
 </div>
-</div>
-<p>这里的 main 属性对应事务 ID，全局递增不重复，它在 etcd 中被当做一个逻辑时钟来使用。sub 代表一次事务中不同的修改操作（如put和delete）编号，从0开始依次递增。所以在一次事务中，每一个修改操作所绑定的<code>revision</code>依次为<code>{txID, 0}</code>, <code>{txID, 1}</code>, <code>{txID, 2}</code>&hellip;</p>
-
+</div><p>这里的 main 属性对应事务 ID，全局递增不重复，它在 etcd 中被当做一个逻辑时钟来使用。sub 代表一次事务中不同的修改操作（如put和delete）编号，从0开始依次递增。所以在一次事务中，每一个修改操作所绑定的<code>revision</code>依次为<code>{txID, 0}</code>, <code>{txID, 1}</code>, <code>{txID, 2}</code>&hellip;</p>
 <h3 id="keyindex">keyIndex</h3>
-
 <p><a href="https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/key_index.go">keyIndex</a>用来记录一个key的生命周期中所涉及过的版本（revision）。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt">1
+<pre class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
@@ -398,16 +382,16 @@ if (!doNotTrack) {
 </span></code></pre></td>
 <td class="lntd">
 <pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">keyIndex</span> <span class="kd">struct</span> <span class="p">{</span>
-    <span class="nx">key</span>         <span class="p">[]</span><span class="kt">byte</span>
+    <span class="nx">key</span>         <span class="p">[</span><span class="p">]</span><span class="kt">byte</span>
     <span class="nx">modified</span>    <span class="nx">revision</span> <span class="c1">// the main rev of the last modification
-</span><span class="c1"></span>    <span class="nx">generations</span> <span class="p">[]</span><span class="nx">generation</span>
-<span class="p">}</span></code></pre></td></tr></table>
+</span><span class="c1"></span>    <span class="nx">generations</span> <span class="p">[</span><span class="p">]</span><span class="nx">generation</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
 </div>
-</div>
-<p>它保存的是当前<code>key</code>的具体值（key），最近一次修改的版本号（modified），以及记录<code>key</code>生命周期的<code>generation</code>，一个<code>generation</code>代表了一个<code>key</code>从创建到被删除的过程。因为一个<code>key</code>可能会经历创建 -&gt; 删除 -&gt; 创建的好几个轮回，所以它有可能会有一个或多个<code>generation</code>。下面来看看一个<code>generation</code>包含哪些内容：</p>
+</div><p>它保存的是当前<code>key</code>的具体值（key），最近一次修改的版本号（modified），以及记录<code>key</code>生命周期的<code>generation</code>，一个<code>generation</code>代表了一个<code>key</code>从创建到被删除的过程。因为一个<code>key</code>可能会经历创建 -&gt; 删除 -&gt; 创建的好几个轮回，所以它有可能会有一个或多个<code>generation</code>。下面来看看一个<code>generation</code>包含哪些内容：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt">1
+<pre class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
@@ -419,97 +403,91 @@ if (!doNotTrack) {
 </span><span class="c1"></span><span class="kd">type</span> <span class="nx">generation</span> <span class="kd">struct</span> <span class="p">{</span>
     <span class="nx">ver</span>     <span class="kt">int64</span>
     <span class="nx">created</span> <span class="nx">revision</span> <span class="c1">// when the generation is created (put in first revision).
-</span><span class="c1"></span>    <span class="nx">revs</span>    <span class="p">[]</span><span class="nx">revision</span>
-<span class="p">}</span></code></pre></td></tr></table>
+</span><span class="c1"></span>    <span class="nx">revs</span>    <span class="p">[</span><span class="p">]</span><span class="nx">revision</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
 </div>
-</div>
-<p>可以看到，一个<code>generation</code>中最重要的信息就是那个<code>revision</code>数组，代表在它这一代中，所经历过的版本变更。</p>
-
+</div><p>可以看到，一个<code>generation</code>中最重要的信息就是那个<code>revision</code>数组，代表在它这一代中，所经历过的版本变更。</p>
 <p>不知所云？没关系，我刚开始看这段代码的时候也是一脸懵逼，不明白为啥要这样层层包装。不过还好我们有<a href="https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/key_index_test.go">UT</a>，跟着UT里面的测试样例大概梳理出这样的逻辑：</p>
-
 <ul>
 <li>假设我们有一个值为<code>foo</code>的key</li>
 </ul>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt">1
+<pre class="chroma"><code><span class="lnt">1
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">ki</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">keyIndex</span><span class="p">{</span><span class="nx">key</span><span class="p">:</span> <span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&#34;foo&#34;</span><span class="p">)}</span></code></pre></td></tr></table>
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">ki</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">keyIndex</span><span class="p">{</span><span class="nx">key</span><span class="p">:</span> <span class="p">[</span><span class="p">]</span><span class="nb">byte</span><span class="p">(</span><span class="s">&#34;foo&#34;</span><span class="p">)</span><span class="p">}</span>
+</code></pre></td></tr></table>
 </div>
-</div>
-<ul>
+</div><ul>
 <li>为它记录两次版本变更</li>
 </ul>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt">1
+<pre class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">ki</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nf">NewExample</span><span class="p">(),</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="c1">// 第一次变更发生在ID为2的事务中，且是第一次操作
-</span><span class="c1"></span><span class="nx">ki</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nf">NewExample</span><span class="p">(),</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">//</span> <span class="nx">第二次变更发生在ID为4的事务中</span><span class="err">，</span><span class="nx">且是第三次操作</span></code></pre></td></tr></table>
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">ki</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nf">NewExample</span><span class="p">(</span><span class="p">)</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="c1">// 第一次变更发生在ID为2的事务中，且是第一次操作
+</span><span class="c1"></span><span class="nx">ki</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nf">NewExample</span><span class="p">(</span><span class="p">)</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="c1">// 第二次变更发生在ID为4的事务中，且是第三次操作
+</span></code></pre></td></tr></table>
 </div>
-</div>
-<ul>
+</div><ul>
 <li>那这个<code>keyIndex</code>变成这样的结构</li>
 </ul>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="lnt">1
+<pre class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-yaml" data-lang="yaml">key<span class="p">:</span><span class="w"> </span><span class="s2">&#34;foo&#34;</span><span class="w">
-</span><span class="w"></span>modified<span class="p">:</span><span class="w"> </span>{<span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">2</span>}<span class="w">
-</span><span class="w"></span>generations<span class="p">:</span><span class="w">
-</span><span class="w">    </span><span class="p">[</span>{<span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}<span class="p">,</span><span class="w"> </span>{<span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">2</span>}<span class="p">]</span></code></pre></td></tr></table>
+<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="k">key</span><span class="p">:</span><span class="w"> </span><span class="s2">&#34;foo&#34;</span><span class="w">
+</span><span class="w"></span><span class="k">modified</span><span class="p">:</span><span class="w"> </span>{<span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">2</span>}<span class="w">
+</span><span class="w"></span><span class="k">generations</span><span class="p">:</span><span class="w">
+</span><span class="w"></span><span class="w">    </span><span class="p">[</span>{<span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}<span class="p">,</span><span class="w"> </span>{<span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">2</span>}<span class="p">]</span><span class="w">
+</span></code></pre></td></tr></table>
 </div>
-</div>
-<ul>
+</div><ul>
 <li>如果在此后的事务中这个key经历了被删除，再创建的过程：</li>
 </ul>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt">1
+<pre class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">ki</span><span class="p">.</span><span class="nf">tombstone</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nf">NewExample</span><span class="p">(),</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1">// 在第6次事务中被删除
-</span><span class="c1"></span><span class="nx">ki</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nf">NewExample</span><span class="p">(),</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="nx">ki</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nf">NewExample</span><span class="p">(),</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></code></pre></td></tr></table>
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">ki</span><span class="p">.</span><span class="nf">tombstone</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nf">NewExample</span><span class="p">(</span><span class="p">)</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1">// 在第6次事务中被删除
+</span><span class="c1"></span><span class="nx">ki</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nf">NewExample</span><span class="p">(</span><span class="p">)</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="nx">ki</span><span class="p">.</span><span class="nf">put</span><span class="p">(</span><span class="nx">zap</span><span class="p">.</span><span class="nf">NewExample</span><span class="p">(</span><span class="p">)</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</code></pre></td></tr></table>
 </div>
-</div>
-<ul>
+</div><ul>
 <li>那它会多一个<code>generation</code></li>
 </ul>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="lnt">1
+<pre class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
 </span><span class="lnt">5
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-yaml" data-lang="yaml">key<span class="p">:</span><span class="w"> </span><span class="s2">&#34;foo&#34;</span><span class="w">
-</span><span class="w"></span>modified<span class="p">:</span><span class="w"> </span>{<span class="m">10</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}<span class="w">
-</span><span class="w"></span>generations<span class="p">:</span><span class="w">
-</span><span class="w">    </span><span class="p">[</span>{<span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}<span class="p">,</span><span class="w"> </span>{<span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">2</span>}<span class="p">,</span><span class="w"> </span>{<span class="m">6</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}(t)<span class="p">],</span><span class="w">
-</span><span class="w">    </span><span class="p">[</span>{<span class="m">8</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}<span class="p">,</span><span class="w"> </span>{<span class="m">10</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}<span class="p">]</span></code></pre></td></tr></table>
+<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="k">key</span><span class="p">:</span><span class="w"> </span><span class="s2">&#34;foo&#34;</span><span class="w">
+</span><span class="w"></span><span class="k">modified</span><span class="p">:</span><span class="w"> </span>{<span class="m">10</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}<span class="w">
+</span><span class="w"></span><span class="k">generations</span><span class="p">:</span><span class="w">
+</span><span class="w"></span><span class="w">    </span><span class="p">[</span>{<span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}<span class="p">,</span><span class="w"> </span>{<span class="m">4</span><span class="p">,</span><span class="w"> </span><span class="m">2</span>}<span class="p">,</span><span class="w"> </span>{<span class="m">6</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}(t)<span class="p">]</span><span class="p">,</span><span class="w">
+</span><span class="w">    </span><span class="p">[</span>{<span class="m">8</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}<span class="p">,</span><span class="w"> </span>{<span class="m">10</span><span class="p">,</span><span class="w"> </span><span class="m">0</span>}<span class="p">]</span><span class="w">
+</span></code></pre></td></tr></table>
 </div>
-</div>
-<p>好了，在知道了key的版本信息及相应的操作后，我们来看看怎么把它们组织起来：</p>
-
+</div><p>好了，在知道了key的版本信息及相应的操作后，我们来看看怎么把它们组织起来：</p>
 <h3 id="treeindex">treeIndex</h3>
-
-<p><a href="https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/index.go">treeIndex</a>顾名思义就是一个树状索引，它通过在内存中维护一个<a href="https://github.com/google/btree">BTree</a>，来达到加速查询key的功能（不明白为啥这里选用了BTree，BTree似乎更适合磁盘的场景，内存中的树一般不都使用红黑树等来实现么？）。</p>
-
-<p>这棵树的每一个节点都是<code>keyIndex</code>。这样，给定一个key就能很快查到它对应的<code>keyIndex</code>，进而可以得知它的版本信息。树状结构比较简单，看看图就能明白，我就不再分析了。</p>
-
+<p><a href="https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/index.go">treeIndex</a>顾名思义就是一个树状索引，它通过在内存中维护一个<a href="https://github.com/google/btree">B树</a>，来达到加速查询key的功能。</p>
+<p>这棵树的每一个节点都是<code>keyIndex</code>，它实现了<a href="https://github.com/google/btree/blob/v1.0.0/btree.go#L59">Item</a>接口，其中的<a href="https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/key_index.go#L281">比较函数</a>主要是比较<code>key</code>的大小。这样，给定一个<code>key</code>就能很快查到它对应的<code>keyIndex</code>，进而可以得知它所有的版本信息。树状结构比较简单，看看图就能明白，我就不再分析了。</p>
 
 <link rel="stylesheet" href="/css/hugo-easy-gallery.css" />
 <div class="box">
@@ -525,21 +503,15 @@ if (!doNotTrack) {
   </figure>
 </div>
 
-
 <p>值得注意的是，这里只存有key的信息，value保存在磁盘里，一方面key一般比较小，同样的内存可以支持存储更多的key；另一方面，value和版本是一一对应的，内存中维护了版本的信息，也就没必要再多存一份value了。</p>
-
 <p>看完了key以及key在内存中的组织结构，我们再来看看value是怎么处理的。</p>
-
 <h3 id="backend">backend</h3>
-
-<p>backend封装了etcd中的存储，按照设计，backend可以对接多种存储，当前使用的是<a href="https://github.com/etcd-io/bbolt">boltdb</a>，但作为一个CNCF项目，官方也在考虑接入更多的存储引擎<sup class="footnote-ref" id="fnref:pluggable-backend"><a href="#fn:pluggable-backend">1</a></sup>。boltdb是一个单机的支持事务的KV存储，etcd的事务是基于boltdb的事务实现的。</p>
-
+<p>backend封装了etcd中的存储，按照设计，backend可以对接多种存储，当前使用的是<a href="https://github.com/etcd-io/bbolt">boltdb</a>，但作为一个CNCF项目，官方也在考虑接入更多的存储引擎<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>。boltdb是一个纯Go语言实现的支持事务的KV存储，etcd的事务就是基于boltdb的事务实现的。</p>
 <p>etcd在boltdb中存储的key是<code>reversion</code>，value是etcd自己的<code>key-value</code>组合。因此，每次更新时，新的<code>reversion</code>会被记在<code>keyIndex</code>中，同时，这个<code>reversion</code>所对应的<code>key-value</code>组合会被存到boltdb中。</p>
-
 <p>举个例子： 用etcdctl通过批量接口写入两条记录：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+<pre class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
@@ -548,13 +520,13 @@ if (!doNotTrack) {
 <pre class="chroma"><code class="language-bash" data-lang="bash">etcdctl txn <span class="o">&lt;&lt;&lt;</span><span class="s1">&#39;
 </span><span class="s1">put key1 &#34;v1&#34;
 </span><span class="s1">put key2 &#34;v2&#34;
-</span><span class="s1">&#39;</span></code></pre></td></tr></table>
+</span><span class="s1">&#39;</span>
+</code></pre></td></tr></table>
 </div>
-</div>
-<p>再通过批量接口更新这两条记录：</p>
+</div><p>再通过批量接口更新这两条记录：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+<pre class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
@@ -563,26 +535,25 @@ if (!doNotTrack) {
 <pre class="chroma"><code class="language-bash" data-lang="bash">etcdctl txn <span class="o">&lt;&lt;&lt;</span><span class="s1">&#39;
 </span><span class="s1">put key1 &#34;v12&#34;
 </span><span class="s1">put key2 &#34;v22&#34;
-</span><span class="s1">&#39;</span></code></pre></td></tr></table>
+</span><span class="s1">&#39;</span>
+</code></pre></td></tr></table>
 </div>
-</div>
-<p>boltdb中其实有了4条数据：</p>
+</div><p>boltdb中其实有了4条数据：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+<pre class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="nv">rev</span><span class="o">={</span><span class="m">3</span> <span class="m">0</span><span class="o">}</span>, <span class="nv">key</span><span class="o">=</span><span class="s2">&#34;key1&#34;</span>, <span class="nv">value</span><span class="o">=</span><span class="s2">&#34;v1&#34;</span>
-<span class="nv">rev</span><span class="o">={</span><span class="m">3</span> <span class="m">1</span><span class="o">}</span>, <span class="nv">key</span><span class="o">=</span><span class="s2">&#34;key2&#34;</span>, <span class="nv">value</span><span class="o">=</span><span class="s2">&#34;v2&#34;</span>
-<span class="nv">rev</span><span class="o">={</span><span class="m">4</span> <span class="m">0</span><span class="o">}</span>, <span class="nv">key</span><span class="o">=</span><span class="s2">&#34;key1&#34;</span>, <span class="nv">value</span><span class="o">=</span><span class="s2">&#34;v12&#34;</span>
-<span class="nv">rev</span><span class="o">={</span><span class="m">4</span> <span class="m">1</span><span class="o">}</span>, <span class="nv">key</span><span class="o">=</span><span class="s2">&#34;key2&#34;</span>, <span class="nv">value</span><span class="o">=</span><span class="s2">&#34;v22&#34;</span></code></pre></td></tr></table>
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="nv">rev</span><span class="o">=</span><span class="o">{</span><span class="m">3</span> 0<span class="o">}</span>, <span class="nv">key</span><span class="o">=</span><span class="s2">&#34;key1&#34;</span>, <span class="nv">value</span><span class="o">=</span><span class="s2">&#34;v1&#34;</span>
+<span class="nv">rev</span><span class="o">=</span><span class="o">{</span><span class="m">3</span> 1<span class="o">}</span>, <span class="nv">key</span><span class="o">=</span><span class="s2">&#34;key2&#34;</span>, <span class="nv">value</span><span class="o">=</span><span class="s2">&#34;v2&#34;</span>
+<span class="nv">rev</span><span class="o">=</span><span class="o">{</span><span class="m">4</span> 0<span class="o">}</span>, <span class="nv">key</span><span class="o">=</span><span class="s2">&#34;key1&#34;</span>, <span class="nv">value</span><span class="o">=</span><span class="s2">&#34;v12&#34;</span>
+<span class="nv">rev</span><span class="o">=</span><span class="o">{</span><span class="m">4</span> 1<span class="o">}</span>, <span class="nv">key</span><span class="o">=</span><span class="s2">&#34;key2&#34;</span>, <span class="nv">value</span><span class="o">=</span><span class="s2">&#34;v22&#34;</span>
+</code></pre></td></tr></table>
 </div>
-</div>
-<p>所以总的来说，内存 btree 维护的是 key 到 keyIndex 的映射，keyIndex 内维护多版本的 revision 信息，而 revision 可以映射到磁盘bbolt中具体的value。下面这个图很好的表示了这个过程<sup class="footnote-ref" id="fnref:lichuang"><a href="#fn:lichuang">2</a></sup>：</p>
-
+</div><p>所以总的来说，<strong>内存 btree 维护的是 key 到 keyIndex 的映射，keyIndex 内维护多版本的 revision 信息，而 revision 可以映射到磁盘bbolt中具体的value。下面这个图很好的表示了这个过程<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup></strong>：</p>
 
 
 <div class="box">
@@ -598,15 +569,12 @@ if (!doNotTrack) {
   </figure>
 </div>
 
-
 <p>基本概念就介绍到这里了，下面我们把这些概念串起来，看看读写操作的完整流程是怎样的。</p>
-
 <h2 id="写操作">写操作</h2>
-
-<p>首先写操作的入口是applierV3的<a href="https://github.com/etcd-io/etcd/blob/v3.3.10/etcdserver/apply.go#L50">Put函数</a>，它开启一个写事务，然后进过层层封装，最后干活的是写事务的<code>put</code>函数，精简后的逻辑大概是这样的：</p>
+<p>首先客户端的<code>Put</code>请求会被<code>EtcdServer</code>的<a href="https://github.com/etcd-io/etcd/blob/v3.3.10/etcdserver/v3_server.go#L111">Put函数</a>接受到，它经过一套 raft 协议的流转后，在 apply 阶段被写入，精简后的写入逻辑大概是这样的：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt"> 1
+<pre class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -631,11 +599,11 @@ if (!doNotTrack) {
 </span></code></pre></td>
 <td class="lntd">
 <pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/kvstore_txn.go#L151
-</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">tw</span> <span class="o">*</span><span class="nx">storeTxnWrite</span><span class="p">)</span> <span class="nf">put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">,</span> <span class="nx">leaseID</span> <span class="nx">lease</span><span class="p">.</span><span class="nx">LeaseID</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">tw</span> <span class="o">*</span><span class="nx">storeTxnWrite</span><span class="p">)</span> <span class="nf">put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span> <span class="p">[</span><span class="p">]</span><span class="kt">byte</span><span class="p">,</span> <span class="nx">leaseID</span> <span class="nx">lease</span><span class="p">.</span><span class="nx">LeaseID</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">rev</span> <span class="o">:=</span> <span class="nx">tw</span><span class="p">.</span><span class="nx">beginRev</span> <span class="o">+</span> <span class="mi">1</span>
 
-    <span class="nx">ibytes</span> <span class="o">:=</span> <span class="nf">newRevBytes</span><span class="p">()</span>
-    <span class="nx">idxRev</span> <span class="o">:=</span> <span class="nx">revision</span><span class="p">{</span><span class="nx">main</span><span class="p">:</span> <span class="nx">rev</span><span class="p">,</span> <span class="nx">sub</span><span class="p">:</span> <span class="nb">int64</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nx">tw</span><span class="p">.</span><span class="nx">changes</span><span class="p">))}</span>
+    <span class="nx">ibytes</span> <span class="o">:=</span> <span class="nf">newRevBytes</span><span class="p">(</span><span class="p">)</span>
+    <span class="nx">idxRev</span> <span class="o">:=</span> <span class="nx">revision</span><span class="p">{</span><span class="nx">main</span><span class="p">:</span> <span class="nx">rev</span><span class="p">,</span> <span class="nx">sub</span><span class="p">:</span> <span class="nb">int64</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nx">tw</span><span class="p">.</span><span class="nx">changes</span><span class="p">)</span><span class="p">)</span><span class="p">}</span>
     <span class="nf">revToBytes</span><span class="p">(</span><span class="nx">idxRev</span><span class="p">,</span> <span class="nx">ibytes</span><span class="p">)</span>
 
     <span class="nx">kv</span> <span class="o">:=</span> <span class="nx">mvccpb</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{</span>
@@ -644,24 +612,22 @@ if (!doNotTrack) {
         <span class="nx">CreateRevision</span><span class="p">:</span> <span class="nx">c</span><span class="p">,</span>
         <span class="nx">ModRevision</span><span class="p">:</span>    <span class="nx">rev</span><span class="p">,</span>
         <span class="nx">Version</span><span class="p">:</span>        <span class="nx">ver</span><span class="p">,</span>
-        <span class="nx">Lease</span><span class="p">:</span>          <span class="nb">int64</span><span class="p">(</span><span class="nx">leaseID</span><span class="p">),</span>
+        <span class="nx">Lease</span><span class="p">:</span>          <span class="nb">int64</span><span class="p">(</span><span class="nx">leaseID</span><span class="p">)</span><span class="p">,</span>
     <span class="p">}</span>
-    <span class="nx">d</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">Marshal</span><span class="p">()</span>
+    <span class="nx">d</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">Marshal</span><span class="p">(</span><span class="p">)</span>
 
     <span class="nx">tw</span><span class="p">.</span><span class="nx">tx</span><span class="p">.</span><span class="nf">UnsafeSeqPut</span><span class="p">(</span><span class="nx">keyBucketName</span><span class="p">,</span> <span class="nx">ibytes</span><span class="p">,</span> <span class="nx">d</span><span class="p">)</span>
     <span class="nx">tw</span><span class="p">.</span><span class="nx">s</span><span class="p">.</span><span class="nx">kvindex</span><span class="p">.</span><span class="nf">Put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">idxRev</span><span class="p">)</span>
     <span class="nx">tw</span><span class="p">.</span><span class="nx">changes</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">tw</span><span class="p">.</span><span class="nx">changes</span><span class="p">,</span> <span class="nx">kv</span><span class="p">)</span>
-<span class="p">}</span></code></pre></td></tr></table>
+<span class="p">}</span>
+</code></pre></td></tr></table>
 </div>
-</div>
-<p>正如前面所分析的，这里的<code>put</code>操作首先获取了当前事务的ID（tw.beginRev），以及当前事务中已经进行过的更改数（tw.changes），然后以此为基础生成了<code>revision</code>，并向<code>boltdb</code>和<code>treeIndex</code>分别执行了两次写入操作。</p>
-
+</div><p>正如前面所分析的，这里的写入操作首先获取了当前事务开始时的ID（tw.beginRev），构造出了新的<code>revision</code>，然后将 value 写入到后端的<code>boltdb</code>中，并更新了内存中 key 的索引（treeIndex）。</p>
 <h2 id="读操作">读操作</h2>
-
-<p>读操作的入口是applierV3的<a href="https://github.com/etcd-io/etcd/blob/v3.3.10/etcdserver/apply.go#L51">Range函数</a>，跟写操作一样，它开启了一个只读事务，然后一路调用到<code>rangeKeys</code>函数：</p>
+<p>读操作的处理函数是由<code>EtcdServer</code>的<a href="https://github.com/etcd-io/etcd/blob/v3.3.10/etcdserver/v3_server.go#L86">Range函数</a>处理的，在走完一段<code>Linearizable Read</code>协议后，我们发现最终的操作是由<code>storeTxnRead.rangeKeys</code>来完成的：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="lnt"> 1
+<pre class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -681,47 +647,43 @@ if (!doNotTrack) {
 </span></code></pre></td>
 <td class="lntd">
 <pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// https://github.com/etcd-io/etcd/blob/v3.3.10/mvcc/kvstore_txn.go#L111
-</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">tr</span> <span class="o">*</span><span class="nx">storeTxnRead</span><span class="p">)</span> <span class="nf">rangeKeys</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">end</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">,</span> <span class="nx">curRev</span> <span class="kt">int64</span><span class="p">,</span> <span class="nx">ro</span> <span class="nx">RangeOptions</span><span class="p">)</span> <span class="p">(</span><span class="o">*</span><span class="nx">RangeResult</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">tr</span> <span class="o">*</span><span class="nx">storeTxnRead</span><span class="p">)</span> <span class="nf">rangeKeys</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">end</span> <span class="p">[</span><span class="p">]</span><span class="kt">byte</span><span class="p">,</span> <span class="nx">curRev</span> <span class="kt">int64</span><span class="p">,</span> <span class="nx">ro</span> <span class="nx">RangeOptions</span><span class="p">)</span> <span class="p">(</span><span class="o">*</span><span class="nx">RangeResult</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">rev</span> <span class="o">:=</span> <span class="nx">ro</span><span class="p">.</span><span class="nx">Rev</span>
 
     <span class="nx">revpairs</span> <span class="o">:=</span> <span class="nx">tr</span><span class="p">.</span><span class="nx">s</span><span class="p">.</span><span class="nx">kvindex</span><span class="p">.</span><span class="nf">Revisions</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">end</span><span class="p">,</span> <span class="nx">rev</span><span class="p">)</span>
 
     <span class="nx">limit</span> <span class="o">:=</span> <span class="nb">int</span><span class="p">(</span><span class="nx">ro</span><span class="p">.</span><span class="nx">Limit</span><span class="p">)</span>
-    <span class="nx">kvs</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="nx">mvccpb</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">,</span> <span class="nx">limit</span><span class="p">)</span>
-    <span class="nx">revBytes</span> <span class="o">:=</span> <span class="nf">newRevBytes</span><span class="p">()</span>
+    <span class="nx">kvs</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="p">[</span><span class="p">]</span><span class="nx">mvccpb</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">,</span> <span class="nx">limit</span><span class="p">)</span>
+    <span class="nx">revBytes</span> <span class="o">:=</span> <span class="nf">newRevBytes</span><span class="p">(</span><span class="p">)</span>
 
-    <span class="k">for</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">revpair</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">revpairs</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="nx">kvs</span><span class="p">)]</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">revpair</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">revpairs</span><span class="p">[</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="nx">kvs</span><span class="p">)</span><span class="p">]</span> <span class="p">{</span>
         <span class="nf">revToBytes</span><span class="p">(</span><span class="nx">revpair</span><span class="p">,</span> <span class="nx">revBytes</span><span class="p">)</span>
         <span class="nx">_</span><span class="p">,</span> <span class="nx">vs</span> <span class="o">:=</span> <span class="nx">tr</span><span class="p">.</span><span class="nx">tx</span><span class="p">.</span><span class="nf">UnsafeRange</span><span class="p">(</span><span class="nx">keyBucketName</span><span class="p">,</span> <span class="nx">revBytes</span><span class="p">,</span> <span class="kc">nil</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="nx">kvs</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nf">Unmarshal</span><span class="p">(</span><span class="nx">vs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="nx">kvs</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="p">.</span><span class="nf">Unmarshal</span><span class="p">(</span><span class="nx">vs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="p">)</span>
     <span class="p">}</span>
-    <span class="k">return</span> <span class="o">&amp;</span><span class="nx">RangeResult</span><span class="p">{</span><span class="nx">KVs</span><span class="p">:</span> <span class="nx">kvs</span><span class="p">,</span> <span class="nx">Count</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="nx">revpairs</span><span class="p">),</span> <span class="nx">Rev</span><span class="p">:</span> <span class="nx">curRev</span><span class="p">},</span> <span class="kc">nil</span>
-    <span class="p">}</span></code></pre></td></tr></table>
+    <span class="k">return</span> <span class="o">&amp;</span><span class="nx">RangeResult</span><span class="p">{</span><span class="nx">KVs</span><span class="p">:</span> <span class="nx">kvs</span><span class="p">,</span> <span class="nx">Count</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="nx">revpairs</span><span class="p">)</span><span class="p">,</span> <span class="nx">Rev</span><span class="p">:</span> <span class="nx">curRev</span><span class="p">}</span><span class="p">,</span> <span class="kc">nil</span>
+    <span class="p">}</span>
+</code></pre></td></tr></table>
 </div>
-</div>
-<p>这里函数的参数<code>curRev</code>代表当前事务ID。拿到这个ID后，我们去<code>treeIndex</code>中查询，满足指定条件的<code>revision</code>有哪些，然后再根据这些<code>revision</code>去<code>boltdb</code>中查询当时存的<code>key-value</code>是什么。</p>
-
+</div><p>这里函数的参数<code>curRev</code>代表当前事务ID。拿到了<code>key</code>以及感兴趣的<code>revision</code>之后，我们去<code>treeIndex</code>中查询，满足指定条件的<code>revision</code>有哪些，然后再根据这些<code>revision</code>去<code>boltdb</code>中查询当时存的<code>key-value</code>是什么，并封装成<code>RangeResult</code>返回出去。</p>
 <h2 id="小结">小结</h2>
-
 <p>本文将乐观锁的原理及其在 etcd 中的实现 MVCC 梳理了一遍，希望对读者在理解和使用乐观锁上能有所帮助。</p>
-
 <p>在 etcd 中，MVCC 的实现还是比较简单直接的。但在阅读代码的过程中，我也有一些看不明白的地方，毕竟一段代码在演化的过程中，会多出各种各样的细节处理，比如边界情况，性能调优等。这些细节会扰乱视线，让我们难以抓住主干。一般碰到这种情况，我会采用两种方法：</p>
-
 <ol>
 <li>阅读UT，看他们都在测试什么。一般UT的输入输出都比较确定，它能够向我们揭示这段代码的作者期望完成的功能是什么。有了这个目标后我们再去看实现，就能剔出哪些是跟主干功能有关的，哪些是细节处理。</li>
 <li>查找较早的提交。既然代码是演进出来的，那它刚开始的几个版本一般都比较粗糙，有很多细节没有处理，但那也是这个功能最直接的实现。通过阅读作者早期的实现，也能帮助我们快速抓住主干。</li>
 </ol>
-<div class="footnotes">
-
-<hr />
-
+<section class="footnotes" role="doc-endnotes">
+<hr>
 <ol>
-<li id="fn:pluggable-backend"><a href="https://github.com/etcd-io/etcd/issues/10321">Meta issue: Pluggable backend #10321</a>
- <a class="footnote-return" href="#fnref:pluggable-backend"><sup>[return]</sup></a></li>
-<li id="fn:lichuang"><a href="https://lichuang.github.io/post/20181125-etcd-server/">etcd存储的实现</a>
- <a class="footnote-return" href="#fnref:lichuang"><sup>[return]</sup></a></li>
+<li id="fn:1" role="doc-endnote">
+<p><a href="https://github.com/etcd-io/etcd/issues/10321">Meta issue: Pluggable backend #10321</a> <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2" role="doc-endnote">
+<p><a href="https://lichuang.github.io/post/20181125-etcd-server/">etcd存储的实现</a> <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
 </ol>
-</div>
+</section>
 
     </div>
 
@@ -735,7 +697,7 @@ if (!doNotTrack) {
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
     <span class="item-content">
-      2018-12-24
+      2020-01-15
       
     </span>
   </p>
@@ -886,7 +848,7 @@ if (!doNotTrack) {
     &copy;
     
       2018 -
-    2019
+    2020
     <span class="heart">
       
       <i class="iconfont">
@@ -908,7 +870,7 @@ if (!doNotTrack) {
 
   
     <span>
-      沪ICP备17033881号-1
+      <a class="beian" href="http://www.beian.miit.gov.cn/" target="_blank">沪ICP备17033881号-1</a>
     </span>
   
 </div>
