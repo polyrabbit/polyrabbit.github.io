@@ -64,12 +64,12 @@
 <meta property="og:type" content="article" />
 <meta property="og:url" content="//blog.betacat.io/post/raft-implementation-in-etcd/" />
 <meta property="article:published_time" content="2018-11-13T19:47:17+08:00" />
-<meta property="article:modified_time" content="2018-11-13T19:47:17+08:00" />
+<meta property="article:modified_time" content="2020-03-20T21:32:23+08:00" />
 <meta itemprop="name" content="Raft 在 etcd 中的实现">
 <meta itemprop="description" content="Raft是近年来比较流行的一个一致性算法。它的原理比较容易理解，网上也有很多相关的介绍，因此这里我就不再啰嗦原理了，而是打算以raft在et">
 <meta itemprop="datePublished" content="2018-11-13T19:47:17&#43;08:00" />
-<meta itemprop="dateModified" content="2018-11-13T19:47:17&#43;08:00" />
-<meta itemprop="wordCount" content="7850">
+<meta itemprop="dateModified" content="2020-03-20T21:32:23&#43;08:00" />
+<meta itemprop="wordCount" content="7841">
 
 
 
@@ -101,13 +101,6 @@ if (!doNotTrack) {
 <script type="text/javascript">
     
     if (window != top) top.location.href = window.location.href
-</script>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<script>
-  (adsbygoogle = window.adsbygoogle || []).push({
-    google_ad_client: "ca-pub-9393129008813908",
-    enable_page_level_ads: true
-  });
 </script>
 
 </head>
@@ -287,7 +280,7 @@ if (!doNotTrack) {
           2018-11-13
         </time>
         
-        <span class="more-meta"> 约 7850 字 </span>
+        <span class="more-meta"> 约 7841 字 </span>
           <span class="more-meta"> 预计阅读 16 分钟 </span>
 
         
@@ -463,7 +456,15 @@ if (!doNotTrack) {
 </code></pre></td></tr></table>
 </div>
 </div><ul>
-<li>Type：当前传递的消息类型，它的取值有<a href="https://github.com/etcd-io/etcd/blob/v3.3.10/raft/raftpb/raft.pb.go#L80">很多种</a>，比如用来请求投票的MsgVote、用来处理网络分区的MsgPreVote<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>、用来发给leader节点，让它在日志中增加数据的MsgProp(ose)、用来复制日志的MsgApp(end)、用来安装snapshot的MsgSnap。不同类型的消息也会用到下面不同的字段。</li>
+<li>Type：当前传递的消息类型，它的取值有<a href="https://github.com/etcd-io/etcd/blob/v3.3.10/raft/raftpb/raft.pb.go#L80">很多个</a>，但大致可以分成两类：
+<ol>
+<li>Raft 协议相关的，包括心跳MsgHeartbeat、日志MsgApp、投票消息MsgVote等。</li>
+<li>上层应用触发的（没错，上层应用并不是通过api与raft库交互的，而是通过发消息），比如应用对数据更改的消息MsgProp(osal)。</li>
+</ol>
+</li>
+</ul>
+<p>不同类型的消息会用到下面不同的字段：</p>
+<ul>
 <li>To, From分别代表了这个消息的接受者和发送者。</li>
 <li>Term：这个消息发出时整个集群所处的任期。</li>
 <li>LogTerm：消息发出者所保存的日志中最后一条的任期号，一般<code>MsgVote</code>会用到这个字段。</li>
@@ -501,7 +502,7 @@ if (!doNotTrack) {
 <span class="p">}</span>
 </code></pre></td></tr></table>
 </div>
-</div><p><code>entries</code>代表的是要进行操作的日志，但日志不可能无限增长，在特定的情况下，某些过期的日志会被清空。那这就引入一个新问题了，如果此后一个新的<code>follower</code>加入，而<code>leader</code>只有一部分操作日志，那这个新<code>follower</code>不是没法跟别人同步了吗？所以这个时候<code>snapshot</code>就登场了 - 我无法给你之前的日志，但我给你所有之前日志应用后的结果，之后的日志你再以这个<code>snapshot</code>为基础进行应用，那我们的状态就可以同步了。因此它们的结构关系可以用下图表示<sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup>：</p>
+</div><p><code>entries</code>代表的是要进行操作的日志，但日志不可能无限增长，在特定的情况下，某些过期的日志会被清空。那这就引入一个新问题了，如果此后一个新的<code>follower</code>加入，而<code>leader</code>只有一部分操作日志，那这个新<code>follower</code>不是没法跟别人同步了吗？所以这个时候<code>snapshot</code>就登场了 - 我无法给你之前的日志，但我给你所有之前日志应用后的结果，之后的日志你再以这个<code>snapshot</code>为基础进行应用，那我们的状态就可以同步了。因此它们的结构关系可以用下图表示<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>：</p>
 
 
 <div class="box">
@@ -528,7 +529,7 @@ if (!doNotTrack) {
 <li>applied uint64：保存当前传入状态机的数据最高索引。</li>
 </ul>
 <p>需要说明的是，一条日志数据，首先需要被提交（committed）成功，然后才能被应用（applied）到状态机中。因此，以下不等式一直成立：<code>applied &lt;= committed</code>。</p>
-<p>raftLog结构体中，几部分数据的排列如下图所示<sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup>：</p>
+<p>raftLog结构体中，几部分数据的排列如下图所示<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>：</p>
 
 
 <div class="box">
@@ -645,7 +646,7 @@ if (!doNotTrack) {
 <p>在正常情况下，<code>Next = Match + 1</code>，也就是下一个要同步的日志应当是对方已有日志的下一条。</p>
 </li>
 <li>
-<p><code>State</code>属性用来保存该节点当前的同步状态，它会有一下几种取值<sup id="fnref:4"><a href="#fn:4" class="footnote-ref" role="doc-noteref">4</a></sup>：</p>
+<p><code>State</code>属性用来保存该节点当前的同步状态，它会有一下几种取值<sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup>：</p>
 <ul>
 <li>ProgressStateProbe</li>
 </ul>
@@ -1186,13 +1187,10 @@ if (!doNotTrack) {
 <p>到写这篇文章为止，etcd的最新版本为<a href="https://github.com/etcd-io/etcd/tree/v3.3.10">v3.3.10</a>，所以这里的分析都是以v3.3.10为基础。 <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 <li id="fn:2" role="doc-endnote">
-<p><a href="https://zhesi.io/post/raft_prevote/">Raft的PreVote实现机制</a> <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<p><a href="https://lichuang.github.io/post/20180922-etcd-raft/">etcd Raft库解析</a> <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 <li id="fn:3" role="doc-endnote">
-<p><a href="https://lichuang.github.io/post/20180922-etcd-raft/">etcd Raft库解析</a> <a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
-</li>
-<li id="fn:4" role="doc-endnote">
-<p><a href="https://github.com/etcd-io/etcd/blob/v3.3.10/raft/design.md#progress">Design spec for Raft Progress</a> <a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<p><a href="https://github.com/etcd-io/etcd/blob/v3.3.10/raft/design.md#progress">Design spec for Raft Progress</a> <a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 </ol>
 </section>
@@ -1209,7 +1207,7 @@ if (!doNotTrack) {
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
     <span class="item-content">
-      2018-11-13
+      2020-03-20
       
     </span>
   </p>
@@ -1270,6 +1268,16 @@ if (!doNotTrack) {
   
 
   
+  
+    <div class="post bg-white">
+      <script src="https://utteranc.es/client.js"
+            repo= "polyrabbit/polyrabbit.github.io"
+            issue-term="title"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+      </script>
+    </div>
   
 
   

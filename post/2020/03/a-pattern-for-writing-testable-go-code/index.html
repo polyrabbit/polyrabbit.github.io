@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="zh-cn" itemscope itemtype="http://schema.org/WebPage">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>编写可测试 Go 代码的一种模式 - 喵叔没话说</title>
+  
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta name="MobileOptimized" content="width"/>
+<meta name="HandheldFriendly" content="true"/>
+
+
+<meta name="applicable-device" content="pc,mobile">
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="author" content="喵叔" />
+  <meta name="description" content="UT（单元测试）是个好东西，我们每个人都爱它。当写完一段功能复杂的逻辑时，各种变态的测试样例能增强我们对这段逻辑的信心；当更改别人的代码时，" />
+<meta name="keywords" content="design pattern, unit test, golang, testable, HTTP mock, SQL mock, time mock, rand mock" />
+
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.64.0" />
+
+
+<link rel="canonical" href="//blog.betacat.io/post/2020/03/a-pattern-for-writing-testable-go-code/" />
+
+
+
+
+
+<link rel="icon" href="/favicon.ico" />
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/sass/jane.min.0995afa14b62cd93e93cfc066b646c4c17a3eddca0e9d52a1d9dcf5d90aaacd3.css" integrity="sha256-CZWvoUtizZPpPPwGa2RsTBej7dyg6dUqHZ3PXZCqrNM=" media="screen" crossorigin="anonymous">
+
+
+
+
+
+<meta property="og:title" content="编写可测试 Go 代码的一种模式" />
+<meta property="og:description" content="UT（单元测试）是个好东西，我们每个人都爱它。当写完一段功能复杂的逻辑时，各种变态的测试样例能增强我们对这段逻辑的信心；当更改别人的代码时，" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="//blog.betacat.io/post/2020/03/a-pattern-for-writing-testable-go-code/" />
+<meta property="article:published_time" content="2020-03-07T20:41:16+08:00" />
+<meta property="article:modified_time" content="2020-03-28T21:32:23+08:00" />
+<meta itemprop="name" content="编写可测试 Go 代码的一种模式">
+<meta itemprop="description" content="UT（单元测试）是个好东西，我们每个人都爱它。当写完一段功能复杂的逻辑时，各种变态的测试样例能增强我们对这段逻辑的信心；当更改别人的代码时，">
+<meta itemprop="datePublished" content="2020-03-07T20:41:16&#43;08:00" />
+<meta itemprop="dateModified" content="2020-03-28T21:32:23&#43;08:00" />
+<meta itemprop="wordCount" content="3672">
+
+
+
+<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="编写可测试 Go 代码的一种模式"/>
+<meta name="twitter:description" content="UT（单元测试）是个好东西，我们每个人都爱它。当写完一段功能复杂的逻辑时，各种变态的测试样例能增强我们对这段逻辑的信心；当更改别人的代码时，"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-36049801-4', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script type="text/javascript">
+    
+    if (window != top) top.location.href = window.location.href
+</script>
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">喵叔没话说</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+          
+        
+      </li>
+    
+
+    
+  </ul>
+</nav>
+
+
+  
+    
+
+
+
+
+
+
+  <link rel="stylesheet" href="/lib/photoswipe/photoswipe.min.css" />
+  <link rel="stylesheet" href="/lib/photoswipe/default-skin/default-skin.min.css" />
+
+
+
+
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="pswp__bg"></div>
+
+<div class="pswp__scroll-wrap">
+    
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    
+    <div class="pswp__ui pswp__ui--hidden">
+    <div class="pswp__top-bar">
+      
+      <div class="pswp__counter"></div>
+      <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+      <button class="pswp__button pswp__button--share" title="Share"></button>
+      <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+      <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+      
+      
+      <div class="pswp__preloader">
+        <div class="pswp__preloader__icn">
+          <div class="pswp__preloader__cut">
+            <div class="pswp__preloader__donut"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+      <div class="pswp__share-tooltip"></div>
+    </div>
+    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+    </button>
+    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+    </button>
+    <div class="pswp__caption">
+      <div class="pswp__caption__center"></div>
+    </div>
+    </div>
+    </div>
+</div>
+
+  
+
+  
+
+  
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">
+    
+      喵叔没话说
+    
+  </a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+          
+
+        
+
+      </li>
+    
+
+    
+    
+
+    
+  </ul>
+</nav>
+
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">编写可测试 Go 代码的一种模式</h1>
+      
+      <div class="post-meta">
+        <time datetime="2020-03-07" class="post-time">
+          2020-03-07
+        </time>
+        
+        <span class="more-meta"> 约 3672 字 </span>
+          <span class="more-meta"> 预计阅读 8 分钟 </span>
+
+        
+        
+
+        
+        
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#monkey-patch">Monkey Patch</a></li>
+    <li><a href="#interface--dependency-injection">Interface + Dependency Injection</a>
+      <ul>
+        <li><a href="#code-in-action">Code in Action</a></li>
+        <li><a href="#best-practices">Best Practices</a></li>
+      </ul>
+    </li>
+    <li><a href="#conclusion">Conclusion</a></li>
+  </ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      <p>UT（单元测试）是个好东西，我们每个人都爱它。当写完一段功能复杂的逻辑时，各种变态的测试样例能增强我们对这段逻辑的信心；当更改别人的代码时，好的 UT coverage 能帮我们确保这次的更改不会影响到其他的代码；当阅读别人代码时，相应的 UT 也是一份文档，能告诉我们这段代码所实现的功能。因此我们总是希望别人的代码能有 UT，但自己却很少写 UT，这是为什么呢？🤔</p>
+<p>以我有限的经验来看，原因大概可以分成这两类：</p>
+<ul>
+<li><strong>外因</strong>：大多数老板不会去鼓励这种行为，他们看重的是更丰富和炫酷的功能，以及更快的迭代速度，具体代码质量怎么样，没人会关心。</li>
+<li><strong>内因</strong>：大部分代码或多或少都会对第三方有些依赖，比如依赖 http 请求或者数据库连接。在测试时，我们需要替换掉那些依赖，但这个替换的过程往往让人痛不欲生，最后写出来的测试可能95%的代码都是在做依赖替换，而真正对业务逻辑的测试却少得可怜。在这种情况下我们很难自发的去写测试。</li>
+</ul>
+<p>可以看到，除了不可控的外因外，单元测试的难点就是<strong>替换依赖</strong>（mock），如果依赖能够简单的替换掉，那代码就变得很容易测试了。下面我们就来看看两种常见的替换方法：</p>
+<h2 id="monkey-patch">Monkey Patch</h2>
+<p>在动态语言（js/python）的世界里，函数和方法是可以被随意修改的，因而在它们的单元测试中，用<code>monkey patch</code>来 mock 依赖是再常见不过的事了。但 Go 是个强类型的语言，<code>monkey patch</code>既违反了语言的特性，也远没有像动态语言里面那么灵活，即使费尽力气使用上了，那段代码也是充满了黑科技，很容易让其他人掉进坑里。所以，如果不是万不得已，一般情况下还是不建议使用这种伤敌一千自损八百的大杀器的。</p>
+<p>理想状况下，一段测试代码应当是简单、可维护的，它的复杂度不应当超过被测试的业务代码，下面介绍的一种方法就很容易达到这个目的。</p>
+<h2 id="interface--dependency-injection">Interface + Dependency Injection</h2>
+<p>在 Go 语言中，<a href="https://gobyexample.com/interfaces">接口</a>（interface）是对一个对象的抽象性描述，表明该对象能提供什么样的服务。它最主要的作用就是<strong>解耦</strong>调用者和实现者，这成为了可测试代码的关键。甚至有人说：</p>
+<blockquote>
+<p><em>如果一个略有规模的项目中没有出现任何 <code>interface</code> 的定义，那么我们可以推测出这在很大的概率上是一个代码质量堪忧并且没有多少单元测试覆盖的项目</em>。</p>
+</blockquote>
+<p>如果我们的代码都是面向接口编程，那依赖注入（dependency injection）就很容易实现。如果依赖注入被大量使用，那替换掉依赖将会变成一件轻而易举的事情。把这两者结合，就得到了一种编写可测试代码的模式：</p>
+<ol>
+<li>将代码的依赖抽象出来，抽象成一个接口，并且这个接口的实例不是自己创建出来，而是由上层调用方注入进来。</li>
+<li>将第三方依赖封装成上面接口的一种实现，调用方负责创建具体的实例，并注入进业务代码。</li>
+</ol>
+<p>有了这一层松耦合的依赖关系，在测试代码里，我们就可以 mock 出另一种接口的实现，从而很容易的替换掉第三方的依赖。</p>
+<p><img src="/image/2020/03/testable-go-code/dependency-injection.svg" alt="Dependency Injection Architecture"></p>
+<p>理论就这么简单，下面通过一个具体的例子实战一下，看看怎样用这个模式来重构一段代码，提升它的可测试性。</p>
+<h3 id="code-in-action">Code in Action</h3>
+<p>比方说我们有一个电商系统中的交易类<code>transaction</code>，用来记录每笔订单的交易情况。其中的<code>Execute()</code>函数负责执行转账操作，将钱从买家的账户转移到卖家的账户中，而真正的转账操作则是通过调用银行（支付宝、微信）的 SDK 完成的：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">transaction</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="nx">ID</span>       <span class="kt">string</span>
+    <span class="nx">BuyerID</span>  <span class="kt">int</span>
+    <span class="nx">SellerID</span> <span class="kt">int</span>
+    <span class="nx">Amount</span>   <span class="kt">float64</span>
+    <span class="nx">createdAt</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span>
+    <span class="nx">Status</span> <span class="nx">TransactionStatus</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">transaction</span><span class="p">)</span> <span class="nf">Execute</span><span class="p">(</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="o">==</span> <span class="nx">Executed</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="kc">true</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">(</span><span class="p">)</span> <span class="o">-</span> <span class="nx">t</span><span class="p">.</span><span class="nx">createdAt</span> <span class="p">&gt;</span> <span class="mf">24.</span><span class="nx">hours</span> <span class="p">{</span> <span class="c1">// 交易有有效期
+</span><span class="c1"></span>        <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="nx">Expired</span>
+        <span class="k">return</span> <span class="kc">false</span>
+    <span class="p">}</span>
+    <span class="nx">client</span> <span class="o">:=</span> <span class="nx">BankClient</span><span class="p">.</span><span class="nf">New</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">token</span><span class="p">)</span> <span class="c1">// 调用银行的 SDK 执行转账
+</span><span class="c1"></span>    <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">client</span><span class="p">.</span><span class="nf">TransferMoney</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">BuyerID</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">SellerID</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Amount</span><span class="p">)</span><span class="p">;</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+        <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="nx">Failed</span>
+        <span class="k">return</span> <span class="kc">false</span>
+    <span class="p">}</span>
+    <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="nx">Executed</span>
+    <span class="k">return</span> <span class="kc">true</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>这个类最重要的功能集中在<code>Execute()</code>函数中，但它却不好测试，因为它有两个外部依赖：</p>
+<ol>
+<li>行为不确定的<code>time.Now</code>函数，它的每一次调用都会产生不同的结果。</li>
+<li>银行提供的转账 SDK，我们不可能每次测试都去真的调用一下，那测试成本也忒高了。</li>
+</ol>
+<p>解决方法就是把这两个依赖 mock 掉，即用一个“假的”服务来替换真的服务，这里我们先拿测试成本较高的银行 SDK 试水。</p>
+<h4 id="mock-sdk-dependency">Mock SDK Dependency</h4>
+<p>按照上面的理论，先将代码里使用到的方法抽象成一个接口（目前这个接口只包含一个方法，当然实际的场景下抽象出来的接口肯定比这个复杂）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">Transferer</span> <span class="kd">interface</span> <span class="p">{</span>
+    <span class="nf">TransferMoney</span><span class="p">(</span><span class="nx">id</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">buyerID</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">sellerID</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">float64</span><span class="p">)</span> <span class="kt">error</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>然后将创建<code>BankClient</code>的行为上移到调用者那边去，相当于调用者创建了一个满足<code>Transferer</code>接口的实例，再注入进我们的代码。所以<code>transaction</code>这边就需要有个地方来接受这个实例，一个方法是通过<code>Execute()</code>函数的参数，但如果依赖过多的话，会造成函数参数爆炸，另一个则是放到<code>transaction</code>的成员属性中。这里我们采用更常见的第二个方法，因此重构后的<code>transaction</code>类及其构造函数就变成了这样：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">transaction</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="nx">ID</span>       <span class="kt">string</span>
+    <span class="nx">BuyerID</span>  <span class="kt">int</span>
+    <span class="nx">SellerID</span> <span class="kt">int</span>
+    <span class="nx">Amount</span>   <span class="kt">float64</span>
+    <span class="nx">createdAt</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span>
+    <span class="nx">Status</span> <span class="nx">TransactionStatus</span>
+    <span class="c1">// 增加了一个存放接口的属性
+</span><span class="c1"></span>    <span class="nx">transferer</span> <span class="nx">Transferer</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="nf">New</span><span class="p">(</span><span class="nx">buyerID</span><span class="p">,</span> <span class="nx">sellerID</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">float64</span><span class="p">,</span> <span class="nx">transferer</span> <span class="nx">Transferer</span><span class="p">)</span> <span class="o">*</span><span class="nx">transaction</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&amp;</span><span class="nx">transaction</span><span class="p">{</span>
+        <span class="nx">ID</span><span class="p">:</span>         <span class="nx">IdGenerator</span><span class="p">.</span><span class="nf">generate</span><span class="p">(</span><span class="p">)</span><span class="p">,</span>
+        <span class="nx">BuyerID</span><span class="p">:</span>    <span class="nx">buyerID</span><span class="p">,</span>
+        <span class="nx">SellerID</span><span class="p">:</span>   <span class="nx">sellerID</span><span class="p">,</span>
+        <span class="nx">Amount</span><span class="p">:</span>     <span class="nx">amount</span><span class="p">,</span>
+        <span class="nx">createdAt</span><span class="p">:</span>  <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">(</span><span class="p">)</span><span class="p">,</span>
+        <span class="nx">Status</span><span class="p">:</span>     <span class="nx">TO_BE_EXECUTD</span><span class="p">,</span>
+        <span class="nx">transferer</span><span class="p">:</span> <span class="nx">transferer</span><span class="p">,</span> <span class="c1">// 注入进 transaction 类中
+</span><span class="c1"></span>    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">transaction</span><span class="p">)</span> <span class="nf">Execute</span><span class="p">(</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+    <span class="c1">//...
+</span><span class="c1"></span>    <span class="c1">//不直接创建，而是使用别人注入的接口实例
+</span><span class="c1"></span>    <span class="nx">t</span><span class="p">.</span><span class="nx">transferer</span><span class="p">.</span><span class="nf">TransferMoney</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">BuyerID</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">SellerID</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Amount</span><span class="p">)</span>
+    <span class="c1">//...
+</span><span class="c1"></span><span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>现在，我们在单元测试中就能够很方便的替换掉那个成本高昂的支付接口的调用了。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// 定义一个满足 Transferer 接口的 mock 类
+</span><span class="c1"></span><span class="kd">type</span> <span class="nx">MockedClient</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="nx">responseError</span> <span class="kt">error</span> <span class="c1">// 实例化的时候可以将期望的返回值保存进来
+</span><span class="c1"></span><span class="p">}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <span class="o">*</span><span class="nx">MockedClient</span><span class="p">)</span> <span class="nf">TransferMoney</span><span class="p">(</span><span class="nx">id</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">buyerID</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">sellerID</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">float64</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">m</span><span class="p">.</span><span class="nx">responseError</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="nf">Test_transaction_Execute</span><span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">T</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// 实例化一个可以自由控制结果的 client
+</span><span class="c1"></span>    <span class="nx">transferer</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">MockedClient</span><span class="p">{</span>
+        <span class="nx">responseError</span><span class="p">:</span> <span class="nx">errors</span><span class="p">.</span><span class="nf">New</span><span class="p">(</span><span class="s">&#34;insufficient balance&#34;</span><span class="p">)</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="nx">tnx</span> <span class="o">:=</span> <span class="nf">New</span><span class="p">(</span><span class="nx">buyerID</span><span class="p">,</span> <span class="nx">sellerID</span><span class="p">,</span> <span class="nx">amount</span><span class="p">,</span> <span class="nx">transferer</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">succeeded</span> <span class="o">:=</span> <span class="nx">tnx</span><span class="p">.</span><span class="nf">Execute</span><span class="p">(</span><span class="p">)</span><span class="p">;</span> <span class="nx">succeeded</span> <span class="o">!=</span> <span class="kc">false</span> <span class="p">{</span>
+        <span class="nx">t</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="s">&#34;Execute() = %v, want %v&#34;</span><span class="p">,</span> <span class="nx">succeeded</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>第三方 SDK 的替换问题解决了，我们再来看看对交易过期这种情况的测试。</p>
+<p>最直观的方法就是将<code>createdAt</code>属性设为24小时之前，这样就可以模拟出过期这个场景了。但这不是一个好的解决方案，因为在我们的实现中，<code>createdAt</code>是个私有属性，它是在交易生成时（即构造函数中）自动获取的系统时间，外界不应该去干预它，否则就破坏了类的封装性。所以我们应该想办法去替换掉<code>time.Now</code>的行为。</p>
+<h4 id="mock-timenow">Mock <code>time.Now</code></h4>
+<p>事实上，怎样 mock 当前时间是一个很常见的问题，类似的函数还有<code>rand.Intn</code>，他们的共同点就是输出是不确定的，这就让我们的测试无法覆盖所有的情况。面对这些函数，我们当然可以像上面一样用一个接口封装一下，但对于这么一个无毒无副作用的 util 函数，用 OOP 的那一套封装一下不免有点小题大做。这方面更常见的一种做法是利用函数在 Go 里面是一等公民，引入一个中间变量解耦一下。</p>
+<p>即业务代码不直接通过调用<code>time.Now</code>获得当前时间，而是通过一个中间人获得，而这个中间人被外界赋值为了<code>time.Now</code>。跟上面一样，这个中间人可以通过成员属性和函数参数的方式注入进来，或者偷懒直接定义为一个全局变量。下面来看看这种偷懒的做法（如果单元测试是并行执行的<code>t.Parallel()</code>，最好不要这么做）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">var</span> <span class="nx">nowFn</span> <span class="p">=</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Now</span> <span class="c1">//一个全局变量，用来解耦time.Now的生产者和消费者
+</span><span class="c1"></span>
+<span class="kd">func</span> <span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">transaction</span><span class="p">)</span> <span class="nf">Execute</span><span class="p">(</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="o">==</span> <span class="nx">Executed</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="kc">true</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="nf">nowFn</span><span class="p">(</span><span class="p">)</span> <span class="o">-</span> <span class="nx">t</span><span class="p">.</span><span class="nx">createdAt</span> <span class="p">&gt;</span> <span class="mf">24.</span><span class="nx">hours</span> <span class="p">{</span> <span class="c1">// 不直接调用time.Now()
+</span><span class="c1"></span>        <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="nx">Expired</span>
+        <span class="k">return</span> <span class="kc">false</span>
+    <span class="p">}</span>
+    <span class="c1">//...
+</span><span class="c1"></span><span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>这样，我们的单元测试就能随心所欲的改变“当前时间”了</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">Test_expired_transaction_Execute</span><span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">T</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// 用同样的函数签名改写业务中需要的时间函数
+</span><span class="c1"></span>    <span class="c1">// 这里能改变私有的全局变量是因为测试代码跟业务代码处于同一个包中
+</span><span class="c1"></span>    <span class="nx">nowFn</span> <span class="p">=</span> <span class="kd">func</span><span class="p">(</span><span class="p">)</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">(</span><span class="p">)</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="o">-</span><span class="mi">24</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Hour</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="c1">// 依旧需要实例化一个假的的 client
+</span><span class="c1"></span>    <span class="nx">transferer</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">MockedClient</span><span class="p">{</span>
+        <span class="nx">responseError</span><span class="p">:</span> <span class="kc">nil</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="nx">tnx</span> <span class="o">:=</span> <span class="nf">New</span><span class="p">(</span><span class="nx">buyerID</span><span class="p">,</span> <span class="nx">sellerID</span><span class="p">,</span> <span class="nx">amount</span><span class="p">,</span> <span class="nx">transferer</span><span class="p">)</span>
+    <span class="c1">//...
+</span><span class="c1"></span><span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>这一次的 mock 虽然没有像上个那样显式的定义一个接口出来，但我们隐式的复用了<code>time.Now</code>的<strong>函数签名</strong>，将它当做一种“接口类型”来使用。可以看到，其实这两个 mock 用到的解耦思想都是一样的。</p>
+<h3 id="best-practices">Best Practices</h3>
+<p>在使用接口+依赖注入实现第三方服务替换的这条路上，这里还有些值得分享的经验，让单元测试的编写更轻松：</p>
+<ul>
+<li>在使用的地方定义接口</li>
+</ul>
+<p>调用方最清楚自己使用了第三方服务的哪几个方法。本着最小依赖的原则，注入的接口最好是由自己定义的，而不要使用第三方服务提供的大而全的接口，这样在 mock 的时候就能减轻不少工作量。这也是 Dave 的<a href="https://twitter.com/davecheney/status/942593128355192832">观点</a>：</p>
+<blockquote>
+<p>#golang top tip: the consumer should define the interface. If you’re defining an interface and an implementation in the same package, you may be doing it wrong.</p>
+<p>调用者应该负责定义接口，如果在一个包中同时定义了接口和实现，那么你<strong>可能</strong>就做错了。</p>
+</blockquote>
+<ul>
+<li>重新封装参数比较复杂的依赖调用</li>
+</ul>
+<p>有的依赖调用入参和出参比较复杂，如果原封不动的抽象成一个接口，那测试代码里就要花很大篇幅去构造那些参数。这个时候我们可以重新封装一下，将原接口的抽象范围扩大，使得整个接口的输入和输出变得更简单、更有业务含义。</p>
+<ul>
+<li><a href="https://www.jetbrains.com/go/">Goland</a> 一键生成测试模板代码</li>
+</ul>
+<p>这是 Goland 的一个小功能，它能自动生成一堆<a href="https://github.com/golang/go/wiki/TableDrivenTests">table driven tests</a>模板代码，我们只要往里面填测试数据就行了，这极大的加快了 UT 的编写。具体使用方法是在函数的任意位置右击，从弹出的菜单栏里选择<code>Generate...</code>，然后就会出现<code>Test for function</code>这个功能了。</p>
+
+<link rel="stylesheet" href="/css/hugo-easy-gallery.css" />
+<div class="box">
+<figure  itemprop="associatedMedia"
+  itemscope itemtype="http://schema.org/ImageObject" 
+  style="max-width:300px" >
+    <div class="img">
+      <img itemprop="thumbnail" src="/image/2020/03/testable-go-code/generate-test.png" alt="Generate test cases in Goland"/>
+    </div>
+    <a href="/image/2020/03/testable-go-code/generate-test.png" itemprop="contentUrl"></a>
+  </figure>
+</div>
+
+<h2 id="conclusion">Conclusion</h2>
+<p>理论上来说，单元测试的难点应当在于思考的缜密性，因为要考虑到各种临界情况。如果你写单元测试的时候主要精力不是花在这里，而是想着怎样用黑魔法改变某个函数的底层行为，那很可能你的方向就走错了。如果我们的代码都用<strong>接口+依赖注入</strong>的方式解耦掉了，依赖都做成可插拔的，那单元测试里面隔离依赖就是一件水到渠成的事情。</p>
+<p>当然，这只是提高代码可测试性的一种途径，如果你还有其他方法，欢迎与我交流。</p>
+
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content"><a href="//blog.betacat.io">喵叔</a></span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">
+      2020-03-28
+      
+    </span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>（转载请注明出处）</span>
+  </p>
+</div>
+
+
+    
+    
+
+    <footer class="post-footer">
+      
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/2019/08/learn-transaction-isolation-levels-from-etcd/">
+            <span class="next-text nav-default">跟 etcd 学习数据库中事务隔离的实现</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            
+            <i class="iconfont">
+              <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M332.091514 74.487481l-75.369571 89.491197c-10.963703 12.998035-10.285251 32.864502 1.499144 44.378743l286.278095 300.375162L266.565125 819.058374c-11.338233 12.190647-11.035334 32.285311 0.638543 44.850487l80.46666 86.564541c11.680017 12.583596 30.356378 12.893658 41.662889 0.716314l377.434212-421.426145c11.332093-12.183484 11.041474-32.266891-0.657986-44.844348l-80.46666-86.564541c-1.772366-1.910513-3.706415-3.533476-5.750981-4.877077L373.270379 71.774697C361.493148 60.273758 343.054193 61.470003 332.091514 74.487481z"></path>
+</svg>
+
+            </i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+
+  
+  
+
+  
+  
+
+  
+
+  
+  
+    <div class="post bg-white">
+      <script src="https://utteranc.es/client.js"
+            repo= "polyrabbit/polyrabbit.github.io"
+            issue-term="title"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+      </script>
+    </div>
+  
+
+  
+
+  
+
+  
+
+    
+
+  
+
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="icon-links">
+  
+  
+    <a href="/email.gif" rel="me noopener" class="iconfont"
+      title="email"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1451 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M664.781909 681.472759 0 97.881301C0 3.997201 71.046997 0 71.046997 0L474.477909 0 961.649408 0 1361.641813 0C1361.641813 0 1432.688811 3.997201 1432.688811 97.881301L771.345323 681.472759C771.345323 681.472759 764.482731 685.154773 753.594283 688.65053L753.594283 688.664858C741.602731 693.493018 729.424896 695.068979 718.077952 694.839748 706.731093 695.068979 694.553173 693.493018 682.561621 688.664858L682.561621 688.65053C671.644501 685.140446 664.781909 681.472759 664.781909 681.472759L664.781909 681.472759ZM718.063616 811.603883C693.779541 811.016482 658.879232 802.205449 619.10784 767.734955 542.989056 701.759633 0 212.052267 0 212.052267L0 942.809523C0 942.809523 0 1024 83.726336 1024L682.532949 1024 753.579947 1024 1348.948139 1024C1432.688811 1024 1432.688811 942.809523 1432.688811 942.809523L1432.688811 212.052267C1432.688811 212.052267 893.138176 701.759633 817.019477 767.734955 777.248 802.205449 742.347691 811.03081 718.063616 811.603883L718.063616 811.603883Z"></path>
+</svg>
+
+    </a>
+  
+    <a href="javascript:alert%28%27My%20tweets%20are%20protected%20now%27%29" rel="me noopener" class="iconfont"
+      title="twitter"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1264 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M1229.8616 18.043658c0 0-117.852626 63.135335-164.151872 67.344358-105.225559-164.151872-505.082682-92.598492-437.738325 223.078185C278.622548 312.675223 89.216542 47.506814 89.216542 47.506814s-117.852626 189.406006 75.762402 345.139833C127.097743 396.85567 55.544363 371.601535 55.544363 371.601535S26.081207 535.753407 253.368414 615.724832c-21.045112 29.463156-113.643603 8.418045-113.643603 8.418045s25.254134 143.10676 231.496229 180.987961c-143.10676 130.479693-387.230056 92.598492-370.393967 105.225559 206.242095 189.406006 1119.599946 231.496229 1128.01799-643.98042C1179.353331 249.539887 1263.533778 123.269217 1263.533778 123.269217s-130.479693 37.881201-138.897738 33.672179C1225.652577 98.015083 1229.8616 18.043658 1229.8616 18.043658"></path>
+</svg>
+
+    </a>
+  
+    <a href="https://www.linkedin.com/in/%E6%98%8C%E6%96%B0-%E7%BC%AA-b46b8591/" rel="me noopener" class="iconfont"
+      title="linkedin"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="33" height="33">
+  <path d="M872.405333 872.618667h-151.637333v-237.610667c0-56.661333-1.152-129.578667-79.018667-129.578667-79.061333 0-91.136 61.653333-91.136 125.397334v241.792H398.976V384h145.664v66.602667h1.962667c20.352-38.4 69.845333-78.933333 143.786666-78.933334 153.642667 0 182.058667 101.12 182.058667 232.746667v268.202667zM227.712 317.141333a87.978667 87.978667 0 0 1-88.021333-88.106666 88.064 88.064 0 1 1 88.021333 88.106666z m76.032 555.477334H151.68V384h152.064v488.618667zM948.266667 0H75.562667C33.792 0 0 33.024 0 73.770667v876.458666C0 991.018667 33.792 1024 75.562667 1024h872.576C989.866667 1024 1024 991.018667 1024 950.229333V73.770667C1024 33.024 989.866667 0 948.138667 0h0.128z"></path>
+</svg>
+
+    </a>
+  
+    <a href="https://github.com/polyrabbit" rel="me noopener" class="iconfont"
+      title="github"  target="_blank"
+      >
+      <svg class="icon" style="" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M512 12.672c-282.88 0-512 229.248-512 512 0 226.261333 146.688 418.133333 350.08 485.76 25.6 4.821333 34.986667-11.008 34.986667-24.618667 0-12.16-0.426667-44.373333-0.64-87.04-142.421333 30.890667-172.458667-68.693333-172.458667-68.693333C188.672 770.986667 155.008 755.2 155.008 755.2c-46.378667-31.744 3.584-31.104 3.584-31.104 51.413333 3.584 78.421333 52.736 78.421333 52.736 45.653333 78.293333 119.850667 55.68 149.12 42.581333 4.608-33.109333 17.792-55.68 32.426667-68.48-113.706667-12.8-233.216-56.832-233.216-253.013333 0-55.893333 19.84-101.546667 52.693333-137.386667-5.76-12.928-23.04-64.981333 4.48-135.509333 0 0 42.88-13.738667 140.8 52.48 40.96-11.392 84.48-17.024 128-17.28 43.52 0.256 87.04 5.888 128 17.28 97.28-66.218667 140.16-52.48 140.16-52.48 27.52 70.528 10.24 122.581333 5.12 135.509333 32.64 35.84 52.48 81.493333 52.48 137.386667 0 196.693333-119.68 240-233.6 252.586667 17.92 15.36 34.56 46.762667 34.56 94.72 0 68.522667-0.64 123.562667-0.64 140.202666 0 13.44 8.96 29.44 35.2 24.32C877.44 942.592 1024 750.592 1024 524.672c0-282.752-229.248-512-512-512"></path>
+</svg>
+
+    </a>
+
+
+<a href="//blog.betacat.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
+    class="iconfont" title="rss" target="_blank">
+    <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="30" height="30">
+  <path d="M819.157333 1024C819.157333 574.592 449.408 204.8 0 204.8V0c561.706667 0 1024 462.293333 1024 1024h-204.842667zM140.416 743.04a140.8 140.8 0 0 1 140.501333 140.586667A140.928 140.928 0 0 1 140.074667 1024C62.72 1024 0 961.109333 0 883.626667s62.933333-140.544 140.416-140.586667zM678.784 1024h-199.04c0-263.210667-216.533333-479.786667-479.744-479.786667V345.173333c372.352 0 678.784 306.517333 678.784 678.826667z"></path>
+</svg>
+
+  </a>
+   
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy;
+    
+      2018 -
+    2020
+    <span class="heart">
+      
+      <i class="iconfont">
+        <svg class="icon" viewBox="0 0 1025 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="14" height="14">
+  <path d="M1000.1 247.9c-15.5-37.3-37.6-70.6-65.7-98.9-54.4-54.8-125.8-85-201-85-85.7 0-166 39-221.4 107.4C456.6 103 376.3 64 290.6 64c-75.1 0-146.5 30.4-201.1 85.6-28.2 28.5-50.4 61.9-65.8 99.3-16 38.8-24 79.9-23.6 122.2 0.7 91.7 40.1 177.2 108.1 234.8 3.1 2.6 6 5.1 8.9 7.8 14.9 13.4 58 52.8 112.6 102.7 93.5 85.5 209.9 191.9 257.5 234.2 7 6.1 15.8 9.5 24.9 9.5 9.2 0 18.1-3.4 24.9-9.5 34.5-30.7 105.8-95.9 181.4-165 74.2-67.8 150.9-138 195.8-178.2 69.5-57.9 109.6-144.4 109.9-237.3 0.1-42.5-8-83.6-24-122.2z"
+   fill="#8a8a8a"></path>
+</svg>
+
+      </i>
+    </span><span class="author">
+        <a href="//blog.betacat.io">喵叔</a>
+        
+      </span></span>
+
+  
+  
+
+  
+    <span>
+      <a class="beian" href="http://www.beian.miit.gov.cn/" target="_blank">沪ICP备17033881号-1</a>
+    </span>
+  
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont">
+        
+        <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="35" height="35">
+  <path d="M510.866688 227.694839 95.449397 629.218702l235.761562 0-2.057869 328.796468 362.40389 0L691.55698 628.188232l241.942331-3.089361L510.866688 227.694839zM63.840492 63.962777l894.052392 0 0 131.813095L63.840492 195.775872 63.840492 63.962777 63.840492 63.962777zM63.840492 63.962777"></path>
+</svg>
+
+      </i>
+    </div>
+  </div>
+  
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+
+
+
+
+<script type="text/javascript" src="/js/main.638251f4230630f0335d8c6748e53a96f94b72670920b60c09a56fdc8bece214.js" integrity="sha256-Y4JR9CMGMPAzXYxnSOU6lvlLcmcJILYMCaVv3Ivs4hQ=" crossorigin="anonymous"></script>
+
+
+
+
+
+
+<script id="baidu_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+    hm.src = "https://hm.baidu.com/hm.js?1d8c3618a611e95c78e0fcaf38baf230";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+  
+    <script type="text/javascript" src="/js/load-photoswipe.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe.min.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe-ui-default.min.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

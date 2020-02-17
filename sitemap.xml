@@ -10,14 +10,21 @@
   
   <url>
     <loc>//blog.betacat.io/post/</loc>
-    <lastmod>2020-02-10T21:32:23+08:00</lastmod>
+    <lastmod>2020-03-28T21:32:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>//blog.betacat.io/</loc>
-    <lastmod>2020-02-10T21:32:23+08:00</lastmod>
+    <lastmod>2020-03-28T21:32:23+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>//blog.betacat.io/post/2020/03/a-pattern-for-writing-testable-go-code/</loc>
+    <lastmod>2020-03-28T21:32:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -59,7 +66,7 @@
   
   <url>
     <loc>//blog.betacat.io/post/raft-implementation-in-etcd/</loc>
-    <lastmod>2018-11-13T19:47:17+08:00</lastmod>
+    <lastmod>2020-03-20T21:32:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
