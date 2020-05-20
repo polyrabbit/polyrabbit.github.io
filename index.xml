@@ -3222,7 +3222,7 @@ ca.crt  namespace  token
   &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;p&gt;IBM主机相比于其他计算机系统，其主要特点在于它的 &lt;a href=&#34;https://zh.wikipedia.org/wiki/%E5%8F%AF%E9%9D%A0%E6%80%A7%E3%80%81%E5%8F%AF%E7%94%A8%E6%80%A7%E5%92%8C%E5%8F%AF%E7%B6%AD%E8%AD%B7%E6%80%A7&#34;&gt;RAS&lt;/a&gt; (Reliability, Availability, Serviceability 高可靠性、高可用性、高可维护性)。曾经有用户反馈，在使用主机的数十年时间内，从未发生过异常停机事件。正是因为这些方面的优点和强大的处理能力，到现在为止还没有其他的系统可以替代它。但由于成本巨大（一台主机通常以亿为计价单位），使用主机系统的一般以政府、银行、保险公司和大型制造企业为主，因为这些机构对信息的稳定性和安全性要求很高。全球财富500强企业中的71%是IBM主机用户，全球企业级数据有80%驻留在IBM主机上&lt;sup id=&#34;fnref:1&#34;&gt;&lt;a href=&#34;#fn:1&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;1&lt;/a&gt;&lt;/sup&gt;。在我国，从央行到工农中建四大商业银行，其核心业务平台都是跑在IBM主机上的（希望银行能给点力，早日摆脱对国外技术的依赖）。&lt;/p&gt;
+&lt;p&gt;IBM主机相比于其他计算机系统，其主要特点在于它的 &lt;a href=&#34;https://zh.wikipedia.org/wiki/%E5%8F%AF%E9%9D%A0%E6%80%A7%E3%80%81%E5%8F%AF%E7%94%A8%E6%80%A7%E5%92%8C%E5%8F%AF%E7%B6%AD%E8%AD%B7%E6%80%A7&#34;&gt;RAS&lt;/a&gt; (Reliability, Availability, Serviceability 高可靠性、高可用性、高可维护性)。它对外承诺的 SLA 是5个9&lt;sup id=&#34;fnref:1&#34;&gt;&lt;a href=&#34;#fn:1&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;1&lt;/a&gt;&lt;/sup&gt;，即全年停机时间不超过 5.26 分钟（&lt;em&gt;2020年更新：z15的 SLA 已经达到了7个9，即全年停机时间不超过 3.16 秒&lt;/em&gt;）。曾经有用户反馈，在使用主机的数十年时间内，从未发生过异常停机事件。正是因为这些方面的优点和强大的处理能力，到现在为止还没有其他的系统可以替代它。但由于成本巨大（一台主机通常以亿为计价单位），使用主机系统的一般以政府、银行、保险公司和大型制造企业为主，因为这些机构对信息的稳定性和安全性要求很高。全球财富500强企业中的71%是IBM主机用户，全球企业级数据有80%驻留在IBM主机上&lt;sup id=&#34;fnref:2&#34;&gt;&lt;a href=&#34;#fn:2&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;2&lt;/a&gt;&lt;/sup&gt;。在我国，从央行到工农中建四大商业银行，其核心业务平台都是跑在IBM主机上的，希望银行能给点力，早日摆脱对国外技术的依赖。&lt;/p&gt;
 &lt;p&gt;这里有一个 z14 的宣传视频，希望能给大家带来一定的感性认识：&lt;/p&gt;
 
 &lt;div style=&#34;position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;&#34;&gt;
@@ -3230,7 +3230,7 @@ ca.crt  namespace  token
 &lt;/div&gt;
 
 &lt;h2 id=&#34;硬件&#34;&gt;硬件&lt;/h2&gt;
-&lt;p&gt;我对硬件不是很了解，只能列举一些数据来说明主机的硬件性能（以最新的 z14 为例）&lt;sup id=&#34;fnref:2&#34;&gt;&lt;a href=&#34;#fn:2&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;2&lt;/a&gt;&lt;/sup&gt;：&lt;/p&gt;
+&lt;p&gt;我对硬件不是很了解，只能列举一些数据来说明主机的硬件性能（以最新的 z14 为例）&lt;sup id=&#34;fnref:3&#34;&gt;&lt;a href=&#34;#fn:3&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;3&lt;/a&gt;&lt;/sup&gt;：&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;14nm 制造工艺&lt;/li&gt;
 &lt;li&gt;5.2GHz 主频&lt;/li&gt;
@@ -3258,7 +3258,7 @@ ca.crt  namespace  token
   &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;p&gt;主机的一个鲜明的特色就是采用了中央处理器（&lt;code&gt;CP&lt;/code&gt;）与系统辅助处理器（&lt;code&gt;SAP&lt;/code&gt;，System Assist Processor）组成，其所采用的CP既不是IBM自家的POWER，也不是x86，而是一个“IBM独立自主”的，基于z/Architecture主机架构而开发的处理器，其采用复杂指令集架构（CISC），有一些复杂指令负责微码（millicode）执行，也有一些被分解为类似于RISC的操作，因此虽然在总体架构上是CISC，但也兼具了RISC的优点。&lt;sup id=&#34;fnref:3&#34;&gt;&lt;a href=&#34;#fn:3&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;3&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+&lt;p&gt;主机的一个鲜明的特色就是采用了中央处理器（&lt;code&gt;CP&lt;/code&gt;）与系统辅助处理器（&lt;code&gt;SAP&lt;/code&gt;，System Assist Processor）组成，其所采用的CP既不是IBM自家的POWER，也不是x86，而是一个“IBM独立自主”的，基于z/Architecture主机架构而开发的处理器，其采用复杂指令集架构（CISC），有一些复杂指令负责微码（millicode）执行，也有一些被分解为类似于RISC的操作，因此虽然在总体架构上是CISC，但也兼具了RISC的优点。&lt;sup id=&#34;fnref:4&#34;&gt;&lt;a href=&#34;#fn:4&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;4&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
 
 
 &lt;div class=&#34;box&#34;&gt;
@@ -3320,7 +3320,7 @@ ca.crt  namespace  token
 &lt;p&gt;DataSet的名字用点(&lt;code&gt;.&lt;/code&gt;)作为分隔符，一般来说整个z/OS的文件系统都是扁平化的，即不会出现一个文件夹里面嵌套好几层文件夹的情况，为了方便在这种结构下组织文件，z/OS支持用&lt;code&gt;?&lt;/code&gt;或者&lt;code&gt;*&lt;/code&gt;来模糊匹配一部分文件路径。还有一点值得提及的是，带单引号(&lt;code&gt;&#39;&lt;/code&gt;)的DataSet是绝对路径，不带单引号的是相对路径，相对于当前用户的HOME（z里面叫HLQ），所以如果我说要访问&lt;code&gt;COBLOG0.JCL&lt;/code&gt;，其实我访问的是&lt;code&gt;&#39;MYUSER.COBLOG0.JCL&#39;&lt;/code&gt;。&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;Migrate&lt;/code&gt;是另一个有趣的特性。z/OS会定期&lt;code&gt;Migrate&lt;/code&gt;掉长期不用的DataSet，这些DataSet会被移到一个容量比较大的Tape上，以节约当前文件系统的空间，当下次需要使用这个DataSet的时候，要先把他&lt;code&gt;Recall&lt;/code&gt;回来。这就有点类似&lt;code&gt;Page Cache&lt;/code&gt;和磁盘的关系，&lt;code&gt;Page Cache&lt;/code&gt;总量就那么大，只能用来存热点数据，那些冷数据就让它呆在磁盘，到用的时候再加载进来好了。&lt;/p&gt;
 &lt;h3 id=&#34;向后兼容性&#34;&gt;向后兼容性&lt;/h3&gt;
-&lt;p&gt;z/OS的向后兼容性简直可以用典范来形容&lt;sup id=&#34;fnref:4&#34;&gt;&lt;a href=&#34;#fn:4&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;4&lt;/a&gt;&lt;/sup&gt;，据说一个上世纪80年代编译出来的程序，在现在的主机上依然可以运行。但也正是这种严苛的向后兼容性让主机背上了沉重的历史包袱，比如主机上使用的字符集是&lt;a href=&#34;https://zh.wikipedia.org/wiki/EBCDIC&#34;&gt;EBCDIC&lt;/a&gt;，它跟ASCII是不兼容的（比ASCII标准出来的要早）。用现在的眼光看，EBCDIC是一种奇怪的编码格式，它的&lt;code&gt;I&lt;/code&gt;和&lt;code&gt;J&lt;/code&gt;、&lt;code&gt;R&lt;/code&gt;和&lt;code&gt;S&lt;/code&gt;是不连续的。这个格式源自于&lt;a href=&#34;https://zh.wikipedia.org/wiki/%E6%89%93%E5%AD%94%E5%8D%A1&#34;&gt;打孔卡&lt;/a&gt;时代，那个时代，IBM是计算机领域的头号玩家，所以他们制定的编码标准也希望能与自己的&lt;code&gt;打孔卡&lt;/code&gt;相兼容&lt;sup id=&#34;fnref:4&#34;&gt;&lt;a href=&#34;#fn:4&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;4&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
+&lt;p&gt;z/OS的向后兼容性简直可以用典范来形容&lt;sup id=&#34;fnref:5&#34;&gt;&lt;a href=&#34;#fn:5&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;5&lt;/a&gt;&lt;/sup&gt;，据说一个上世纪80年代编译出来的程序，在现在的主机上依然可以运行。但也正是这种严苛的向后兼容性让主机背上了沉重的历史包袱，比如主机上使用的字符集是&lt;a href=&#34;https://zh.wikipedia.org/wiki/EBCDIC&#34;&gt;EBCDIC&lt;/a&gt;，它跟ASCII是不兼容的（比ASCII标准出来的要早）。用现在的眼光看，EBCDIC是一种奇怪的编码格式，它的&lt;code&gt;I&lt;/code&gt;和&lt;code&gt;J&lt;/code&gt;、&lt;code&gt;R&lt;/code&gt;和&lt;code&gt;S&lt;/code&gt;是不连续的。这个格式源自于&lt;a href=&#34;https://zh.wikipedia.org/wiki/%E6%89%93%E5%AD%94%E5%8D%A1&#34;&gt;打孔卡&lt;/a&gt;时代，那个时代，IBM是计算机领域的头号玩家，所以他们制定的编码标准也希望能与自己的&lt;code&gt;打孔卡&lt;/code&gt;相兼容&lt;sup id=&#34;fnref:5&#34;&gt;&lt;a href=&#34;#fn:5&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;5&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;//blog.betacat.io/image/ibm-mainframe/ebcdic.png&#34; alt=&#34;EBCDIC Standard&#34;&gt;&lt;/p&gt;
 &lt;p&gt;这个在当时看来无比正确的决定却给现在的我们带来无数的坑，在移植x86平台的程序到主机时，最大的麻烦就在于字符集的处理。但这种备受开发人员吐槽的向后兼容性却很受客户的欢迎，因为客户的诉求就是稳定可靠，他们希望应用程序开发完了之后，不应该因为操作系统的升级而需要重新开发，从这点也可以看出IBM&lt;code&gt;客户至上&lt;/code&gt;的理念。&lt;/p&gt;
 &lt;h3 id=&#34;其他组件&#34;&gt;其他组件&lt;/h3&gt;
@@ -3356,16 +3356,19 @@ ca.crt  namespace  token
 &lt;hr&gt;
 &lt;ol&gt;
 &lt;li id=&#34;fn:1&#34; role=&#34;doc-endnote&#34;&gt;
-&lt;p&gt;&lt;a href=&#34;https://servers.pconline.com.cn/gc/1202/2679853_3.html&#34;&gt;大型机市场现状&lt;/a&gt; &lt;a href=&#34;#fnref:1&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;http://twinkie.homedns.org/TechDocs/Books/sg248451.pdf&#34;&gt;IBM z14 Technical Guide&lt;/a&gt; &lt;a href=&#34;#fnref:1&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;li id=&#34;fn:2&#34; role=&#34;doc-endnote&#34;&gt;
-&lt;p&gt;&lt;a href=&#34;https://cloud.tencent.com/developer/news/268909&#34;&gt;新一代IBM z14主机技术介绍&lt;/a&gt; &lt;a href=&#34;#fnref:2&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://servers.pconline.com.cn/gc/1202/2679853_3.html&#34;&gt;大型机市场现状&lt;/a&gt; &lt;a href=&#34;#fnref:2&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;li id=&#34;fn:3&#34; role=&#34;doc-endnote&#34;&gt;
-&lt;p&gt;&lt;a href=&#34;https://mainframecn.com/article-71-1.html&#34;&gt;浅析IBM新一代zEnterprise System大型主机的设计&lt;/a&gt; &lt;a href=&#34;#fnref:3&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://cloud.tencent.com/developer/news/268909&#34;&gt;新一代IBM z14主机技术介绍&lt;/a&gt; &lt;a href=&#34;#fnref:3&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;li id=&#34;fn:4&#34; role=&#34;doc-endnote&#34;&gt;
-&lt;p&gt;&lt;a href=&#34;https://groups.google.com/d/msg/golang-dev/f6IC8Dm7weI/4Vzs9EY9CAAJ&#34;&gt;John McKown on glang-dev mail-list&lt;/a&gt; &lt;a href=&#34;#fnref:4&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://mainframecn.com/article-71-1.html&#34;&gt;浅析IBM新一代zEnterprise System大型主机的设计&lt;/a&gt; &lt;a href=&#34;#fnref:4&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:5&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;&lt;a href=&#34;https://groups.google.com/d/msg/golang-dev/f6IC8Dm7weI/4Vzs9EY9CAAJ&#34;&gt;John McKown on glang-dev mail-list&lt;/a&gt; &lt;a href=&#34;#fnref:5&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
 &lt;/section&gt;
