@@ -10,14 +10,21 @@
   
   <url>
     <loc>//blog.betacat.io/post/</loc>
-    <lastmod>2020-05-20T21:32:23+08:00</lastmod>
+    <lastmod>2020-08-07T21:32:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>//blog.betacat.io/</loc>
-    <lastmod>2020-05-20T21:32:23+08:00</lastmod>
+    <lastmod>2020-08-07T21:32:23+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>//blog.betacat.io/post/2020/08/how-to-mount-etcd-as-a-filesystem/</loc>
+    <lastmod>2020-08-07T21:32:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -45,7 +52,7 @@
   
   <url>
     <loc>//blog.betacat.io/post/golang-atomic-value-exploration/</loc>
-    <lastmod>2020-02-10T21:32:23+08:00</lastmod>
+    <lastmod>2020-08-04T21:32:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>

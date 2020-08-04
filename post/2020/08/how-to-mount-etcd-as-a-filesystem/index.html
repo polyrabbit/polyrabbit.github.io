@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>喵叔没话说</title>
+  <title>怎样用文件浏览器查看etcd的内容 - 喵叔没话说</title>
   
 
 <meta name="renderer" content="webkit" />
@@ -23,6 +23,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 
 <meta name="author" content="喵叔" />
+  <meta name="description" content="TL;DR 用 etcdfs 就可以，它能把一个 etcd 集群的 key-value 键值对，按照逻辑层级关系，映射成文件系统中的文件和文件夹，这样我们就能够用回熟悉的ls, grep, vim等工具了。" />
+<meta name="keywords" content="fuse, filesystem, etcd, etcd-client" />
+
 
 
 
@@ -32,8 +35,8 @@
 <meta name="generator" content="Hugo 0.64.0" />
 
 
-<link rel="canonical" href="//blog.betacat.io/" />
-<link href="/index.xml" rel="alternate" type="application/rss+xml" title="喵叔没话说" />
+<link rel="canonical" href="//blog.betacat.io/post/2020/08/how-to-mount-etcd-as-a-filesystem/" />
+
 
 
 
@@ -56,15 +59,23 @@
 
 
 
-<meta property="og:title" content="喵叔没话说" />
-<meta property="og:description" content="" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="//blog.betacat.io/" />
-<meta property="og:updated_time" content="2020-08-01T11:47:09+08:00" />
-<meta itemprop="name" content="喵叔没话说">
-<meta itemprop="description" content=""><meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="喵叔没话说"/>
-<meta name="twitter:description" content=""/>
+<meta property="og:title" content="怎样用文件浏览器查看etcd的内容" />
+<meta property="og:description" content="TL;DR 用 etcdfs 就可以，它能把一个 etcd 集群的 key-value 键值对，按照逻辑层级关系，映射成文件系统中的文件和文件夹，这样我们就能够用回熟悉的ls, grep, vim等工具了。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="//blog.betacat.io/post/2020/08/how-to-mount-etcd-as-a-filesystem/" />
+<meta property="article:published_time" content="2020-08-01T11:47:09+08:00" />
+<meta property="article:modified_time" content="2020-08-07T21:32:23+08:00" />
+<meta itemprop="name" content="怎样用文件浏览器查看etcd的内容">
+<meta itemprop="description" content="TL;DR 用 etcdfs 就可以，它能把一个 etcd 集群的 key-value 键值对，按照逻辑层级关系，映射成文件系统中的文件和文件夹，这样我们就能够用回熟悉的ls, grep, vim等工具了。">
+<meta itemprop="datePublished" content="2020-08-01T11:47:09&#43;08:00" />
+<meta itemprop="dateModified" content="2020-08-07T21:32:23&#43;08:00" />
+<meta itemprop="wordCount" content="1987">
+
+
+
+<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="怎样用文件浏览器查看etcd的内容"/>
+<meta name="twitter:description" content="TL;DR 用 etcdfs 就可以，它能把一个 etcd 集群的 key-value 键值对，按照逻辑层级关系，映射成文件系统中的文件和文件夹，这样我们就能够用回熟悉的ls, grep, vim等工具了。"/>
 
 <!--[if lte IE 9]>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
@@ -212,7 +223,7 @@ if (!doNotTrack) {
   <ul id="menu" class="menu">
     
     
-        <li class="menu-item active">
+        <li class="menu-item">
         
           
           
@@ -259,226 +270,200 @@ if (!doNotTrack) {
     <main id="main" class="main bg-llight">
       <div class="content-wrapper">
         <div id="content" class="content container">
-          
-<section id="posts" class="posts">
-  
-  
+          <article class="post bg-white">
     
-  
-  
-  
-    <article class="post bg-white">
-  <header class="post-header">
-    <h1 class="post-title">
+    <header class="post-header">
+      <h1 class="post-title">怎样用文件浏览器查看etcd的内容</h1>
       
-      <a class="post-link" href="/post/introduction-to-paging/">【译】分页技术简介</a>
-    </h1>
-    
-    <div class="post-meta">
-      <time datetime="2019-02-10" class="post-time">
-        2019-02-10
-      </time>
-      
-      <span class="more-meta"> 约 9933 字 </span>
-      <span class="more-meta"> 预计阅读 20 分钟 </span>
-      
-      
-      
-    </div>
-  </header>
-  
-  <div class="post-content">
-    
-    <div class="post-summary">
-      译注：这篇文章节选自《用Rust编写一个操作系统》系列。它由浅入深的介绍了分页技术（Paging）的历史由来，以及在现代操作系统中的实现。这
-    </div>
-    <div class="read-more">
-      <a href="/post/introduction-to-paging/" class="read-more-link">阅读全文</a>
-    </div>
-    
-  </div>
-</article>
+      <div class="post-meta">
+        <time datetime="2020-08-01" class="post-time">
+          2020-08-01
+        </time>
+        
+        <span class="more-meta"> 约 1987 字 </span>
+          <span class="more-meta"> 预计阅读 4 分钟 </span>
 
-  
-    <article class="post bg-white">
-  <header class="post-header">
-    <h1 class="post-title">
-      
-      <a class="post-link" href="/post/mvcc-implementation-in-etcd/">MVCC 在 etcd 中的实现</a>
-    </h1>
-    
-    <div class="post-meta">
-      <time datetime="2018-12-24" class="post-time">
-        2018-12-24
-      </time>
-      
-      <span class="more-meta"> 约 3315 字 </span>
-      <span class="more-meta"> 预计阅读 7 分钟 </span>
-      
-      
-      
-    </div>
-  </header>
-  
-  <div class="post-content">
-    
-    <div class="post-summary">
-      简介 在数据库领域，面对高并发环境下数据冲突的问题，业界常用的解决方案有两种： 想办法避免冲突。使用悲观锁来确保同一时刻只有一人能对数据进行更改
-    </div>
-    <div class="read-more">
-      <a href="/post/mvcc-implementation-in-etcd/" class="read-more-link">阅读全文</a>
-    </div>
-    
-  </div>
-</article>
+        
+        
 
-  
-    <article class="post bg-white">
-  <header class="post-header">
-    <h1 class="post-title">
-      
-      <a class="post-link" href="/post/raft-implementation-in-etcd/">Raft 在 etcd 中的实现</a>
-    </h1>
-    
-    <div class="post-meta">
-      <time datetime="2018-11-13" class="post-time">
-        2018-11-13
-      </time>
-      
-      <span class="more-meta"> 约 7841 字 </span>
-      <span class="more-meta"> 预计阅读 16 分钟 </span>
-      
-      
-      
-    </div>
-  </header>
-  
-  <div class="post-content">
-    
-    <div class="post-summary">
-      Raft是近年来比较流行的一个一致性算法。它的原理比较容易理解，网上也有很多相关的介绍，因此这里我就不再啰嗦原理了，而是打算以raft在et
-    </div>
-    <div class="read-more">
-      <a href="/post/raft-implementation-in-etcd/" class="read-more-link">阅读全文</a>
-    </div>
-    
-  </div>
-</article>
+        
+        
+      </div>
+    </header>
 
-  
-    <article class="post bg-white">
-  <header class="post-header">
-    <h1 class="post-title">
-      
-      <a class="post-link" href="/post/introduction-to-ibm-mainframe/">我所了解的IBM主机</a>
-    </h1>
     
-    <div class="post-meta">
-      <time datetime="2018-10-16" class="post-time">
-        2018-10-16
-      </time>
-      
-      <span class="more-meta"> 约 3610 字 </span>
-      <span class="more-meta"> 预计阅读 8 分钟 </span>
-      
-      
-      
-    </div>
-  </header>
-  
-  <div class="post-content">
     
-    <div class="post-summary">
-      我目前的工作主要是跟IBM主机打交道，但每次向别人介绍主机时，总觉得对方很难get到它的价值。一方面是因为主机这个系统太古老，又相对封闭，它
-    </div>
-    <div class="read-more">
-      <a href="/post/introduction-to-ibm-mainframe/" class="read-more-link">阅读全文</a>
-    </div>
-    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#tldr">TL;DR</a></li>
+    <li><a href="#举个栗子">举个栗子</a></li>
+    <li><a href="#工作原理">工作原理</a>
+      <ul>
+        <li><a href="#背景">背景</a></li>
+        <li><a href="#fuse-文件系统">FUSE 文件系统</a></li>
+        <li><a href="#go-fuse-库">Go-fuse 库</a></li>
+      </ul>
+    </li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
+</nav>
   </div>
-</article>
+</div>
 
-  
-    <article class="post bg-white">
-  <header class="post-header">
-    <h1 class="post-title">
-      
-      <a class="post-link" href="/post/how-to-extract-main-content-from-web-pages-using-machine-learning/">[Practical Guide] How to Extract Main Content From Web Pages Using Machine-Learning</a>
-    </h1>
     
-    <div class="post-meta">
-      <time datetime="2018-09-18" class="post-time">
-        2018-09-18
-      </time>
-      
-      <span class="more-meta"> 约 30 字 </span>
-      <span class="more-meta"> 预计阅读 1 分钟 </span>
-      
-      
-      
-    </div>
-  </header>
-  
-  <div class="post-content">
-    
-    <div class="post-summary">
-      Following Jupyter Notebook is a step-by-step tutorial I took when making the Hacker News Digest, hope you find it helpful:
-How to extract main content from web pages using Machine-Learning
-    </div>
-    <div class="read-more">
-      <a href="/post/how-to-extract-main-content-from-web-pages-using-machine-learning/" class="read-more-link">阅读全文</a>
-    </div>
-    
-  </div>
-</article>
-
-  
+    <div class="post-content">
+      <h2 id="tldr">TL;DR</h2>
+<p>用 <a href="https://github.com/polyrabbit/etcdfs">etcdfs</a> 就可以，它能把一个 etcd 集群的 key-value 键值对，按照逻辑层级关系，映射成文件系统中的文件和文件夹，这样我们就能够用回熟悉的<code>ls</code>, <code>grep</code>, <code>vim</code>等工具了。</p>
+<h2 id="举个栗子">举个栗子</h2>
+<p>Kubernetes 底层使用 etcd 来存放数据，如果我们想了解具体数据的组织结构，那用<code>etcdctl</code>就有点强人锁男了，因为它的操作对象是一个个扁平的 key-value 键值对，我们需要脑补出其中的层次结构。但如果把整个 etcd server <strong>挂载到本地</strong>的一个目录上，再用 VS Code 打开这个目录，那所有的数据都一览无遗，我们就拥有了一个更高阶的全貌视角：</p>
+<p><img src="/image/2020/08/etcdfs/open-kubernetes-etcd-in-vscode.png" alt="open kubernetes etcd in vscode.png"></p>
+<p>其实 Kubernetes 存放的数据格式继承自上古时代，那个时候用的还是 etcd v2 版本，所有的数据也是根据 v2 的模型组织成了一个树形结构，到后来虽然升级到了 v3，但之前的层次结构还是遗留了下来，对于这种有逻辑层级关系的数据，用一棵文件树来表示，似乎更有可读性。</p>
+<p><em>如果有兴趣，可以找一个 Kubernetes 集群，按下面的步骤，自己挂载一个来实际观察一下：</em></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">$ <span class="c1"># 将访问 etcd 用到的证书先拷到本地来（需小心保管）</span>
+$ scp -r &lt;kubernetes-master-ip&gt;:/etc/kubernetes/pki/etcd .
+$ <span class="c1"># 用 etcdfs 挂载到本地，注意到 etcdfs 用到的命令参数其实跟 etcdctl 是很相似的</span>
+$ etcdfs --endpoints<span class="o">=</span>&lt;kubernetes-master-ip&gt;:2379 --cacert etcd/ca.crt --key etcd/server.key --cert etcd/server.crt mnt
+$ <span class="c1"># 上一步成功后，就可以用 VS Code 打开了</span>
+$ code mnt
+</code></pre></td></tr></table>
+</div>
+</div><p>到这里为止，<em>“怎样把 etcd 挂载到本地”</em> 这个问题算是解答了，所用到的操作也就上面的几条命令，你也可以关掉页面了。但如果你想了解它是怎么做到的，请继续阅读&hellip;</p>
+<h2 id="工作原理">工作原理</h2>
+<h3 id="背景">背景</h3>
+<p>Linux 有一个 slogan —— <em>一切皆文件</em>，支撑这个 slogan 的是它背后的各种文件系统，比如常见的<code>procfs</code>, <code>ext4</code>, <code>NFS</code>。在这些花式文件系统之上，Linux 抽象出了一层 VFS(Virtual File System)，用来对外提供统一的接口，这样上层应用就不需要关心底下挂载到底是什么文件系统了。我们拿一个读请求举例：</p>
+<p><img src="/image/2020/08/etcdfs/vsf-read-operation.png" alt="VFS Read Operation"></p>
+<ol>
+<li>应用程序发起一个读函数调用。</li>
+<li><code>glibc</code>把该函数调用翻译成对应的系统调用。</li>
+<li><code>VFS</code>知道具体挂载的文件系统，转而调用该文件系统的函数指针。</li>
+<li>不同的文件系统会有不同的实现逻辑，比如<code>ext4</code>就根据<a href="https://zh.wikipedia.org/wiki/Inode">inode</a>中的元信息，去底层的块存储中寻址取值。</li>
+</ol>
+<h3 id="fuse-文件系统">FUSE 文件系统</h3>
+<p>了解完上面的流程后，再来介绍另一个文件系统的实现——<a href="https://en.wikipedia.org/wiki/Filesystem_in_Userspace">FUSE</a>（Filesystem in Userspace），它在整个文件系统栈中的定位跟<code>ext4</code>一样，也是响应<code>VFS</code>的调用，只不过把该调用封装成 FUSE 协议的消息<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>，通过设备<code>/dev/fuse</code>转发出去，这样用户态的程序只要监听该设备，解析消息作出相应的处理，并再发送回去就行。借助这样的能力，我们就能够在用户态模拟出一个文件系统来。</p>
+<p><img src="/image/2020/08/etcdfs/fuse-stack.png" alt="FUSE Stack"></p>
+<p>这种不依赖于底层硬件的灵活性给了程序员们无限的可能，比如将 FUSE 的请求通过 ssh 转发到远程的<a href="https://github.com/libfuse/sshfs">sshfs</a>，再比如这里的 etcdfs，也是将文件系统的操作转化为对 etcd 的 CURD 操作🤪。</p>
+<h3 id="go-fuse-库">Go-fuse 库</h3>
+<p>在 Go 语言生态圈，不少大佬都对 FUSE 协议进行了封装，其中用户量最大的应该是<a href="https://github.com/hanwen/go-fuse">go-fuse</a>，它作为 FUSE 的客户端，负责与内核中的 FUSE 模块交互，读取 FUSE 请求，解析出其中的<code>OpCode</code><sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>，并转为对用户程序中相应方法的调用，然后将结果封装成 FUSE 消息返回出去。</p>
+<p>在 go-fuse 中最重要的一个概念就是<code>fs.Inode</code><sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup>，它代表了在 VFS 文件树中的一个节点，所有文件系统的操作都需要以一个<code>fs.Inode</code>作为操作对象。在最开始做挂载调用的时候，我们就需要创建好一个<code>fs.Inode</code>对象，作为后续所有操作的根节点，它的<a href="https://www.ruanyifeng.com/blog/2011/12/inode.html">inode编号</a>必须为<code>1</code>。有了根节点之后，我们就可以递归的查找它的子节点，直到找到目标操作对象。</p>
+<p>再举个栗子，比如现在发生了<code>unlink(&quot;/tmp/foo&quot;)</code>系统调用，那 VFS 层首先会把目标文件名进行分段处理，在这个例子中，我们会得到三段：<code>/</code>, <code>tmp</code>, <code>foo</code>。其中的根节点<code>/</code>在挂载的时候已经创建了，所以 VFS 会以它作为起点，依次调用<code>Lookup</code>方法递归遍历下去：</p>
+<ol>
+<li>VFS 调用 root 节点的方法 <code>Lookup(&quot;tmp&quot;)</code>，拿到代表 tmp 目录的 Inode。</li>
+<li>VFS 继续调用 tmp 节点的方法<code>Lookup(&quot;foo&quot;)</code>，拿到代表 foo 文件的 Inode。</li>
+<li>VFS 拿到目标节点后，调用目标节点的<code>Unlink()</code>方法，实现删除操作。</li>
+</ol>
+<p>当然，实际实现中，我们不可能每次都从根节点一路遍历下来，那样子性能太差了。Linux 的 VFS 层支持<a href="http://www.science.unitn.it/~fiorella/guidelinux/tlk/node111.html">dentry cache</a> ，<code>dentry</code>用来保存文件名和<code>inode</code>之间的映射，并且允许文件系统的实现者设置 cache 的过期时间。在 ext4 的实现中，该缓存被设为永不过期，而 go-fuse 则允许我们通过 <a href="https://github.com/hanwen/go-fuse/blob/v2.0.3/fs/api.go#L572">EntryTimeout</a> 来指定过期时间。</p>
+<p>理解了 fs.Inode 的查找逻辑之后，剩下的就是在该对象上实现各种各样的方法了。因为 go-fuse 拿到一个 OpCode 之后，会用 Go 的接口断言判断一下当前的 fs.Inode 对象是否实现了该 OpCode 所需的方法，如果实现了则直接调用用户程序中的方法，否则走默认处理逻辑或者报错。</p>
+<h2 id="总结">总结</h2>
+<p>etcdfs 将文件系统常用的操作（比如：open, read, write, flush）都实现了一遍，底层封装的还是对 etcd 的操作。在知道了 go-fuse 的工作原理及使用方法后，这部分<a href="https://github.com/polyrabbit/etcdfs/tree/master/fs">文件系统相关的代码</a>应该就不难理解了。如果你对 etcdfs 有什么反馈建议，也欢迎与我交流。</p>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1" role="doc-endnote">
+<p><a href="https://github.com/libfuse/libfuse/blob/fuse-3.9.2/include/fuse_kernel.h">Kernel FUSE message format</a> <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2" role="doc-endnote">
+<p><a href="https://github.com/libfuse/libfuse/blob/fuse-3.9.2/include/fuse_kernel.h#L379">OpCode enum</a> <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3" role="doc-endnote">
+<p><a href="https://github.com/hanwen/go-fuse/blob/v2.0.3/fs/inode.go#L60">go-fuse Inode structure</a> <a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
 </section>
 
+    </div>
 
-
-
-
-
-  
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-
-  
-  
-  <nav class="pagination">
-    <ul>
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content"><a href="//blog.betacat.io">喵叔</a></span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">
+      2020-08-07
       
-      <li >
-        <a href="/">1</a>
-      </li>
+    </span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>（转载请注明出处）</span>
+  </p>
+</div>
+
+
+    
+    
+
+    <footer class="post-footer">
       
-      <li  class="active" >
-        <a href="/page/2/">2</a>
-      </li>
+
       
-      <li >
-        <a href="/page/3/">3</a>
-      </li>
-      
-    </ul>
-  </nav>
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/2020/03/a-pattern-for-writing-testable-go-code/">
+            <span class="next-text nav-default">编写可测试 Go 代码的一种模式</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            
+            <i class="iconfont">
+              <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M332.091514 74.487481l-75.369571 89.491197c-10.963703 12.998035-10.285251 32.864502 1.499144 44.378743l286.278095 300.375162L266.565125 819.058374c-11.338233 12.190647-11.035334 32.285311 0.638543 44.850487l80.46666 86.564541c11.680017 12.583596 30.356378 12.893658 41.662889 0.716314l377.434212-421.426145c11.332093-12.183484 11.041474-32.266891-0.657986-44.844348l-80.46666-86.564541c-1.772366-1.910513-3.706415-3.533476-5.750981-4.877077L373.270379 71.774697C361.493148 60.273758 343.054193 61.470003 332.091514 74.487481z"></path>
+</svg>
+
+            </i>
+          </a>
+      </nav>
+    </footer>
+  </article>
 
   
   
 
+  
+  
 
+  
 
+  
+  
+    <div class="post bg-white">
+      <script src="https://utteranc.es/client.js"
+            repo= "polyrabbit/polyrabbit.github.io"
+            issue-term="title"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+      </script>
+    </div>
+  
 
+  
+
+  
+
+  
+
+    
+
+  
 
         </div>
       </div>

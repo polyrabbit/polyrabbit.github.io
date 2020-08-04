@@ -6,10 +6,19 @@
     <description>Recent content in Posts on 喵叔没话说</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 07 Mar 2020 20:41:16 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 01 Aug 2020 11:47:09 +0800</lastBuildDate>
     
 	<atom:link href="//blog.betacat.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>怎样用文件浏览器查看etcd的内容</title>
+      <link>//blog.betacat.io/post/2020/08/how-to-mount-etcd-as-a-filesystem/</link>
+      <pubDate>Sat, 01 Aug 2020 11:47:09 +0800</pubDate>
+      
+      <guid>//blog.betacat.io/post/2020/08/how-to-mount-etcd-as-a-filesystem/</guid>
+      <description>TL;DR 用 etcdfs 就可以，它能把一个 etcd 集群的 key-value 键值对，按照逻辑层级关系，映射成文件系统中的文件和文件夹，这样我们就能够用回熟悉的ls, grep, vim等工具了。</description>
+    </item>
     
     <item>
       <title>编写可测试 Go 代码的一种模式</title>

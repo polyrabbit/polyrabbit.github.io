@@ -64,11 +64,11 @@
 <meta property="og:type" content="article" />
 <meta property="og:url" content="//blog.betacat.io/post/golang-atomic-value-exploration/" />
 <meta property="article:published_time" content="2019-03-15T21:30:47+08:00" />
-<meta property="article:modified_time" content="2020-02-10T21:32:23+08:00" />
+<meta property="article:modified_time" content="2020-08-04T21:32:23+08:00" />
 <meta itemprop="name" content="Go 语言标准库中 atomic.Value 的前世今生">
 <meta itemprop="description" content="在 Go 语言标准库中，sync/atomic包将底层硬件提供的原子操作封装成了 Go 的函数。但这些操作只支持几种基本数据类型，因此为了扩大原子操作的">
 <meta itemprop="datePublished" content="2019-03-15T21:30:47&#43;08:00" />
-<meta itemprop="dateModified" content="2020-02-10T21:32:23&#43;08:00" />
+<meta itemprop="dateModified" content="2020-08-04T21:32:23&#43;08:00" />
 <meta itemprop="wordCount" content="4417">
 
 
@@ -637,7 +637,7 @@ if (!doNotTrack) {
 </ol>
 <h2 id="总结">总结</h2>
 <p>本文从邮件列表中的一段讨论开始，介绍了<code>atomic.Value</code>的被提出来的历史缘由。然后由浅入深的介绍了它的使用姿势，以及内部实现。让大家不仅知其然，还能知其所以然。</p>
-<p>另外，再强调一遍，原子操作由<strong>底层硬件</strong>支持，而锁则由<strong>操作系统</strong>的调度器实现。锁应当用来保护一段逻辑，对于一个变量更新的保护，原子操作通常会更有效率，并且更能利用计算机多核的优势，如果要更新的是一个复合对象，则应当使用<code>atomic.Value</code>封装好的实现。</p>
+<p>另外，再强调一遍，原子操作由<strong>底层硬件</strong>支持，而锁则由操作系统的<strong>调度器</strong>实现。锁应当用来保护一段逻辑，对于一个变量更新的保护，原子操作通常会更有效率，并且更能利用计算机多核的优势，如果要更新的是一个复合对象，则应当使用<code>atomic.Value</code>封装好的实现。</p>
 
     </div>
 
@@ -651,7 +651,7 @@ if (!doNotTrack) {
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
     <span class="item-content">
-      2020-02-10
+      2020-08-04
       
     </span>
   </p>
