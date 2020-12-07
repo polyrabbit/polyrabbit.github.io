@@ -332,7 +332,7 @@ if (!doNotTrack) {
 <h3 id="原子性">原子性</h3>
 <p>一个或者多个操作在 CPU 执行的过程中不被中断的特性，称为<em>原子性（atomicity）</em> 。这些操作对外表现成一个不可分割的整体，他们要么都执行，要么都不执行，外界不会看到他们只执行到一半的状态。而在现实世界中，CPU 不可能不中断的执行一系列操作，但如果我们在执行多个操作时，能让他们的<strong>中间状态对外不可见</strong>，那我们就可以宣称他们拥有了&quot;不可分割”的原子性。</p>
 <p>有些朋友可能不知道，在 Go（甚至是大部分语言）中，一条普通的赋值语句其实不是一个原子操作。例如，在32位机器上写<code>int64</code>类型的变量就会有中间状态，因为它会被拆成两次写操作（<code>MOV</code>）——写低 32 位和写高 32 位，如下图所示：</p>
-<p><img src="/image/golang-atomic-value/64-bit-write.svg" alt="64位变量的赋值操作"></p>
+<p><img src="/image/golang-atomic-value/64-bit-write.drawio.png" alt="64位变量的赋值操作"></p>
 <p>如果一个线程刚写完低32位，还没来得及写高32位时，另一个线程读取了这个变量，那它得到的就是一个毫无逻辑的中间变量，这很有可能使我们的程序出现诡异的 Bug。</p>
 <p>这还只是一个基础类型，如果我们对一个结构体进行赋值，那它出现并发问题的概率就更高了。很可能写线程刚写完一小半的字段，读线程就来读取这个变量，那么就只能读到仅修改了一部分的值。这显然破坏了变量的完整性，读出来的值也是完全错误的。</p>
 <p>面对这种多线程下变量的读写问题，我们的主角——<code>atomic.Value</code>登场了，它使得我们可以不依赖于不保证兼容性的<code>unsafe.Pointer</code>类型，同时又能将任意数据类型的读写操作封装成原子性操作（让中间状态对外不可见）。</p>
@@ -595,7 +595,7 @@ if (!doNotTrack) {
 </ol>
 <p>这个逻辑的主要思想就是，为了完成多个字段的原子性写入，我们可以抓住其中的一个字段，以它的状态来标志整个原子写入的状态。这个想法我在<a href="https://pingcap.com/blog-cn/percolator-and-txn/"> TiDB 的事务</a>实现中看到过类似的，他们那边叫<code>Percolator</code>模型，主要思想也是先选出一个<code>primaryRow</code>，然后所有的操作也是以<code>primaryRow</code>的成功与否作为标志。嗯，果然是太阳底下没有新东西。</p>
 <p>如果没有耐心看代码，没关系，这儿还有个简化版的流程图：</p>
-<p><img src="/image/golang-atomic-value/atomic-value-store.svg" alt="atomic.Value Store 流程"></p>
+<p><img src="/image/golang-atomic-value/atomic-value-store.drawio.png" alt="atomic.Value Store 流程"></p>
 <h3 id="读取load操作">读取（Load）操作</h3>
 <p>先上代码：</p>
 <div class="highlight"><div class="chroma">

@@ -6,10 +6,19 @@
     <description>Recent content in Posts on 喵叔没话说</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 01 Aug 2020 11:47:09 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 23 Oct 2020 11:51:13 +0800</lastBuildDate>
     
 	<atom:link href="//blog.betacat.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>利用 AST 从代码反推出 thrift 文件</title>
+      <link>//blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/</link>
+      <pubDate>Fri, 23 Oct 2020 11:51:13 +0800</pubDate>
+      
+      <guid>//blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/</guid>
+      <description>众所周知 (?)，字节跳动内部主要使用 Thrift 作为 RPC 的序列化及传输协议。据说这套技术栈是从 99 房继承过来的，那个时候创业公司也没几个 RPC 框架可选，国内小</description>
+    </item>
     
     <item>
       <title>怎样用文件浏览器查看etcd的内容</title>

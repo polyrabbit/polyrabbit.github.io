@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="zh-cn" itemscope itemtype="http://schema.org/WebPage">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>利用 AST 从代码反推出 thrift 文件 - 喵叔没话说</title>
+  
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta name="MobileOptimized" content="width"/>
+<meta name="HandheldFriendly" content="true"/>
+
+
+<meta name="applicable-device" content="pc,mobile">
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="author" content="喵叔" />
+  <meta name="description" content="众所周知 (?)，字节跳动内部主要使用 Thrift 作为 RPC 的序列化及传输协议。据说这套技术栈是从 99 房继承过来的，那个时候创业公司也没几个 RPC 框架可选，国内小" />
+<meta name="keywords" content="go ast, thrift, ast, parser, visitor, 访问者模式, 语法树" />
+
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.64.0" />
+
+
+<link rel="canonical" href="//blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/" />
+
+
+
+
+
+<link rel="icon" href="/favicon.ico" />
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/sass/jane.min.0995afa14b62cd93e93cfc066b646c4c17a3eddca0e9d52a1d9dcf5d90aaacd3.css" integrity="sha256-CZWvoUtizZPpPPwGa2RsTBej7dyg6dUqHZ3PXZCqrNM=" media="screen" crossorigin="anonymous">
+
+
+
+
+
+<meta property="og:title" content="利用 AST 从代码反推出 thrift 文件" />
+<meta property="og:description" content="众所周知 (?)，字节跳动内部主要使用 Thrift 作为 RPC 的序列化及传输协议。据说这套技术栈是从 99 房继承过来的，那个时候创业公司也没几个 RPC 框架可选，国内小" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="//blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/" />
+<meta property="article:published_time" content="2020-10-23T11:51:13+08:00" />
+<meta property="article:modified_time" content="2020-11-13T11:51:13+08:00" />
+<meta itemprop="name" content="利用 AST 从代码反推出 thrift 文件">
+<meta itemprop="description" content="众所周知 (?)，字节跳动内部主要使用 Thrift 作为 RPC 的序列化及传输协议。据说这套技术栈是从 99 房继承过来的，那个时候创业公司也没几个 RPC 框架可选，国内小">
+<meta itemprop="datePublished" content="2020-10-23T11:51:13&#43;08:00" />
+<meta itemprop="dateModified" content="2020-11-13T11:51:13&#43;08:00" />
+<meta itemprop="wordCount" content="3133">
+
+
+
+<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="利用 AST 从代码反推出 thrift 文件"/>
+<meta name="twitter:description" content="众所周知 (?)，字节跳动内部主要使用 Thrift 作为 RPC 的序列化及传输协议。据说这套技术栈是从 99 房继承过来的，那个时候创业公司也没几个 RPC 框架可选，国内小"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-36049801-4', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script type="text/javascript">
+    
+    if (window != top) top.location.href = window.location.href
+</script>
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">喵叔没话说</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+          
+        
+      </li>
+    
+
+    
+  </ul>
+</nav>
+
+
+  
+    
+
+
+
+
+
+
+  <link rel="stylesheet" href="/lib/photoswipe/photoswipe.min.css" />
+  <link rel="stylesheet" href="/lib/photoswipe/default-skin/default-skin.min.css" />
+
+
+
+
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="pswp__bg"></div>
+
+<div class="pswp__scroll-wrap">
+    
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    
+    <div class="pswp__ui pswp__ui--hidden">
+    <div class="pswp__top-bar">
+      
+      <div class="pswp__counter"></div>
+      <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+      <button class="pswp__button pswp__button--share" title="Share"></button>
+      <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+      <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+      
+      
+      <div class="pswp__preloader">
+        <div class="pswp__preloader__icn">
+          <div class="pswp__preloader__cut">
+            <div class="pswp__preloader__donut"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+      <div class="pswp__share-tooltip"></div>
+    </div>
+    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+    </button>
+    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+    </button>
+    <div class="pswp__caption">
+      <div class="pswp__caption__center"></div>
+    </div>
+    </div>
+    </div>
+</div>
+
+  
+
+  
+
+  
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">
+    
+      喵叔没话说
+    
+  </a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+          
+
+        
+
+      </li>
+    
+
+    
+    
+
+    
+  </ul>
+</nav>
+
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">利用 AST 从代码反推出 thrift 文件</h1>
+      
+      <div class="post-meta">
+        <time datetime="2020-10-23" class="post-time">
+          2020-10-23
+        </time>
+        
+        <span class="more-meta"> 约 3133 字 </span>
+          <span class="more-meta"> 预计阅读 7 分钟 </span>
+
+        
+        
+
+        
+        
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#构建-ast">构建 AST</a>
+      <ul>
+        <li><a href="#gotoken">go/token</a></li>
+        <li><a href="#goscanner">go/scanner</a></li>
+        <li><a href="#goparser">go/parser</a></li>
+        <li><a href="#goast">go/ast</a></li>
+      </ul>
+    </li>
+    <li><a href="#遍历-ast">遍历 AST</a></li>
+    <li><a href="#反推-thrift">反推 thrift</a></li>
+    <li><a href="#总结">总结</a></li>
+  </ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      <p>众所周知 (?)，字节跳动内部主要使用 <a href="https://thrift.apache.org/">Thrift</a> 作为 RPC 的序列化及传输协议。据说这套技术栈是从 99 房继承过来的，那个时候创业公司也没几个 RPC 框架可选，国内小公司基本用的都是 Thrift。</p>
+<p>正常流程下，研发一般先写一个语言无关的 <a href="https://github.com/apache/thrift/blob/v0.13.0/tutorial/tutorial.thrift">thrift</a> 文件，然后由工具生成 Server 端和对应的 Client 端的代码。但某一天，突然“插进来”一个紧急需求（有哪个需求不是紧急插入的？）——<strong>要从生成的 Go 代码中，反推出原始的 thrift</strong>。作为工具人的我们，拒需求的能力没有，但自嗨的工具倒是不少，这次打算使用的工具就是<a href="https://zh.wikipedia.org/wiki/%E6%8A%BD%E8%B1%A1%E8%AA%9E%E6%B3%95%E6%A8%B9">抽象语法树</a> AST。</p>
+<h2 id="构建-ast">构建 AST</h2>
+<p>了解过编译原理的同学可能知道，编译器的前端工作大致可以分成三步：</p>
+<p><img src="/image/2020/10/go-ast/code-token-ast.drawio.png" alt="code-to-ast.png"></p>
+<p>所以为了构建一个 AST，我们需要前序的词法和语法分析，不过幸好 Go 语言的标准库中自带一个<a href="https://golang.org/pkg/go/ast/">实现</a>，我们不需要重复实现一个语言标准的解析器了。拿上面的步骤举例，它们分别对应的实现位于：</p>
+<ul>
+<li>Token——go/token</li>
+<li>词法分析——go/scanner</li>
+<li>语法解析——go/parser</li>
+<li>语法树——go/ast</li>
+</ul>
+<p>先把基础打牢，我们诶个介绍一下：</p>
+<h3 id="gotoken">go/token</h3>
+<p><code>go/token</code>包用来表示源代码被分割成的一个个<a href="https://golang.org/pkg/go/token/#Token">token</a>。它主要提供了两种属性—— 类型和位置信息。</p>
+<p>类型由包中定义的常量表示，比如一个变量申明语句<code>var sum int = 3 + 2</code>解析出来的 token 就会带上这样的类型属性：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">var</span> <span class="nx">sum</span> <span class="kt">int</span> <span class="p">=</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">2</span>
+ <span class="p">|</span>   <span class="p">|</span>   <span class="p">|</span>  <span class="p">|</span> <span class="p">|</span> <span class="p">|</span> <span class="p">|</span>
+ <span class="p">|</span>   <span class="p">|</span>   <span class="p">|</span>  <span class="p">|</span> <span class="p">|</span> <span class="p">|</span> <span class="nx">token</span><span class="p">.</span><span class="nx">INT</span>
+ <span class="p">|</span>   <span class="p">|</span>   <span class="p">|</span>  <span class="p">|</span> <span class="p">|</span> <span class="nx">token</span><span class="p">.</span><span class="nx">ADD</span>
+ <span class="p">|</span>   <span class="p">|</span>   <span class="p">|</span>  <span class="p">|</span> <span class="nx">token</span><span class="p">.</span><span class="nx">INT</span>
+ <span class="p">|</span>   <span class="p">|</span>   <span class="p">|</span>  <span class="nx">token</span><span class="p">.</span><span class="nx">ASSIGN</span>
+ <span class="p">|</span>   <span class="p">|</span>   <span class="nx">token</span><span class="p">.</span><span class="nx">IDENT</span>
+ <span class="p">|</span>   <span class="nx">token</span><span class="p">.</span><span class="nx">IDENT</span>
+ <span class="nx">token</span><span class="p">.</span><span class="nx">VAR</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>而位置信息则由<a href="https://golang.org/pkg/go/token/#Position">Position</a>表示，它包含的信息有该 token 所在的文件、行号和列号。比如我们常见的编译错误前面的位置信息就由它提供。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">main</span><span class="p">.</span><span class="k">go</span><span class="p">:</span><span class="mi">14</span><span class="p">:</span><span class="mi">2</span><span class="p">:</span> <span class="nx">undefined</span><span class="p">:</span> <span class="nx">abc</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>如果一次编译中涉及到多个源文件，那我们就需要用<a href="https://golang.org/pkg/go/token/#FileSet">FileSet</a>来记录多个文件中的 token 位置信息。</p>
+<p>接下来再看看怎样拿到这些 token 信息。</p>
+<h3 id="goscanner">go/scanner</h3>
+<p><code>Scanner</code>有时也被称作<code>Lexer</code>，它的输入是代表源代码的<code>[]byte</code>数组，输出是一个个的<code>token</code>（包括位置信息）。用法是不断的调用<a href="https://golang.org/pkg/go/scanner/#Scanner.Scan">Scan方法</a>，直到遇到 <code>token.EOF</code>：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">main</span><span class="p">(</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">src</span> <span class="o">:=</span> <span class="p">[</span><span class="p">]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`</span><span class="s">var sum int = 3 + 2</span><span class="s">`</span><span class="p">)</span>
+
+	<span class="c1">// 初始化一个 scanner
+</span><span class="c1"></span>	<span class="kd">var</span> <span class="nx">s</span> <span class="nx">scanner</span><span class="p">.</span><span class="nx">Scanner</span>
+	<span class="nx">fset</span> <span class="o">:=</span> <span class="nx">token</span><span class="p">.</span><span class="nf">NewFileSet</span><span class="p">(</span><span class="p">)</span>
+	<span class="nx">file</span> <span class="o">:=</span> <span class="nx">fset</span><span class="p">.</span><span class="nf">AddFile</span><span class="p">(</span><span class="s">&#34;demo&#34;</span><span class="p">,</span> <span class="nx">fset</span><span class="p">.</span><span class="nf">Base</span><span class="p">(</span><span class="p">)</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">src</span><span class="p">)</span><span class="p">)</span> <span class="c1">// 这里使用一个假文件
+</span><span class="c1"></span>	<span class="nx">s</span><span class="p">.</span><span class="nf">Init</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">src</span><span class="p">,</span> <span class="kc">nil</span><span class="p">,</span> <span class="nx">scanner</span><span class="p">.</span><span class="nx">ScanComments</span><span class="p">)</span>           <span class="c1">// 需要识别出注释
+</span><span class="c1"></span>
+	<span class="c1">// 启动 scanner
+</span><span class="c1"></span>	<span class="k">for</span> <span class="p">{</span>
+		<span class="nx">pos</span><span class="p">,</span> <span class="nx">tok</span><span class="p">,</span> <span class="nx">lit</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nf">Scan</span><span class="p">(</span><span class="p">)</span>
+		<span class="k">if</span> <span class="nx">tok</span> <span class="o">==</span> <span class="nx">token</span><span class="p">.</span><span class="nx">EOF</span> <span class="p">{</span>
+			<span class="k">break</span>
+		<span class="p">}</span>
+		<span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;%s\t%s\t%q\n&#34;</span><span class="p">,</span> <span class="nx">fset</span><span class="p">.</span><span class="nf">Position</span><span class="p">(</span><span class="nx">pos</span><span class="p">)</span><span class="p">,</span> <span class="nx">tok</span><span class="p">,</span> <span class="nx">lit</span><span class="p">)</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>有了 token 之后，我们就需要来理解这些 token 了，比如怎么知道上面是一条变量申明语句？这时就需要构建出 AST了。</p>
+<h3 id="goparser">go/parser</h3>
+<p><code>go/parser</code>是个集大成者，它的输出是个 AST，但输入却不需要是之前的 token 流，而可以是最原始的源代码，即<strong>它帮我们完成了循环调用<code>Scanner</code>生成<code>Token</code>那一堆模板代码</strong>。内部实现中，它根据 Scan 出来的不同 Token，构建出不同的 AST 节点，最终连接成一棵语法树。</p>
+<p><img src="/image/2020/10/go-ast/go-parser.drawio.png" alt="go-parser-internals"></p>
+<p>在它的封装下，我们从源代码构建出 AST 就是一个函数调用的事情，底层的 Scanner 和 Token 都被屏蔽掉了：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">main</span><span class="p">(</span><span class="p">)</span> <span class="p">{</span>
+	<span class="nx">src</span> <span class="o">:=</span> <span class="p">[</span><span class="p">]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`</span><span class="s">
+</span><span class="s">package main
+</span><span class="s">func ssa() int </span><span class="s">{</span><span class="s">
+</span><span class="s">	var sum int = 3 + 2
+</span><span class="s">	return sum
+</span><span class="s">}</span><span class="s">`</span><span class="p">)</span>
+
+	<span class="nx">fset</span> <span class="o">:=</span> <span class="nx">token</span><span class="p">.</span><span class="nf">NewFileSet</span><span class="p">(</span><span class="p">)</span>
+	<span class="c1">// 这里的参数基本是原封不动的传给了scanner的Init函数
+</span><span class="c1"></span>	<span class="nx">node</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">parser</span><span class="p">.</span><span class="nf">ParseFile</span><span class="p">(</span><span class="nx">fset</span><span class="p">,</span> <span class="s">&#34;demo&#34;</span><span class="p">,</span> <span class="nx">src</span><span class="p">,</span> <span class="nx">parser</span><span class="p">.</span><span class="nx">ParseComments</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+		<span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+	<span class="p">}</span>
+
+ 	<span class="c1">// 以层次结构输出语法树
+</span><span class="c1"></span>	<span class="nx">ast</span><span class="p">.</span><span class="nf">Fprint</span><span class="p">(</span><span class="nx">os</span><span class="p">.</span><span class="nx">Stdout</span><span class="p">,</span> <span class="nx">fset</span><span class="p">,</span> <span class="nx">node</span><span class="p">,</span> <span class="kc">nil</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="goast">go/ast</h3>
+<p>上一步会输出非常详细的 AST，结果也很长，限于篇幅我就不贴了，感兴趣的同学可以自行运行一下看看完整的 AST 结构，也可以通过在线的<a href="https://yuroyoro.github.io/goast-viewer/index.html">GoAst Viewer</a>查看。这里只画一张函数<code>ssa</code>的简图：</p>
+<p><img src="/image/2020/10/go-ast/function-ast.drawio.png" alt="function-ast.png"></p>
+<p>这个结构就是在 <code>go/ast</code>中定义的。跟<code>go/token</code>包一样，它里面也定义了很多类型，用来表示语法树中的不同节点。所有的节点都实现了<a href="https://golang.org/pkg/go/ast/#Node">Node</a>类型。</p>
+<p>我们以刚刚最后的加法语句<code>3 + 2</code>为例，它在 AST 中的节点就是一个<a href="https://golang.org/pkg/go/ast/#BinaryExpr">BinaryExpr</a>：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">BinaryExpr</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="nx">X</span>     <span class="nx">Expr</span>        <span class="c1">// left operand
+</span><span class="c1"></span>    <span class="nx">OpPos</span> <span class="nx">token</span><span class="p">.</span><span class="nx">Pos</span>   <span class="c1">// position of Op
+</span><span class="c1"></span>    <span class="nx">Op</span>    <span class="nx">token</span><span class="p">.</span><span class="nx">Token</span> <span class="c1">// operator
+</span><span class="c1"></span>    <span class="nx">Y</span>     <span class="nx">Expr</span>        <span class="c1">// right operand
+</span><span class="c1"></span><span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>其中的<code>Op</code>就是加号<code>+</code>，<code>X</code> 为<code>3</code>，<code>Y</code>为<code>2</code>。</p>
+<p>同样的再往上一层，<code>var sum int = 3 + 2</code>需要一个<a href="https://golang.org/pkg/go/ast/#ValueSpec">ValueSpec</a>类型来表示：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">ValueSpec</span> <span class="kd">struct</span> <span class="p">{</span>
+    <span class="nx">Doc</span>     <span class="o">*</span><span class="nx">CommentGroup</span> <span class="c1">// associated documentation; or nil
+</span><span class="c1"></span>    <span class="nx">Names</span>   <span class="p">[</span><span class="p">]</span><span class="o">*</span><span class="nx">Ident</span>      <span class="c1">// value names (len(Names) &gt; 0)
+</span><span class="c1"></span>    <span class="nx">Type</span>    <span class="nx">Expr</span>          <span class="c1">// value type; or nil
+</span><span class="c1"></span>    <span class="nx">Values</span>  <span class="p">[</span><span class="p">]</span><span class="nx">Expr</span>        <span class="c1">// initial values; or nil
+</span><span class="c1"></span>    <span class="nx">Comment</span> <span class="o">*</span><span class="nx">CommentGroup</span> <span class="c1">// line comments; or nil
+</span><span class="c1"></span><span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>它的<code>Names</code>数组只有一项，是变量名<code>sum</code>；<code>Type</code>则是<code>int</code>；而<code>Values</code>数组也只有一项，就是刚刚分析过的<code>BinaryExpr</code>。</p>
+<p>这样一层一层的叠加起来，我们就得到了一棵语法树 AST。</p>
+<h2 id="遍历-ast">遍历 AST</h2>
+<p>一棵 AST 信息量非常大，我们可能只对其中某些节点感兴趣，这时候就需要对它的节点进行遍历了。根据<code>go/ast</code>中定义的类型信息，我们很容易写出这样的代码：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">node</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">parser</span><span class="p">.</span><span class="nf">ParseFile</span><span class="p">(</span><span class="nx">fset</span><span class="p">,</span> <span class="s">&#34;demo&#34;</span><span class="p">,</span> <span class="nx">src</span><span class="p">,</span> <span class="nx">parser</span><span class="p">.</span><span class="nx">ParseComments</span><span class="p">)</span>
+<span class="c1">// 遍历所有的申明
+</span><span class="c1"></span><span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">decl</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">node</span><span class="p">.</span><span class="nx">Decls</span> <span class="p">{</span>
+  <span class="c1">// 寻找其中的函数申明
+</span><span class="c1"></span>  <span class="nx">fn</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">decl</span><span class="p">.</span><span class="p">(</span><span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">FuncDecl</span><span class="p">)</span>
+  <span class="k">if</span> <span class="p">!</span><span class="nx">ok</span> <span class="p">{</span>
+    <span class="k">continue</span>
+  <span class="p">}</span>
+  <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">stmt</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">fn</span><span class="p">.</span><span class="nx">Body</span><span class="p">.</span><span class="nx">List</span> <span class="p">{</span>
+    <span class="c1">// 寻找函数体中的变量申明
+</span><span class="c1"></span>    <span class="nx">declStamt</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">stmt</span><span class="p">.</span><span class="p">(</span><span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">DeclStmt</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">!</span><span class="nx">ok</span> <span class="p">{</span>
+      <span class="k">continue</span>
+    <span class="p">}</span>
+    <span class="c1">// 对变量申明递归下去，可以找到其中的ValueSpce, BinaryExpr等...
+</span><span class="c1"></span>  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>由于这是一个很常见的场景，用的代码几乎也是千篇一律的，所以标准库也进行了抽象——它允许业务代码以访问者（Visitor）的模式注入进来，这样，在对整颗树进行了深度优先遍历的时候，就能让访问者有机会处理到遍历过程中遇到的每一个节点。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">node</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">parser</span><span class="p">.</span><span class="nf">ParseFile</span><span class="p">(</span><span class="nx">fset</span><span class="p">,</span> <span class="s">&#34;demo&#34;</span><span class="p">,</span> <span class="nx">src</span><span class="p">,</span> <span class="nx">parser</span><span class="p">.</span><span class="nx">ParseComments</span><span class="p">)</span>
+<span class="c1">// 遍历并回调业务代码
+</span><span class="c1"></span><span class="nx">ast</span><span class="p">.</span><span class="nf">Inspect</span><span class="p">(</span><span class="nx">node</span><span class="p">,</span> <span class="kd">func</span><span class="p">(</span><span class="nx">n</span> <span class="nx">ast</span><span class="p">.</span><span class="nx">Node</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+  <span class="nx">binaryExpr</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">n</span><span class="p">.</span><span class="p">(</span><span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">BinaryExpr</span><span class="p">)</span>
+  <span class="k">if</span> <span class="p">!</span><span class="nx">ok</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="kc">true</span>
+  <span class="p">}</span>
+  <span class="c1">// 直接拿到深层的BinaryExpr，并进行处理...
+</span><span class="c1"></span><span class="p">}</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>代码是不是瞬间简单明了了很多?!</p>
+<h2 id="反推-thrift">反推 thrift</h2>
+<p>基础终于介绍完了，可以看到，Go 标准库中的这一套组合拳打的还算中规中矩，用法跟其它语言中的 AST 库差异并不大（虽然我只用过<a href="https://github.com/jquery/esprima">esprima</a>）。总结一下，大家的套路一般都是：</p>
+<ol>
+<li>先把代码解析成 AST，这应该有现成的库可以使用。</li>
+<li>AST 作为一个树状结构，对它进行深度优先遍历，对遇到的每一个节点，调用业务代码进行处理。</li>
+<li>业务代码拿到的则是 AST 树上的一个个节点，对于这些节点，根据它的类型或者某些属性，来决定是不是需要深入递归下去。</li>
+</ol>
+<p>在反推 thrift 这个场景中，前两步已经有标准库完成了，我们只需要提供第三步的回调函数，处理有明显 thrift 特征的节点即可。</p>
+<p>举个栗子🌰，Thrift 中<code>struct</code>的定义大概长这个样子：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">struct</span> <span class="nx">Demo</span> <span class="p">{</span>
+  <span class="mi">1</span><span class="p">:</span> <span class="nx">i32</span> <span class="nx">id</span><span class="p">,</span>
+  <span class="mi">2</span><span class="p">:</span> <span class="nx">optional</span> <span class="kt">string</span> <span class="nx">comment</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>由它生成的代码大概是这样子的：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">Demo</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span class="nx">Id</span> <span class="kt">int32</span> <span class="s">`</span><span class="s">thrift:&#34;id,1&#34; json:&#34;id&#34;</span><span class="s">`</span>
+	<span class="nx">Comment</span> <span class="o">*</span><span class="kt">string</span> <span class="s">`</span><span class="s">thrift:&#34;comment,2&#34; json:&#34;comment,omitempty&#34;</span><span class="s">`</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>这里的特征就很明显了，<code>Demo</code>类型中的字段都有<code>thrift</code>这个 tag，且该 tag 的第一个参数表示它在源 thrift 文件中的名字，第二个参数表示该字段的 id。字段<code>Comment</code>是<code>*string</code>类型，表明它在 thrift 中有<code>optional</code>修饰符。</p>
+<p>根据这些条件，我们可以写出相应的解析规则，这里提供一份伪代码供参考。</p>
+<p>首先定义一下期望的模型：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// StructDefinition is similar to go struct, except its field name comes from the thrift tag
+</span><span class="c1"></span><span class="kd">type</span> <span class="nx">StructDefinition</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span class="nx">Name</span>   <span class="kt">string</span>
+	<span class="nx">Fields</span> <span class="p">[</span><span class="p">]</span><span class="nx">StructField</span>
+<span class="p">}</span>
+<span class="c1">// StructField represents a field in thrift struct, eg. Id int32 `thrift:&#34;id,1&#34; json:&#34;id&#34;`
+</span><span class="c1"></span><span class="kd">type</span> <span class="nx">StructField</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span class="nx">ID</span>       <span class="kt">string</span>
+	<span class="nx">Name</span>     <span class="kt">string</span>
+	<span class="nx">Type</span>     <span class="kt">string</span>
+	<span class="nx">Required</span> <span class="kt">bool</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>在遍历 AST 的过程中插入这样的检查代码：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">ast</span><span class="p">.</span><span class="nf">Inspect</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="kd">func</span><span class="p">(</span><span class="nx">n</span> <span class="nx">ast</span><span class="p">.</span><span class="nx">Node</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+    <span class="k">switch</span> <span class="nx">node</span> <span class="o">:=</span> <span class="nx">n</span><span class="p">.</span><span class="p">(</span><span class="kd">type</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">TypeSpec</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">!</span><span class="nx">node</span><span class="p">.</span><span class="nx">Name</span><span class="p">.</span><span class="nf">IsExported</span><span class="p">(</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="kc">false</span>
+        <span class="p">}</span>
+        <span class="k">switch</span> <span class="nx">structType</span> <span class="o">:=</span> <span class="nx">node</span><span class="p">.</span><span class="nx">Type</span><span class="p">.</span><span class="p">(</span><span class="kd">type</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">StructType</span><span class="p">:</span> <span class="c1">// 如果是struct定义，就检查它是不是有thrift生成的痕迹
+</span><span class="c1"></span>            <span class="nx">sd</span> <span class="o">:=</span> <span class="nx">StructDefinition</span><span class="p">{</span> <span class="c1">// 初始化自己的model
+</span><span class="c1"></span>                <span class="nx">Name</span><span class="p">:</span>   <span class="nx">node</span><span class="p">.</span><span class="nx">Name</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">f</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">structType</span><span class="p">.</span><span class="nx">Fields</span><span class="p">.</span><span class="nx">List</span> <span class="p">{</span>
+                <span class="k">for</span> <span class="k">range</span> <span class="nx">f</span><span class="p">.</span><span class="nx">Names</span> <span class="p">{</span>
+                    <span class="nx">tags</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">structtag</span><span class="p">.</span><span class="nf">Parse</span><span class="p">(</span><span class="nx">strings</span><span class="p">.</span><span class="nf">Trim</span><span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">Tag</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="s">&#34;`&#34;</span><span class="p">)</span><span class="p">)</span>
+                    <span class="nx">thriftTag</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">tags</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="s">&#34;thrift&#34;</span><span class="p">)</span> <span class="c1">// 检查 field tag。限于篇幅其他的检查已被省略
+</span><span class="c1"></span>                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nx">thriftTag</span><span class="p">.</span><span class="nx">Options</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="kc">false</span>
+                    <span class="p">}</span>
+                    <span class="nx">required</span> <span class="o">:=</span> <span class="kc">true</span> <span class="c1">// 检查是不是可选的
+</span><span class="c1"></span>                    <span class="k">if</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">f</span><span class="p">.</span><span class="nx">Type</span><span class="p">.</span><span class="p">(</span><span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">StarExpr</span><span class="p">)</span><span class="p">;</span> <span class="nx">ok</span> <span class="p">{</span>
+                        <span class="nx">required</span> <span class="p">=</span> <span class="kc">false</span>
+                    <span class="p">}</span>
+                    <span class="nx">sd</span><span class="p">.</span><span class="nx">Fields</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">sd</span><span class="p">.</span><span class="nx">Fields</span><span class="p">,</span> <span class="nx">StructField</span><span class="p">{</span>
+                        <span class="nx">ID</span><span class="p">:</span>       <span class="nx">thriftTag</span><span class="p">.</span><span class="nx">Options</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="p">,</span>
+                        <span class="nx">Name</span><span class="p">:</span>     <span class="nx">thriftTag</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span>
+                        <span class="nx">Type</span><span class="p">:</span>     <span class="nf">PrintExpr</span><span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">Type</span><span class="p">)</span><span class="p">,</span>
+                        <span class="nx">Required</span><span class="p">:</span> <span class="nx">required</span><span class="p">,</span>
+                    <span class="p">}</span><span class="p">)</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="kc">false</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="kc">true</span>
+<span class="p">}</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>好了，一个 thrift <code>struct</code>类型就解析好了，拿到模型<code>StructDefinition</code>之后，我们就可以对它进行任意的操作了，比如再序列化成原始的 thrift 语法中的格式。</p>
+<p>对于 thrift 中其他类型，比如<code>exception</code>、<code>service</code>我们都可以进行同样的解析操作，生成对应的 model，再输出成 thrift 格式。</p>
+<h2 id="总结">总结</h2>
+<p>Go 标准库中语言规范相关的包已经为我们封装好了解析、遍历 AST 的能力，在此基础上，再配合<a href="https://golang.org/pkg/go/printer/">go/printer</a>将 AST 输出成 Go 代码，我们就能做出很多有趣的工具，比如官方提供的<code>go fmt</code>、<code>goimports</code>，底层原理大多是魔改原始的 AST，再格式化输出成新的代码。</p>
+<p>希望能够抛砖引玉，启发大家造出更多更好用的工（lun）具（zi）来。</p>
+
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content"><a href="//blog.betacat.io">喵叔</a></span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">
+      2020-11-13
+      
+    </span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>（转载请注明出处）</span>
+  </p>
+</div>
+
+
+    
+    
+
+    <footer class="post-footer">
+      
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/2020/08/how-to-mount-etcd-as-a-filesystem/">
+            <span class="next-text nav-default">怎样用文件浏览器查看etcd的内容</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            
+            <i class="iconfont">
+              <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M332.091514 74.487481l-75.369571 89.491197c-10.963703 12.998035-10.285251 32.864502 1.499144 44.378743l286.278095 300.375162L266.565125 819.058374c-11.338233 12.190647-11.035334 32.285311 0.638543 44.850487l80.46666 86.564541c11.680017 12.583596 30.356378 12.893658 41.662889 0.716314l377.434212-421.426145c11.332093-12.183484 11.041474-32.266891-0.657986-44.844348l-80.46666-86.564541c-1.772366-1.910513-3.706415-3.533476-5.750981-4.877077L373.270379 71.774697C361.493148 60.273758 343.054193 61.470003 332.091514 74.487481z"></path>
+</svg>
+
+            </i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+
+  
+  
+
+  
+  
+
+  
+
+  
+  
+    <div class="post bg-white">
+      <script src="https://utteranc.es/client.js"
+            repo= "polyrabbit/polyrabbit.github.io"
+            issue-term="title"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+      </script>
+    </div>
+  
+
+  
+
+  
+
+  
+
+    
+
+  
+
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="icon-links">
+  
+  
+    <a href="/email.gif" rel="me noopener" class="iconfont"
+      title="email"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1451 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M664.781909 681.472759 0 97.881301C0 3.997201 71.046997 0 71.046997 0L474.477909 0 961.649408 0 1361.641813 0C1361.641813 0 1432.688811 3.997201 1432.688811 97.881301L771.345323 681.472759C771.345323 681.472759 764.482731 685.154773 753.594283 688.65053L753.594283 688.664858C741.602731 693.493018 729.424896 695.068979 718.077952 694.839748 706.731093 695.068979 694.553173 693.493018 682.561621 688.664858L682.561621 688.65053C671.644501 685.140446 664.781909 681.472759 664.781909 681.472759L664.781909 681.472759ZM718.063616 811.603883C693.779541 811.016482 658.879232 802.205449 619.10784 767.734955 542.989056 701.759633 0 212.052267 0 212.052267L0 942.809523C0 942.809523 0 1024 83.726336 1024L682.532949 1024 753.579947 1024 1348.948139 1024C1432.688811 1024 1432.688811 942.809523 1432.688811 942.809523L1432.688811 212.052267C1432.688811 212.052267 893.138176 701.759633 817.019477 767.734955 777.248 802.205449 742.347691 811.03081 718.063616 811.603883L718.063616 811.603883Z"></path>
+</svg>
+
+    </a>
+  
+    <a href="javascript:alert%28%27My%20tweets%20are%20protected%20now%27%29" rel="me noopener" class="iconfont"
+      title="twitter"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1264 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M1229.8616 18.043658c0 0-117.852626 63.135335-164.151872 67.344358-105.225559-164.151872-505.082682-92.598492-437.738325 223.078185C278.622548 312.675223 89.216542 47.506814 89.216542 47.506814s-117.852626 189.406006 75.762402 345.139833C127.097743 396.85567 55.544363 371.601535 55.544363 371.601535S26.081207 535.753407 253.368414 615.724832c-21.045112 29.463156-113.643603 8.418045-113.643603 8.418045s25.254134 143.10676 231.496229 180.987961c-143.10676 130.479693-387.230056 92.598492-370.393967 105.225559 206.242095 189.406006 1119.599946 231.496229 1128.01799-643.98042C1179.353331 249.539887 1263.533778 123.269217 1263.533778 123.269217s-130.479693 37.881201-138.897738 33.672179C1225.652577 98.015083 1229.8616 18.043658 1229.8616 18.043658"></path>
+</svg>
+
+    </a>
+  
+    <a href="https://www.linkedin.com/in/%E6%98%8C%E6%96%B0-%E7%BC%AA-b46b8591/" rel="me noopener" class="iconfont"
+      title="linkedin"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="33" height="33">
+  <path d="M872.405333 872.618667h-151.637333v-237.610667c0-56.661333-1.152-129.578667-79.018667-129.578667-79.061333 0-91.136 61.653333-91.136 125.397334v241.792H398.976V384h145.664v66.602667h1.962667c20.352-38.4 69.845333-78.933333 143.786666-78.933334 153.642667 0 182.058667 101.12 182.058667 232.746667v268.202667zM227.712 317.141333a87.978667 87.978667 0 0 1-88.021333-88.106666 88.064 88.064 0 1 1 88.021333 88.106666z m76.032 555.477334H151.68V384h152.064v488.618667zM948.266667 0H75.562667C33.792 0 0 33.024 0 73.770667v876.458666C0 991.018667 33.792 1024 75.562667 1024h872.576C989.866667 1024 1024 991.018667 1024 950.229333V73.770667C1024 33.024 989.866667 0 948.138667 0h0.128z"></path>
+</svg>
+
+    </a>
+  
+    <a href="https://github.com/polyrabbit" rel="me noopener" class="iconfont"
+      title="github"  target="_blank"
+      >
+      <svg class="icon" style="" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M512 12.672c-282.88 0-512 229.248-512 512 0 226.261333 146.688 418.133333 350.08 485.76 25.6 4.821333 34.986667-11.008 34.986667-24.618667 0-12.16-0.426667-44.373333-0.64-87.04-142.421333 30.890667-172.458667-68.693333-172.458667-68.693333C188.672 770.986667 155.008 755.2 155.008 755.2c-46.378667-31.744 3.584-31.104 3.584-31.104 51.413333 3.584 78.421333 52.736 78.421333 52.736 45.653333 78.293333 119.850667 55.68 149.12 42.581333 4.608-33.109333 17.792-55.68 32.426667-68.48-113.706667-12.8-233.216-56.832-233.216-253.013333 0-55.893333 19.84-101.546667 52.693333-137.386667-5.76-12.928-23.04-64.981333 4.48-135.509333 0 0 42.88-13.738667 140.8 52.48 40.96-11.392 84.48-17.024 128-17.28 43.52 0.256 87.04 5.888 128 17.28 97.28-66.218667 140.16-52.48 140.16-52.48 27.52 70.528 10.24 122.581333 5.12 135.509333 32.64 35.84 52.48 81.493333 52.48 137.386667 0 196.693333-119.68 240-233.6 252.586667 17.92 15.36 34.56 46.762667 34.56 94.72 0 68.522667-0.64 123.562667-0.64 140.202666 0 13.44 8.96 29.44 35.2 24.32C877.44 942.592 1024 750.592 1024 524.672c0-282.752-229.248-512-512-512"></path>
+</svg>
+
+    </a>
+
+
+<a href="//blog.betacat.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
+    class="iconfont" title="rss" target="_blank">
+    <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="30" height="30">
+  <path d="M819.157333 1024C819.157333 574.592 449.408 204.8 0 204.8V0c561.706667 0 1024 462.293333 1024 1024h-204.842667zM140.416 743.04a140.8 140.8 0 0 1 140.501333 140.586667A140.928 140.928 0 0 1 140.074667 1024C62.72 1024 0 961.109333 0 883.626667s62.933333-140.544 140.416-140.586667zM678.784 1024h-199.04c0-263.210667-216.533333-479.786667-479.744-479.786667V345.173333c372.352 0 678.784 306.517333 678.784 678.826667z"></path>
+</svg>
+
+  </a>
+   
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy;
+    
+      2018 -
+    2020
+    <span class="heart">
+      
+      <i class="iconfont">
+        <svg class="icon" viewBox="0 0 1025 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="14" height="14">
+  <path d="M1000.1 247.9c-15.5-37.3-37.6-70.6-65.7-98.9-54.4-54.8-125.8-85-201-85-85.7 0-166 39-221.4 107.4C456.6 103 376.3 64 290.6 64c-75.1 0-146.5 30.4-201.1 85.6-28.2 28.5-50.4 61.9-65.8 99.3-16 38.8-24 79.9-23.6 122.2 0.7 91.7 40.1 177.2 108.1 234.8 3.1 2.6 6 5.1 8.9 7.8 14.9 13.4 58 52.8 112.6 102.7 93.5 85.5 209.9 191.9 257.5 234.2 7 6.1 15.8 9.5 24.9 9.5 9.2 0 18.1-3.4 24.9-9.5 34.5-30.7 105.8-95.9 181.4-165 74.2-67.8 150.9-138 195.8-178.2 69.5-57.9 109.6-144.4 109.9-237.3 0.1-42.5-8-83.6-24-122.2z"
+   fill="#8a8a8a"></path>
+</svg>
+
+      </i>
+    </span><span class="author">
+        <a href="//blog.betacat.io">喵叔</a>
+        
+      </span></span>
+
+  
+  
+
+  
+    <span>
+      <a class="beian" href="http://www.beian.miit.gov.cn/" target="_blank">沪ICP备17033881号-1</a>
+    </span>
+  
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont">
+        
+        <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="35" height="35">
+  <path d="M510.866688 227.694839 95.449397 629.218702l235.761562 0-2.057869 328.796468 362.40389 0L691.55698 628.188232l241.942331-3.089361L510.866688 227.694839zM63.840492 63.962777l894.052392 0 0 131.813095L63.840492 195.775872 63.840492 63.962777 63.840492 63.962777zM63.840492 63.962777"></path>
+</svg>
+
+      </i>
+    </div>
+  </div>
+  
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+
+
+
+
+<script type="text/javascript" src="/js/main.638251f4230630f0335d8c6748e53a96f94b72670920b60c09a56fdc8bece214.js" integrity="sha256-Y4JR9CMGMPAzXYxnSOU6lvlLcmcJILYMCaVv3Ivs4hQ=" crossorigin="anonymous"></script>
+
+
+
+
+
+
+<script id="baidu_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+    hm.src = "https://hm.baidu.com/hm.js?1d8c3618a611e95c78e0fcaf38baf230";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+  
+    <script type="text/javascript" src="/js/load-photoswipe.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe.min.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe-ui-default.min.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

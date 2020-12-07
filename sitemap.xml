@@ -10,14 +10,21 @@
   
   <url>
     <loc>//blog.betacat.io/post/</loc>
-    <lastmod>2020-08-07T21:32:23+08:00</lastmod>
+    <lastmod>2020-11-13T11:51:13+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>//blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/</loc>
+    <lastmod>2020-11-13T11:51:13+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>//blog.betacat.io/</loc>
-    <lastmod>2020-08-07T21:32:23+08:00</lastmod>
+    <lastmod>2020-11-13T11:51:13+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
