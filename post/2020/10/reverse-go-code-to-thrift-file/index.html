@@ -328,7 +328,7 @@ if (!doNotTrack) {
 <li>语法解析——go/parser</li>
 <li>语法树——go/ast</li>
 </ul>
-<p>先把基础打牢，我们诶个介绍一下：</p>
+<p>先把基础打牢，我们挨个介绍一下：</p>
 <h3 id="gotoken">go/token</h3>
 <p><code>go/token</code>包用来表示源代码被分割成的一个个<a href="https://golang.org/pkg/go/token/#Token">token</a>。它主要提供了两种属性—— 类型和位置信息。</p>
 <p>类型由包中定义的常量表示，比如一个变量申明语句<code>var sum int = 3 + 2</code>解析出来的 token 就会带上这样的类型属性：</p>

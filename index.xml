@@ -51,7 +51,7 @@
 &lt;li&gt;语法解析——go/parser&lt;/li&gt;
 &lt;li&gt;语法树——go/ast&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;先把基础打牢，我们诶个介绍一下：&lt;/p&gt;
+&lt;p&gt;先把基础打牢，我们挨个介绍一下：&lt;/p&gt;
 &lt;h3 id=&#34;gotoken&#34;&gt;go/token&lt;/h3&gt;
 &lt;p&gt;&lt;code&gt;go/token&lt;/code&gt;包用来表示源代码被分割成的一个个&lt;a href=&#34;https://golang.org/pkg/go/token/#Token&#34;&gt;token&lt;/a&gt;。它主要提供了两种属性—— 类型和位置信息。&lt;/p&gt;
 &lt;p&gt;类型由包中定义的常量表示，比如一个变量申明语句&lt;code&gt;var sum int = 3 + 2&lt;/code&gt;解析出来的 token 就会带上这样的类型属性：&lt;/p&gt;
