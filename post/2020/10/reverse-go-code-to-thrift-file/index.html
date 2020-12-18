@@ -64,12 +64,12 @@
 <meta property="og:type" content="article" />
 <meta property="og:url" content="//blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/" />
 <meta property="article:published_time" content="2020-10-23T11:51:13+08:00" />
-<meta property="article:modified_time" content="2020-11-13T11:51:13+08:00" />
+<meta property="article:modified_time" content="2020-12-18T11:51:13+08:00" />
 <meta itemprop="name" content="利用 AST 从代码反推出 thrift 文件">
 <meta itemprop="description" content="众所周知 (?)，字节跳动内部主要使用 Thrift 作为 RPC 的序列化及传输协议。据说这套技术栈是从 99 房继承过来的，那个时候创业公司也没几个 RPC 框架可选，国内小">
 <meta itemprop="datePublished" content="2020-10-23T11:51:13&#43;08:00" />
-<meta itemprop="dateModified" content="2020-11-13T11:51:13&#43;08:00" />
-<meta itemprop="wordCount" content="3133">
+<meta itemprop="dateModified" content="2020-12-18T11:51:13&#43;08:00" />
+<meta itemprop="wordCount" content="3481">
 
 
 
@@ -280,7 +280,7 @@ if (!doNotTrack) {
           2020-10-23
         </time>
         
-        <span class="more-meta"> 约 3133 字 </span>
+        <span class="more-meta"> 约 3481 字 </span>
           <span class="more-meta"> 预计阅读 7 分钟 </span>
 
         
@@ -307,8 +307,14 @@ if (!doNotTrack) {
       </ul>
     </li>
     <li><a href="#遍历-ast">遍历 AST</a></li>
-    <li><a href="#反推-thrift">反推 thrift</a></li>
+    <li><a href="#反推-thrift">反推 thrift</a>
+      <ul>
+        <li><a href="#转换-ast">转换 AST</a></li>
+        <li><a href="#代码生成">代码生成</a></li>
+      </ul>
+    </li>
     <li><a href="#总结">总结</a></li>
+    <li><a href="#参考资料">参考资料</a></li>
   </ul>
 </nav>
   </div>
@@ -547,7 +553,7 @@ if (!doNotTrack) {
 <span class="p">}</span>
 </code></pre></td></tr></table>
 </div>
-</div><p>由于这是一个很常见的场景，用的代码几乎也是千篇一律的，所以标准库也进行了抽象——它允许业务代码以访问者（Visitor）的模式注入进来，这样，在对整颗树进行了深度优先遍历的时候，就能让访问者有机会处理到遍历过程中遇到的每一个节点。</p>
+</div><p>由于这是一个很常见的场景，用的代码几乎也是千篇一律的，所以标准库也进行了抽象——它允许业务代码以<strong>访问者</strong>（Visitor）的模式注入进来，这样，在对整颗树进行了深度优先遍历的时候，就能让访问者有机会处理到 AST 中的每一个节点。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre class="chroma"><code><span class="lnt">1
@@ -572,16 +578,22 @@ if (!doNotTrack) {
 </span><span class="c1"></span><span class="p">}</span><span class="p">)</span>
 </code></pre></td></tr></table>
 </div>
-</div><p>代码是不是瞬间简单明了了很多?!</p>
+</div><p>代码是不是瞬间简单明了了很多？！</p>
 <h2 id="反推-thrift">反推 thrift</h2>
-<p>基础终于介绍完了，可以看到，Go 标准库中的这一套组合拳打的还算中规中矩，用法跟其它语言中的 AST 库差异并不大（虽然我只用过<a href="https://github.com/jquery/esprima">esprima</a>）。总结一下，大家的套路一般都是：</p>
+<p>基础终于介绍完了，可以看到，Go 标准库中的这一套组合拳打的还算中规中矩，用法跟其它语言中的 AST 库差异并不大（比如 JS 中的<a href="https://github.com/jquery/esprima">esprima</a>）。总结一下，大家的套路一般都是：</p>
 <ol>
 <li>先把代码解析成 AST，这应该有现成的库可以使用。</li>
 <li>AST 作为一个树状结构，对它进行深度优先遍历，对遇到的每一个节点，调用业务代码进行处理。</li>
-<li>业务代码拿到的则是 AST 树上的一个个节点，对于这些节点，根据它的类型或者某些属性，来决定是不是需要深入递归下去。</li>
 </ol>
-<p>在反推 thrift 这个场景中，前两步已经有标准库完成了，我们只需要提供第三步的回调函数，处理有明显 thrift 特征的节点即可。</p>
-<p>举个栗子🌰，Thrift 中<code>struct</code>的定义大概长这个样子：</p>
+<p>上面的两步属于编译器的前端工作，已经由标准库完成了，接下来的工作就属于编译器后端的范畴了：</p>
+<ol>
+<li><strong>转换</strong>——可以直接对生成的 AST 进行更改，也可以生成一个全新的 AST/model。</li>
+<li><strong>代码生成</strong>——根据上一步生成的 AST/model，再反向输出成代码格式。</li>
+</ol>
+<p>这两步一般需要根据业务的需求做一些定制开发。在反推 thrift 的场景中，我们选择第二种，构建出自己的 model，然后在代码生成阶段输出成 thrift 文件。</p>
+<h3 id="转换-ast">转换 AST</h3>
+<p>在 AST 的 Visitor 中，我们有机会检查到每一个节点，这时可以根据一些特征，识别出有明显 thrift 痕迹的节点即可。</p>
+<p>举个栗子🌰，thrift 中<code>struct</code>的定义大概长这个样子：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre class="chroma"><code><span class="lnt">1
@@ -611,9 +623,9 @@ if (!doNotTrack) {
 <span class="p">}</span>
 </code></pre></td></tr></table>
 </div>
-</div><p>这里的特征就很明显了，<code>Demo</code>类型中的字段都有<code>thrift</code>这个 tag，且该 tag 的第一个参数表示它在源 thrift 文件中的名字，第二个参数表示该字段的 id。字段<code>Comment</code>是<code>*string</code>类型，表明它在 thrift 中有<code>optional</code>修饰符。</p>
+</div><p>这里的特征就很明显了，<code>Demo</code>类型中的字段都有<code>thrift</code>这个 tag，且该 tag 的第一个参数表示它在源 thrift 文件中的名字，第二个参数表示该字段的 id。字段<code>Comment</code>是<code>*string</code>指针类型，表明它在 thrift 中有<code>optional</code>修饰符。</p>
 <p>根据这些条件，我们可以写出相应的解析规则，这里提供一份伪代码供参考。</p>
-<p>首先定义一下期望的模型：</p>
+<p>首先定义一下期望转换后的 model：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre class="chroma"><code><span class="lnt"> 1
@@ -628,23 +640,25 @@ if (!doNotTrack) {
 </span><span class="lnt">10
 </span><span class="lnt">11
 </span><span class="lnt">12
+</span><span class="lnt">13
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// StructDefinition is similar to go struct, except its field name comes from the thrift tag
-</span><span class="c1"></span><span class="kd">type</span> <span class="nx">StructDefinition</span> <span class="kd">struct</span> <span class="p">{</span>
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// ThriftStruct is similar to go struct, except its field name comes from the thrift tag
+</span><span class="c1"></span><span class="kd">type</span> <span class="nx">ThriftStruct</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span class="nx">Name</span>   <span class="kt">string</span>
-	<span class="nx">Fields</span> <span class="p">[</span><span class="p">]</span><span class="nx">StructField</span>
+	<span class="nx">Fields</span> <span class="p">[</span><span class="p">]</span><span class="nx">ThriftStructField</span>
 <span class="p">}</span>
-<span class="c1">// StructField represents a field in thrift struct, eg. Id int32 `thrift:&#34;id,1&#34; json:&#34;id&#34;`
-</span><span class="c1"></span><span class="kd">type</span> <span class="nx">StructField</span> <span class="kd">struct</span> <span class="p">{</span>
+<span class="c1">// ThriftStructField represents a field in thrift struct, eg. Id int32 `thrift:&#34;id,1&#34; json:&#34;id&#34;`
+</span><span class="c1"></span><span class="kd">type</span> <span class="nx">ThriftStructField</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span class="nx">ID</span>       <span class="kt">string</span>
 	<span class="nx">Name</span>     <span class="kt">string</span>
 	<span class="nx">Type</span>     <span class="kt">string</span>
-	<span class="nx">Required</span> <span class="kt">bool</span>
+	<span class="nx">Required</span> <span class="kt">string</span>
+	<span class="nx">IsArray</span>  <span class="kt">bool</span>
 <span class="p">}</span>
 </code></pre></td></tr></table>
 </div>
-</div><p>在遍历 AST 的过程中插入这样的检查代码：</p>
+</div><p>在遍历 AST 的过程中插入检查代码：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre class="chroma"><code><span class="lnt"> 1
@@ -692,7 +706,7 @@ if (!doNotTrack) {
         <span class="p">}</span>
         <span class="k">switch</span> <span class="nx">structType</span> <span class="o">:=</span> <span class="nx">node</span><span class="p">.</span><span class="nx">Type</span><span class="p">.</span><span class="p">(</span><span class="kd">type</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">case</span> <span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">StructType</span><span class="p">:</span> <span class="c1">// 如果是struct定义，就检查它是不是有thrift生成的痕迹
-</span><span class="c1"></span>            <span class="nx">sd</span> <span class="o">:=</span> <span class="nx">StructDefinition</span><span class="p">{</span> <span class="c1">// 初始化自己的model
+</span><span class="c1"></span>            <span class="nx">sd</span> <span class="o">:=</span> <span class="nx">ThriftStruct</span><span class="p">{</span> <span class="c1">// 初始化自己的model
 </span><span class="c1"></span>                <span class="nx">Name</span><span class="p">:</span>   <span class="nx">node</span><span class="p">.</span><span class="nx">Name</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span>
             <span class="p">}</span>
             <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">f</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">structType</span><span class="p">.</span><span class="nx">Fields</span><span class="p">.</span><span class="nx">List</span> <span class="p">{</span>
@@ -706,7 +720,7 @@ if (!doNotTrack) {
 </span><span class="c1"></span>                    <span class="k">if</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">f</span><span class="p">.</span><span class="nx">Type</span><span class="p">.</span><span class="p">(</span><span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">StarExpr</span><span class="p">)</span><span class="p">;</span> <span class="nx">ok</span> <span class="p">{</span>
                         <span class="nx">required</span> <span class="p">=</span> <span class="kc">false</span>
                     <span class="p">}</span>
-                    <span class="nx">sd</span><span class="p">.</span><span class="nx">Fields</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">sd</span><span class="p">.</span><span class="nx">Fields</span><span class="p">,</span> <span class="nx">StructField</span><span class="p">{</span>
+                    <span class="nx">sd</span><span class="p">.</span><span class="nx">Fields</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">sd</span><span class="p">.</span><span class="nx">Fields</span><span class="p">,</span> <span class="nx">ThriftStructField</span><span class="p">{</span>
                         <span class="nx">ID</span><span class="p">:</span>       <span class="nx">thriftTag</span><span class="p">.</span><span class="nx">Options</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="p">,</span>
                         <span class="nx">Name</span><span class="p">:</span>     <span class="nx">thriftTag</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span>
                         <span class="nx">Type</span><span class="p">:</span>     <span class="nf">PrintExpr</span><span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">Type</span><span class="p">)</span><span class="p">,</span>
@@ -721,11 +735,67 @@ if (!doNotTrack) {
 <span class="p">}</span><span class="p">)</span>
 </code></pre></td></tr></table>
 </div>
-</div><p>好了，一个 thrift <code>struct</code>类型就解析好了，拿到模型<code>StructDefinition</code>之后，我们就可以对它进行任意的操作了，比如再序列化成原始的 thrift 语法中的格式。</p>
-<p>对于 thrift 中其他类型，比如<code>exception</code>、<code>service</code>我们都可以进行同样的解析操作，生成对应的 model，再输出成 thrift 格式。</p>
+</div><p>好了，一个 thrift <code>struct</code>类型就解析好了，我们拿到了自己的<code>ThriftStruct</code>类型。</p>
+<h3 id="代码生成">代码生成</h3>
+<p>代码生成可以理解为对自定义 model 的一种序列化操作，还拿刚才的🌰：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">ts</span> <span class="o">*</span><span class="nx">ThriftStruct</span><span class="p">)</span> <span class="nf">String</span><span class="p">(</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+	<span class="nx">fields</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="p">[</span><span class="p">]</span><span class="kt">string</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">ts</span><span class="p">.</span><span class="nx">Fields</span><span class="p">)</span><span class="p">)</span>
+	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">sf</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">ts</span><span class="p">.</span><span class="nx">Fields</span> <span class="p">{</span>
+		<span class="nx">fields</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">fields</span><span class="p">,</span> <span class="nx">sf</span><span class="p">.</span><span class="nf">String</span><span class="p">(</span><span class="p">)</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;struct %s {\n\t%s\n}&#34;</span><span class="p">,</span> <span class="nx">ts</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span> <span class="nx">strings</span><span class="p">.</span><span class="nf">Join</span><span class="p">(</span><span class="nx">fields</span><span class="p">,</span> <span class="s">&#34;,\n\t&#34;</span><span class="p">)</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">sf</span> <span class="o">*</span><span class="nx">ThriftStructField</span><span class="p">)</span> <span class="nf">String</span><span class="p">(</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+	<span class="nx">thriftType</span> <span class="o">:=</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">Type</span>
+	<span class="k">if</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">IsArray</span> <span class="p">{</span>
+		<span class="nx">thriftType</span> <span class="p">=</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;list&lt;%s&gt;&#34;</span><span class="p">,</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">Type</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;%s: %s %s %s&#34;</span><span class="p">,</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">ID</span><span class="p">,</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">Required</span><span class="p">,</span> <span class="nx">thriftType</span><span class="p">,</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">Name</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>其实就是<code>ThriftStruct</code>按照 thrift 的语法模板，填充自己的属性字段。对于复杂类型<code>ThriftStructField</code>，递归调用它自己的代码生成逻辑。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">struct</span> <span class="err">$</span><span class="p">{</span><span class="nx">name</span><span class="p">}</span> <span class="p">{</span>
+  <span class="err">$</span><span class="p">{</span><span class="nx">field</span><span class="p">}</span><span class="o">...</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>而 thrift 中其他类型，比如<code>exception</code>、<code>service</code>我们都可以进行同样的操作，识别出它的特征，生成对应的 model，再输出成 thrift 格式。</p>
 <h2 id="总结">总结</h2>
-<p>Go 标准库中语言规范相关的包已经为我们封装好了解析、遍历 AST 的能力，在此基础上，再配合<a href="https://golang.org/pkg/go/printer/">go/printer</a>将 AST 输出成 Go 代码，我们就能做出很多有趣的工具，比如官方提供的<code>go fmt</code>、<code>goimports</code>，底层原理大多是魔改原始的 AST，再格式化输出成新的代码。</p>
+<p>Go 标准库中语言规范相关的包已经为我们封装好了解析、遍历 AST 的能力，在此基础上，再配合<a href="https://golang.org/pkg/go/printer/">go/printer</a>将 AST 输出成 Go 代码，我们就能做出很多有趣的工具，比如官方提供的<code>go fmt</code>、<code>goimports</code>，底层原理大多是魔改原始的 AST，再格式化输出成新的代码。其实我们这里反推 thrift 也是类似的流程，只不过在代码生成阶段输出的不是 Go 代码，而是 thrift 描述文件。</p>
 <p>希望能够抛砖引玉，启发大家造出更多更好用的工（lun）具（zi）来。</p>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li><a href="https://github.com/jamiebuilds/the-super-tiny-compiler">The Super Tiny Compiler</a></li>
+<li><a href="https://www.youtube.com/watch?v=oxc8B2fjDvY">How to write your own Go tool</a></li>
+</ul>
 
     </div>
 
@@ -739,7 +809,7 @@ if (!doNotTrack) {
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
     <span class="item-content">
-      2020-11-13
+      2020-12-18
       
     </span>
   </p>
