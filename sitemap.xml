@@ -9,21 +9,35 @@
   </url>
   
   <url>
-    <loc>//blog.betacat.io/post/</loc>
-    <lastmod>2020-12-18T11:51:13+08:00</lastmod>
+    <loc>//blog.betacat.io/post/2021/10/nfs-mount-protocol/</loc>
+    <lastmod>2021-10-27T12:03:16+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/</loc>
-    <lastmod>2020-12-18T11:51:13+08:00</lastmod>
+    <loc>//blog.betacat.io/post/</loc>
+    <lastmod>2021-10-27T12:03:16+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>//blog.betacat.io/</loc>
+    <lastmod>2021-10-27T12:03:16+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>//blog.betacat.io/post/2021/07/fio-internal/</loc>
+    <lastmod>2021-07-05T11:45:24+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>//blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/</loc>
     <lastmod>2020-12-18T11:51:13+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>

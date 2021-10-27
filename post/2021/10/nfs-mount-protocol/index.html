@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>怎样用文件浏览器查看etcd的内容 - 喵叔没话说</title>
+  <title>NFS 协议 Mount 过程揭秘 - 喵叔没话说</title>
   
 
 <meta name="renderer" content="webkit" />
@@ -23,8 +23,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 
 <meta name="author" content="喵叔" />
-  <meta name="description" content="TL;DR 用 etcdfs 就可以，它能把一个 etcd 集群的 key-value 键值对，按照逻辑层级关系，映射成文件系统中的文件和文件夹，这样我们就能够用回熟悉的ls, grep, vim等工具了。" />
-<meta name="keywords" content="fuse, filesystem, etcd, etcd-client" />
+  <meta name="description" content="NFS 协议经过20多年的发展，已经变得非常复杂，本文以 mount 过程中发生的交互为切入点，带大家走进 nfs，走近科学… Mount 可以类比于其他协议中的握手过程，" />
+<meta name="keywords" content="nfs, file system, mount, compound" />
 
 
 
@@ -35,7 +35,7 @@
 <meta name="generator" content="Hugo 0.64.0" />
 
 
-<link rel="canonical" href="//blog.betacat.io/post/2020/08/how-to-mount-etcd-as-a-filesystem/" />
+<link rel="canonical" href="//blog.betacat.io/post/2021/10/nfs-mount-protocol/" />
 
 
 
@@ -59,23 +59,23 @@
 
 
 
-<meta property="og:title" content="怎样用文件浏览器查看etcd的内容" />
-<meta property="og:description" content="TL;DR 用 etcdfs 就可以，它能把一个 etcd 集群的 key-value 键值对，按照逻辑层级关系，映射成文件系统中的文件和文件夹，这样我们就能够用回熟悉的ls, grep, vim等工具了。" />
+<meta property="og:title" content="NFS 协议 Mount 过程揭秘" />
+<meta property="og:description" content="NFS 协议经过20多年的发展，已经变得非常复杂，本文以 mount 过程中发生的交互为切入点，带大家走进 nfs，走近科学… Mount 可以类比于其他协议中的握手过程，" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="//blog.betacat.io/post/2020/08/how-to-mount-etcd-as-a-filesystem/" />
-<meta property="article:published_time" content="2020-08-01T11:47:09+08:00" />
-<meta property="article:modified_time" content="2020-08-07T21:32:23+08:00" />
-<meta itemprop="name" content="怎样用文件浏览器查看etcd的内容">
-<meta itemprop="description" content="TL;DR 用 etcdfs 就可以，它能把一个 etcd 集群的 key-value 键值对，按照逻辑层级关系，映射成文件系统中的文件和文件夹，这样我们就能够用回熟悉的ls, grep, vim等工具了。">
-<meta itemprop="datePublished" content="2020-08-01T11:47:09&#43;08:00" />
-<meta itemprop="dateModified" content="2020-08-07T21:32:23&#43;08:00" />
-<meta itemprop="wordCount" content="1987">
+<meta property="og:url" content="//blog.betacat.io/post/2021/10/nfs-mount-protocol/" />
+<meta property="article:published_time" content="2021-10-27T12:03:16+08:00" />
+<meta property="article:modified_time" content="2021-10-27T12:03:16+08:00" />
+<meta itemprop="name" content="NFS 协议 Mount 过程揭秘">
+<meta itemprop="description" content="NFS 协议经过20多年的发展，已经变得非常复杂，本文以 mount 过程中发生的交互为切入点，带大家走进 nfs，走近科学… Mount 可以类比于其他协议中的握手过程，">
+<meta itemprop="datePublished" content="2021-10-27T12:03:16&#43;08:00" />
+<meta itemprop="dateModified" content="2021-10-27T12:03:16&#43;08:00" />
+<meta itemprop="wordCount" content="2614">
 
 
 
 <meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="怎样用文件浏览器查看etcd的内容"/>
-<meta name="twitter:description" content="TL;DR 用 etcdfs 就可以，它能把一个 etcd 集群的 key-value 键值对，按照逻辑层级关系，映射成文件系统中的文件和文件夹，这样我们就能够用回熟悉的ls, grep, vim等工具了。"/>
+<meta name="twitter:title" content="NFS 协议 Mount 过程揭秘"/>
+<meta name="twitter:description" content="NFS 协议经过20多年的发展，已经变得非常复杂，本文以 mount 过程中发生的交互为切入点，带大家走进 nfs，走近科学… Mount 可以类比于其他协议中的握手过程，"/>
 
 <!--[if lte IE 9]>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
@@ -273,15 +273,15 @@ if (!doNotTrack) {
           <article class="post bg-white">
     
     <header class="post-header">
-      <h1 class="post-title">怎样用文件浏览器查看etcd的内容</h1>
+      <h1 class="post-title">NFS 协议 Mount 过程揭秘</h1>
       
       <div class="post-meta">
-        <time datetime="2020-08-01" class="post-time">
-          2020-08-01
+        <time datetime="2021-10-27" class="post-time">
+          2021-10-27
         </time>
         
-        <span class="more-meta"> 约 1987 字 </span>
-          <span class="more-meta"> 预计阅读 4 分钟 </span>
+        <span class="more-meta"> 约 2614 字 </span>
+          <span class="more-meta"> 预计阅读 6 分钟 </span>
 
         
         
@@ -298,16 +298,26 @@ if (!doNotTrack) {
   <div class="post-toc-content">
     <nav id="TableOfContents">
   <ul>
-    <li><a href="#tldr">TL;DR</a></li>
-    <li><a href="#举个栗子">举个栗子</a></li>
-    <li><a href="#工作原理">工作原理</a>
+    <li><a href="#v3-挂载">V3 挂载</a>
       <ul>
-        <li><a href="#背景">背景</a></li>
-        <li><a href="#fuse-文件系统">FUSE 文件系统</a></li>
-        <li><a href="#go-fuse-库">Go-fuse 库</a></li>
+        <li><a href="#1-portmap">1. Portmap</a></li>
+        <li><a href="#2-fsinfo">2. FSINFO</a></li>
+        <li><a href="#3-pathconf">3. PATHCONF</a></li>
+      </ul>
+    </li>
+    <li><a href="#v4挂载">V4挂载</a>
+      <ul>
+        <li><a href="#1-exchange_id">1. EXCHANGE_ID</a></li>
+        <li><a href="#2-create_session">2. CREATE_SESSION</a></li>
+        <li><a href="#3-reclaim_complete">3. RECLAIM_COMPLETE</a></li>
+        <li><a href="#4-secinfo_no_name">4. SECINFO_NO_NAME</a></li>
+        <li><a href="#5-putrootfs--getattr">5. PUTROOTFS | GETATTR</a></li>
+        <li><a href="#6-若干连续-getattr">6. 若干连续 GETATTR</a></li>
+        <li><a href="#compound真的用起来了吗">Compound真的用起来了吗？</a></li>
       </ul>
     </li>
     <li><a href="#总结">总结</a></li>
+    <li><a href="#参考资料">参考资料</a></li>
   </ul>
 </nav>
   </div>
@@ -315,73 +325,133 @@ if (!doNotTrack) {
 
     
     <div class="post-content">
-      <h2 id="tldr">TL;DR</h2>
-<p>用 <a href="https://github.com/polyrabbit/etcdfs">etcdfs</a> 就可以，它能把一个 etcd 集群的 key-value 键值对，按照逻辑层级关系，映射成文件系统中的文件和文件夹，这样我们就能够用回熟悉的<code>ls</code>, <code>grep</code>, <code>vim</code>等工具了。</p>
-<h2 id="举个栗子">举个栗子</h2>
-<p>Kubernetes 底层使用 etcd 来存放数据，如果我们想了解具体数据的组织结构，那用<code>etcdctl</code>就有点强人锁男了，因为它的操作对象是一个个扁平的 key-value 键值对，我们需要脑补出其中的层次结构。但如果把整个 etcd server <strong>挂载到本地</strong>的一个目录上，再用 VS Code 打开这个目录，那所有的数据都一览无遗，我们就拥有了一个更高阶的全貌视角：</p>
-<p><img src="/image/2020/08/etcdfs/open-kubernetes-etcd-in-vscode.png" alt="open kubernetes etcd in vscode.png"></p>
-<p>其实 Kubernetes 存放的数据格式继承自上古时代，那个时候用的还是 etcd v2 版本，所有的数据也是根据 v2 的模型组织成了一个树形结构，到后来虽然升级到了 v3，但之前的层次结构还是遗留了下来，对于这种有逻辑层级关系的数据，用一棵文件树来表示，似乎更有可读性。</p>
-<p><em>如果有兴趣，可以找一个 Kubernetes 集群，按下面的步骤，自己挂载一个来实际观察一下：</em></p>
+      <p>NFS 协议经过20多年的发展，已经变得非常复杂，本文以 mount 过程中发生的交互为切入点，带大家走进 nfs，走近科学…</p>
+<p>Mount 可以类比于其他协议中的握手过程，大家先拉通对齐一下，商量好以后沟通过程中要用到的一些参数。</p>
+<p>NFS v3 和 v4 的 mount 过程完全不同，简直可以用“<em>两种不同的协议</em>”来形容。下面分别描述：</p>
+<h2 id="v3-挂载">V3 挂载</h2>
+<p>V3 责任划分明确，一个 mount 过程涉及到好几个组件，我们可以通过<code>rpcinfo -p</code>查看到他们各自监听的端口：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span><span class="lnt">3
-</span><span class="lnt">4
-</span><span class="lnt">5
-</span><span class="lnt">6
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-bash" data-lang="bash">$ <span class="c1"># 将访问 etcd 用到的证书先拷到本地来（需小心保管）</span>
-$ scp -r &lt;kubernetes-master-ip&gt;:/etc/kubernetes/pki/etcd .
-$ <span class="c1"># 用 etcdfs 挂载到本地，注意到 etcdfs 用到的命令参数其实跟 etcdctl 是很相似的</span>
-$ etcdfs --endpoints<span class="o">=</span>&lt;kubernetes-master-ip&gt;:2379 --cacert etcd/ca.crt --key etcd/server.key --cert etcd/server.crt mnt
-$ <span class="c1"># 上一步成功后，就可以用 VS Code 打开了</span>
-$ code mnt
+<pre class="chroma"><code class="language-shell" data-lang="shell">$ rpcinfo -p
+   program vers proto   port  service
+    <span class="m">100000</span>    <span class="m">4</span>   tcp    <span class="m">111</span>  portmapper
+    <span class="m">100000</span>    <span class="m">3</span>   tcp    <span class="m">111</span>  portmapper
+    <span class="m">100000</span>    <span class="m">2</span>   tcp    <span class="m">111</span>  portmapper
+    <span class="m">100000</span>    <span class="m">4</span>   udp    <span class="m">111</span>  portmapper
+    <span class="m">100000</span>    <span class="m">3</span>   udp    <span class="m">111</span>  portmapper
+    <span class="m">100000</span>    <span class="m">2</span>   udp    <span class="m">111</span>  portmapper
+    <span class="m">100003</span>    <span class="m">3</span>   udp   <span class="m">8800</span>  nfs
+    <span class="m">100003</span>    <span class="m">3</span>   tcp   <span class="m">8800</span>  nfs
+    <span class="m">100005</span>    <span class="m">1</span>   udp   <span class="m">8801</span>  mountd
+    <span class="m">100005</span>    <span class="m">1</span>   tcp   <span class="m">8801</span>  mountd
+    <span class="m">100005</span>    <span class="m">3</span>   udp   <span class="m">8801</span>  mountd
+    <span class="m">100005</span>    <span class="m">3</span>   tcp   <span class="m">8801</span>  mountd
+    <span class="m">100003</span>    <span class="m">4</span>   udp   <span class="m">8800</span>  nfs
+    <span class="m">100003</span>    <span class="m">4</span>   tcp   <span class="m">8800</span>  nfs
+    <span class="m">100021</span>    <span class="m">4</span>   udp  <span class="m">36618</span>  nlockmgr
+    <span class="m">100021</span>    <span class="m">4</span>   tcp  <span class="m">42333</span>  nlockmgr
 </code></pre></td></tr></table>
 </div>
-</div><p>到这里为止，<em>“怎样把 etcd 挂载到本地”</em> 这个问题算是解答了，所用到的操作也就上面的几条命令，你也可以关掉页面了。但如果你想了解它是怎么做到的，请继续阅读&hellip;</p>
-<h2 id="工作原理">工作原理</h2>
-<h3 id="背景">背景</h3>
-<p>Linux 有一个 slogan —— <em>一切皆文件</em>，支撑这个 slogan 的是它背后的各种文件系统，比如常见的<code>procfs</code>, <code>ext4</code>, <code>NFS</code>。在这些花式文件系统之上，Linux 抽象出了一层 VFS(Virtual File System)，用来对外提供统一的接口，这样上层应用就不需要关心底下挂载到底是什么文件系统了。我们拿一个读请求举例：</p>
-<p><img src="/image/2020/08/etcdfs/vsf-read-operation.png" alt="VFS Read Operation"></p>
+</div><p>这里的第一列代表一个服务的标识编号；第二列代表该服务所支持的版本号，可以看到在我的测试机器上<code>nfs</code>同时支持v3、v4两种模式；第三列代表支持的传输协议；第四列代表监听的端口，这里除了<code>portmapper</code>外，其他的端口<em>几乎</em>都是随机值；第五列代表人眼可读的服务名称。</p>
+<p>首先需要介绍下入口服务<code>portmapper</code>，它一般监听在<code>111</code>端口，起的作用有点类似现代的 DNS 服务——客户端首先连上它，询问<code>nfs</code>、<code>mountd</code>、<code>nlockmgr</code>等服务监听的端口，有了端口号后才能与对应的服务打交道。话不多说，抓包看请求：</p>
+<h3 id="1-portmap">1. Portmap</h3>
+<p><img src="/image/2021/10/portmap.png" alt="V3 Portmap"></p>
+<p>这是<code>mount</code>刚开始的几个rpc call，大致流程是这样的：</p>
+<ul>
+<li>Client 向<code>portmapper</code>询问<code>nfs</code>服务(100003)监听的端口
+<ul>
+<li><code>portmapper</code>回复<code>8800</code></li>
+</ul>
+</li>
+<li>Client 向<code>nfs</code>发送一个<code>NULL</code>请求，用来测试对方服务是否能正常响应
+<ul>
+<li><code>nfs</code>响应</li>
+</ul>
+</li>
+<li>Client 向<code>portmapper</code>询问<code>mountd</code>服务(100005)监听的端口
+<ul>
+<li><code>portmapper</code>回复<code>8801</code></li>
+</ul>
+</li>
+</ul>
+<p>Client 拿到了各服务的地址（端口）后，就可以开始对话了。它首先告诉<code>mountd</code>需要挂载的目录：</p>
+<p><img src="/image/2021/10/v3-mnt.png" alt="V3 Mnt"></p>
+<p><code>mountd</code>在回复中则返回了根目录的<code>FileHandle</code>，这是一个48字节的字符数组（上限是64字节），用来唯一标识一个文件或目录。Client 并不会解析它，而 Server（这里用 <a href="https://github.com/nfs-ganesha/nfs-ganesha">Ganesha</a>） 则会在其中编码进 Ganesha 的版本号，FS ID，Inode 等信息。</p>
+<h3 id="2-fsinfo">2. FSINFO</h3>
+<p>Client 从<code>mountd</code>中拿到根目录的<code>FileHandle</code>之后，一切都有据可循了，之后的操作都会直接跟<code>nfs</code>服务打交道。</p>
+<p>首先用刚刚拿到的根目录的<code>FileHandle</code>，调用<code>FSINFO</code>获取该文件系统的静态信息：</p>
+<p><img src="/image/2021/10/fsinfo-reply.png" alt="FSINFO Reply"></p>
+<p>Server 返回的信息包括该 Server 所支持的文件读写时最大 IO 大小、一次<code>readdir</code>推荐大小、文件最大长度、以及是否支持软硬连接等能力。</p>
+<h3 id="3-pathconf">3. PATHCONF</h3>
+<p><code>PATHCONF</code>主要用来满足<code>pathconf</code>系统调用的请求，它返回了包括文件名最大长度、最大链接数、是否大小写敏感等信息。</p>
+<p><img src="/image/2021/10/pathconf-reply.png" alt="PATHCONF Reply"></p>
+<p>至此，Client 已经拿到了所有信息，挂载就成功了。</p>
+<h2 id="v4挂载">V4挂载</h2>
+<p>V4 相对于 V3 主要增加了<code>Compound</code>语义和状态的支持。在<code>mount</code>过程中前几个 rpc 可以理解为构造状态的种子信息。</p>
+<p><img src="/image/2021/10/v4-mnt.png" alt="V4 Mnt"></p>
+<h3 id="1-exchange_id">1. EXCHANGE_ID</h3>
+<p>顾名思义，这一步用来交换双方的 id，主要用来索引状态信息。</p>
+<p><img src="/image/2021/10/exchange-id-request.png" alt="Exchange ID Request"></p>
+<p>Client 提供的信息有一串 verfifier（用来标识重启）、ownerid（用来标识机器）、自己的内核版本、DNS Domain 等。目前 Ganesha 的实现中，它主要根据 ownerid、pnfs flags、server ip 的 hash 值生成一个 client id。</p>
+<h3 id="2-create_session">2. CREATE_SESSION</h3>
+<p><img src="/image/2021/10/create-session.png" alt="Create Session"></p>
+<p>这一步就是客户端发起建立会话请求，通过此请求告知会话中使用的读写块大小等信息，会话一旦建立就会一直保存到<code>umount</code>或者服务器重启为止。</p>
+<p>Session 的一个主要用途是用来确保请求的幂等性（Exactly Once Semantics），即 session id + seq id 可以唯一标识一个请求，从而缓存该请求的处理结果，以便 Client 重试。</p>
+<h3 id="3-reclaim_complete">3. RECLAIM_COMPLETE</h3>
+<p>主要是 Server 重启后，Client 恢复完状态后发起，不太了解细节&hellip;</p>
+<h3 id="4-secinfo_no_name">4. SECINFO_NO_NAME</h3>
+<p>Client 将不使用任何认证信息。</p>
+<h3 id="5-putrootfs--getattr">5. PUTROOTFS | GETATTR</h3>
+<p>在 NFS 中，文件对象都通过<code>FileHandle</code>来标识，在最开始的时候，我们并不知道任何对象的<code>FileHandle</code>，所以 NFS 提供了<code>PUTROOTFS</code>这个 op ，实现了类似 V3 协议中的<code>mount</code>请求，用来获取<code>Root FileHandle</code>。</p>
+<p>在 V4 协议中，所有的 op 都封装在一个<code>Compound</code>里面，一般每一个<code>Compound</code>里都有个设置当前上下文的 op —— <code>PUTROOTFS</code>(不带参数）或 <code>PUTFH</code>（带<code>FileHandle</code>参数），表示之后的 op 都操作在<code>FileHandle</code>这个对象上。</p>
+<p>还以 mount 过程中的这个请求为例：</p>
+<p><img src="/image/2021/10/putrootfh.png" alt="PUTROOTFH"></p>
+<p>这个请求的<code>Compound</code>中包含了 4 个 op：</p>
 <ol>
-<li>应用程序发起一个读函数调用。</li>
-<li><code>glibc</code>把该函数调用翻译成对应的系统调用。</li>
-<li><code>VFS</code>知道具体挂载的文件系统，转而调用该文件系统的函数指针。</li>
-<li>不同的文件系统会有不同的实现逻辑，比如<code>ext4</code>就根据<a href="https://zh.wikipedia.org/wiki/Inode">inode</a>中的元信息，去底层的块存储中寻址取值。</li>
+<li>标识请求的 session id 和 seq id</li>
+<li>将<strong>当前</strong><code>FileHandle</code>设为<code>Root FileHandle</code></li>
+<li>返回当前<code>FileHandle</code>，即<code>Root FileHandle</code>给客户端</li>
+<li>通过<code>GETATTR</code>获取<strong>当前</strong><code>FileHandle</code>的属性，包括 Inode, Type, Mode, Owner 等信息</li>
 </ol>
-<h3 id="fuse-文件系统">FUSE 文件系统</h3>
-<p>了解完上面的流程后，再来介绍另一个文件系统的实现——<a href="https://en.wikipedia.org/wiki/Filesystem_in_Userspace">FUSE</a>（Filesystem in Userspace），它在整个文件系统栈中的定位跟<code>ext4</code>一样，也是响应<code>VFS</code>的调用，只不过把该调用封装成 FUSE 协议的消息<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>，通过设备<code>/dev/fuse</code>转发出去，这样用户态的程序只要监听该设备，解析消息作出相应的处理，并再发送回去就行。借助这样的能力，我们就能够在用户态模拟出一个文件系统来。</p>
-<p><img src="/image/2020/08/etcdfs/fuse-stack.png" alt="FUSE Stack"></p>
-<p>这种不依赖于底层硬件的灵活性给了程序员们无限的可能，比如将 FUSE 的请求通过 ssh 转发到远程的<a href="https://github.com/libfuse/sshfs">sshfs</a>，再比如这里的 etcdfs，也是将文件系统的操作转化为对 etcd 的 CURD 操作🤪。</p>
-<h3 id="go-fuse-库">Go-fuse 库</h3>
-<p>在 Go 语言生态圈，不少大佬都对 FUSE 协议进行了封装，其中用户量最大的应该是<a href="https://github.com/hanwen/go-fuse">go-fuse</a>，它作为 FUSE 的客户端，负责与内核中的 FUSE 模块交互，读取 FUSE 请求，解析出其中的<code>OpCode</code><sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>，并转为对用户程序中相应方法的调用，然后将结果封装成 FUSE 消息返回出去。</p>
-<p>在 go-fuse 中最重要的一个概念就是<code>fs.Inode</code><sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup>，它代表了在 VFS 文件树中的一个节点，所有文件系统的操作都需要以一个<code>fs.Inode</code>作为操作对象。在最开始做挂载调用的时候，我们就需要创建好一个<code>fs.Inode</code>对象，作为后续所有操作的根节点，它的<a href="https://www.ruanyifeng.com/blog/2011/12/inode.html">inode编号</a>必须为<code>1</code>。有了根节点之后，我们就可以递归的查找它的子节点，直到找到目标操作对象。</p>
-<p>再举个栗子，比如现在发生了<code>unlink(&quot;/tmp/foo&quot;)</code>系统调用，那 VFS 层首先会把目标文件名进行分段处理，在这个例子中，我们会得到三段：<code>/</code>, <code>tmp</code>, <code>foo</code>。其中的根节点<code>/</code>在挂载的时候已经创建了，所以 VFS 会以它作为起点，依次调用<code>Lookup</code>方法递归遍历下去：</p>
-<ol>
-<li>VFS 调用 root 节点的方法 <code>Lookup(&quot;tmp&quot;)</code>，拿到代表 tmp 目录的 Inode。</li>
-<li>VFS 继续调用 tmp 节点的方法<code>Lookup(&quot;foo&quot;)</code>，拿到代表 foo 文件的 Inode。</li>
-<li>VFS 拿到目标节点后，调用目标节点的<code>Unlink()</code>方法，实现删除操作。</li>
-</ol>
-<p>当然，实际实现中，我们不可能每次都从根节点一路遍历下来，那样子性能太差了。Linux 的 VFS 层支持<a href="http://www.science.unitn.it/~fiorella/guidelinux/tlk/node111.html">dentry cache</a> ，<code>dentry</code>用来保存文件名和<code>inode</code>之间的映射，并且允许文件系统的实现者设置 cache 的过期时间。在 ext4 的实现中，该缓存被设为永不过期，而 go-fuse 则允许我们通过 <a href="https://github.com/hanwen/go-fuse/blob/v2.0.3/fs/api.go#L572">EntryTimeout</a> 来指定过期时间。</p>
-<p>理解了 fs.Inode 的查找逻辑之后，剩下的就是在该对象上实现各种各样的方法了。因为 go-fuse 拿到一个 OpCode 之后，会用 Go 的接口断言判断一下当前的 fs.Inode 对象是否实现了该 OpCode 所需的方法，如果实现了则直接调用用户程序中的方法，否则走默认处理逻辑或者报错。</p>
+<h3 id="6-若干连续-getattr">6. 若干连续 GETATTR</h3>
+<p>Client 从上一步的第3个 op 中拿到<code>Root FileHandle</code>之后，就可以对它进行一系列的<code>GETATTR</code>操作，包括获取它的最大文件大小、读写大小、是否支持软硬链接等信息。</p>
+<h3 id="compound真的用起来了吗">Compound真的用起来了吗？</h3>
+<p><strong>几乎没有。</strong></p>
+<p><code>Compound</code>是一个很好的设计——请求流水线化，但由于 POSIX API 设计的过于底层，以及 Kernel 中实现的问题，一次<code>Compound</code>中<strong>有效</strong>负载的 op 很少，几乎只有一两个，比如用户要读取<code>/home/Bob/.bashrc</code>文件，那 Kernel Client 会构造出好几个 rpc 请求：</p>
+<p><img src="/image/2021/10/kernel-compound.png" alt="Kernel Compound Request"></p>
+<p>但事实上，NFS 协议完全支持更高效的流水线写法，即将这些主要的 op 都封装在同一个<code>Compound</code>中，这样从原来的 5 次 rpc 调用转为了 1 次 rpc 调用，大大节省了网络延时的开销。有一个在用户态实现的简易版 <a href="https://github.com/Cyberax/go-nfs-client/blob/20b5579098223e885f84be9c70006acba26daefb/nfs4/client.go#L450-L463">nfs client</a>，就构造出了这样的<code>Compound</code>，这不仅简化了代码处理流程，也提高了 IO 效率。</p>
+<p><img src="/image/2021/10/intensive-compound.png" alt="Intensive Compound Request"></p>
+<p>Kernel Client 可能会做一些复杂的缓存，来减少这些 rpc 调用。但在大量小文件的场景下，Kernel 的缓存会频繁失效，比如<code>git clone</code> 7w 个小文件的 Kernel 代码，我就观察到非常多元数据的重复查询，而且每个元数据变更的请求都要<strong>同步持久化</strong>（相对而言，本地文件系统采取异步回写，批量提交的模式），这么多 rpc 请求也是 nfs 在大量小文件场景下<a href="http://lass.cs.umass.edu/papers/pdf/FAST04.pdf">比<code>块存储</code>慢的原因</a>之一。</p>
+<p>有人在用户态实现了一个支持构造高负荷<code>Compound</code>的 NFS Client，将大量小文件场景下的读写性能提升了 5~103 倍，有兴趣的可以参见<a href="https://www.fsl.cs.sunysb.edu/docs/nfs4perf/vnfs-fast17.pdf">这篇论文</a>。</p>
 <h2 id="总结">总结</h2>
-<p>etcdfs 将文件系统常用的操作（比如：open, read, write, flush）都实现了一遍，底层封装的还是对 etcd 的操作。在知道了 go-fuse 的工作原理及使用方法后，这部分<a href="https://github.com/polyrabbit/etcdfs/tree/master/fs">文件系统相关的代码</a>应该就不难理解了。如果你对 etcdfs 有什么反馈建议，也欢迎与我交流。</p>
-<section class="footnotes" role="doc-endnotes">
-<hr>
-<ol>
-<li id="fn:1" role="doc-endnote">
-<p><a href="https://github.com/libfuse/libfuse/blob/fuse-3.9.2/include/fuse_kernel.h">Kernel FUSE message format</a> <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
-</li>
-<li id="fn:2" role="doc-endnote">
-<p><a href="https://github.com/libfuse/libfuse/blob/fuse-3.9.2/include/fuse_kernel.h#L379">OpCode enum</a> <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
-</li>
-<li id="fn:3" role="doc-endnote">
-<p><a href="https://github.com/hanwen/go-fuse/blob/v2.0.3/fs/inode.go#L60">go-fuse Inode structure</a> <a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
-</li>
-</ol>
-</section>
+<p>本文以 mount 握手过程为<em>抓手</em>，介绍了几个常用的 nfs op，以助大家打通<em>底层逻辑</em>，并以 <code>Compound</code>为例，输出了<em>自己的思考</em>，更多 op 细节需要大家去查阅  rfc 文档，<em>形成闭环</em>。如有错误，欢迎指正：）</p>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li><a href="https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.22.7599&amp;rep=rep1&amp;type=pdf">The NFS Version 4 Protocol</a></li>
+<li><a href="https://www.fsl.cs.sunysb.edu/docs/nfs4perf/vnfs-fast17.pdf">Maximizing NFS Performance with Compounds and Vectorized I/O</a></li>
+<li><a href="http://lass.cs.umass.edu/papers/pdf/FAST04.pdf">A Performance Comparison of NFS and iSCSI for IP-Networked Storage</a></li>
+<li><a href="https://www.kernel.org/doc/ols/2001/nfsv4_ols.pdf">Linux NFS Version 4: Implementation and Administration</a></li>
+</ul>
 
     </div>
 
@@ -395,7 +465,7 @@ $ code mnt
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
     <span class="item-content">
-      2020-08-07
+      2021-10-27
       
     </span>
   </p>
@@ -416,22 +486,9 @@ $ code mnt
       
       <nav class="post-nav">
         
-          <a class="prev" href="/post/2020/10/reverse-go-code-to-thrift-file/">
-            
-            <i class="iconfont">
-              <svg  class="icon" viewBox="0 0 1024 1024" version="1.1"
-  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-  width="18" height="18">
-  <path d="M691.908486 949.511495l75.369571-89.491197c10.963703-12.998035 10.285251-32.864502-1.499144-44.378743L479.499795 515.267417 757.434875 204.940602c11.338233-12.190647 11.035334-32.285311-0.638543-44.850487l-80.46666-86.564541c-11.680017-12.583596-30.356378-12.893658-41.662889-0.716314L257.233596 494.235404c-11.332093 12.183484-11.041474 32.266891 0.657986 44.844348l80.46666 86.564541c1.772366 1.910513 3.706415 3.533476 5.750981 4.877077l306.620399 321.703933C662.505829 963.726242 680.945807 962.528973 691.908486 949.511495z"></path>
-</svg>
-
-            </i>
-            <span class="prev-text nav-default">利用 AST 从代码反推出 thrift 文件</span>
-            <span class="prev-text nav-mobile">上一篇</span>
-          </a>
         
-          <a class="next" href="/post/2020/03/a-pattern-for-writing-testable-go-code/">
-            <span class="next-text nav-default">编写可测试 Go 代码的一种模式</span>
+          <a class="next" href="/post/2021/07/fio-internal/">
+            <span class="next-text nav-default">FIO 到底在干什么</span>
             <span class="prev-text nav-mobile">下一篇</span>
             
             <i class="iconfont">

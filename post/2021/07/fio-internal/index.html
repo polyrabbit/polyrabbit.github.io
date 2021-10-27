@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="zh-cn" itemscope itemtype="http://schema.org/WebPage">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>FIO 到底在干什么 - 喵叔没话说</title>
+  
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta name="MobileOptimized" content="width"/>
+<meta name="HandheldFriendly" content="true"/>
+
+
+<meta name="applicable-device" content="pc,mobile">
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="author" content="喵叔" />
+  <meta name="description" content="fio 是一个常见的 IO 性能测试工具。它功能强大，上至文件系统，下至裸盘都能支持，但同时也参数繁多，目前的最新版本（3.27）中已经定义了至少237" />
+<meta name="keywords" content="fio, strace, file system" />
+
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.64.0" />
+
+
+<link rel="canonical" href="//blog.betacat.io/post/2021/07/fio-internal/" />
+
+
+
+
+
+<link rel="icon" href="/favicon.ico" />
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/sass/jane.min.0995afa14b62cd93e93cfc066b646c4c17a3eddca0e9d52a1d9dcf5d90aaacd3.css" integrity="sha256-CZWvoUtizZPpPPwGa2RsTBej7dyg6dUqHZ3PXZCqrNM=" media="screen" crossorigin="anonymous">
+
+
+
+
+
+<meta property="og:title" content="FIO 到底在干什么" />
+<meta property="og:description" content="fio 是一个常见的 IO 性能测试工具。它功能强大，上至文件系统，下至裸盘都能支持，但同时也参数繁多，目前的最新版本（3.27）中已经定义了至少237" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="//blog.betacat.io/post/2021/07/fio-internal/" />
+<meta property="article:published_time" content="2021-07-05T11:45:24+08:00" />
+<meta property="article:modified_time" content="2021-07-05T11:45:24+08:00" />
+<meta itemprop="name" content="FIO 到底在干什么">
+<meta itemprop="description" content="fio 是一个常见的 IO 性能测试工具。它功能强大，上至文件系统，下至裸盘都能支持，但同时也参数繁多，目前的最新版本（3.27）中已经定义了至少237">
+<meta itemprop="datePublished" content="2021-07-05T11:45:24&#43;08:00" />
+<meta itemprop="dateModified" content="2021-07-05T11:45:24&#43;08:00" />
+<meta itemprop="wordCount" content="2094">
+
+
+
+<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="FIO 到底在干什么"/>
+<meta name="twitter:description" content="fio 是一个常见的 IO 性能测试工具。它功能强大，上至文件系统，下至裸盘都能支持，但同时也参数繁多，目前的最新版本（3.27）中已经定义了至少237"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-36049801-4', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script type="text/javascript">
+    
+    if (window != top) top.location.href = window.location.href
+</script>
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">喵叔没话说</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+          
+        
+      </li>
+    
+
+    
+  </ul>
+</nav>
+
+
+  
+    
+
+
+
+
+
+
+  <link rel="stylesheet" href="/lib/photoswipe/photoswipe.min.css" />
+  <link rel="stylesheet" href="/lib/photoswipe/default-skin/default-skin.min.css" />
+
+
+
+
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="pswp__bg"></div>
+
+<div class="pswp__scroll-wrap">
+    
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    
+    <div class="pswp__ui pswp__ui--hidden">
+    <div class="pswp__top-bar">
+      
+      <div class="pswp__counter"></div>
+      <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+      <button class="pswp__button pswp__button--share" title="Share"></button>
+      <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+      <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+      
+      
+      <div class="pswp__preloader">
+        <div class="pswp__preloader__icn">
+          <div class="pswp__preloader__cut">
+            <div class="pswp__preloader__donut"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+      <div class="pswp__share-tooltip"></div>
+    </div>
+    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+    </button>
+    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+    </button>
+    <div class="pswp__caption">
+      <div class="pswp__caption__center"></div>
+    </div>
+    </div>
+    </div>
+</div>
+
+  
+
+  
+
+  
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">
+    
+      喵叔没话说
+    
+  </a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+          
+
+        
+
+      </li>
+    
+
+    
+    
+
+    
+  </ul>
+</nav>
+
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">FIO 到底在干什么</h1>
+      
+      <div class="post-meta">
+        <time datetime="2021-07-05" class="post-time">
+          2021-07-05
+        </time>
+        
+        <span class="more-meta"> 约 2094 字 </span>
+          <span class="more-meta"> 预计阅读 5 分钟 </span>
+
+        
+        
+
+        
+        
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#laying-out-io-files">Laying out IO file(s)</a></li>
+    <li><a href="#io-pattern">IO Pattern</a>
+      <ul>
+        <li><a href="#顺序读read">顺序读——read</a></li>
+        <li><a href="#顺序写write">顺序写——write</a></li>
+        <li><a href="#随机读randread">随机读——randread</a></li>
+        <li><a href="#随机写randwrite">随机写——randwrite</a></li>
+        <li><a href="#随机读写randrw">随机读写——randrw</a></li>
+      </ul>
+    </li>
+    <li><a href="#参考资料">参考资料</a></li>
+  </ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      <p>fio 是一个常见的 IO 性能测试工具。它功能强大，上至文件系统，下至裸盘都能支持，但同时也参数繁多，目前的最新版本（3.27）中已经定义了至少<a href="https://github.com/axboe/fio/blob/fio-3.27/options.c#L1671">237种</a>一级参数，再加上这些参数的不同取值，一套组合拳下来能把人打的找不着北。所幸我们并不需要了解全部的参数，在使用的时候，只要到脚本库里面找到一个现成的命令，<em>Ctrl</em>+C / <em>Ctrl</em>+V一下即可（至少我是这样）。</p>
+<p>比如我常用的一个命令模板：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">fio -directory<span class="o">=</span>/mnt/fio/ --ramp_time<span class="o">=</span><span class="m">60</span> --nrfiles<span class="o">=</span><span class="m">10</span> --size<span class="o">=</span>2560m --thread --group_reporting --direct<span class="o">=</span><span class="m">1</span> --ioengine<span class="o">=</span>libaio --bs<span class="o">=</span>4k --rw<span class="o">=</span>randrw --iodepth<span class="o">=</span><span class="m">64</span> --iodepth_batch_submit<span class="o">=</span><span class="m">8</span> --iodepth_batch_complete<span class="o">=</span><span class="m">8</span> --name<span class="o">=</span>randrw_perfile<span class="o">[</span>256m<span class="o">]</span>_bs<span class="o">[</span>4k<span class="o">]</span>_iodepth<span class="o">[</span>64<span class="o">]</span> --time_based<span class="o">=</span><span class="m">1</span> --runtime<span class="o">=</span><span class="k">$((</span><span class="m">120</span><span class="o">*</span><span class="m">60</span><span class="k">))</span> --continue_on_error<span class="o">=</span>none
+</code></pre></td></tr></table>
+</div>
+</div><p>但在反复的性能测试中，我观察到 fio 不合常理的慢，它经常卡在一个叫<code>Laying out IO file(s)</code>的阶段，有时甚至比它跑 benchmark 的时间还要长。对于这样的浪费我自然是不能忍受的，所以不禁好奇，fio 到底在干什么？</p>
+<h2 id="laying-out-io-files">Laying out IO file(s)</h2>
+<p>当挂载好了一个全新的目录，开始跑 fio 的时候，我们会看到 fio 输出一段<code>Laying out IO file(s)</code>，然后就一动不动的 hang 住几分钟。看起来它是在准备些什么文件，具体都干了些啥，可以通过<code>strace</code>观察到:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">strace -f -o /tmp/fio.strace fio ...
+
+<span class="m">2998863</span> fallocate<span class="o">(</span>3, 0, 0, 1048576<span class="o">)</span>     <span class="o">=</span> -1 EOPNOTSUPP <span class="o">(</span>Operation not supported<span class="o">)</span>
+<span class="m">2998863</span> pwrite64<span class="o">(</span>3, <span class="s2">&#34;\0&#34;</span>, 1, 4095<span class="o">)</span>      <span class="o">=</span> <span class="m">1</span>
+<span class="m">2998863</span> pwrite64<span class="o">(</span>3, <span class="s2">&#34;\0&#34;</span>, 1, 8191<span class="o">)</span>      <span class="o">=</span> <span class="m">1</span>
+<span class="m">2998863</span> pwrite64<span class="o">(</span>3, <span class="s2">&#34;\0&#34;</span>, 1, 12287<span class="o">)</span>     <span class="o">=</span> <span class="m">1</span>
+// ... 共 <span class="m">256</span> 个 pwrite64
+<span class="m">2998863</span> pwrite64<span class="o">(</span>3, <span class="s2">&#34;\0&#34;</span>, 1, 1048575<span class="o">)</span>   <span class="o">=</span> <span class="m">1</span>
+<span class="m">2998863</span> ftruncate<span class="o">(</span>3, 1048576<span class="o">)</span>           <span class="o">=</span> <span class="m">0</span>
+<span class="m">2998863</span> write<span class="o">(</span>3, <span class="s2">&#34;\303\214\344\234\371\216v\v\230\21;\355l\3\207\0363b\333\24\320iB\27F\354\201Q\314B\245\f&#34;</span>..., 4096<span class="o">)</span> <span class="o">=</span> <span class="m">4096</span>
+<span class="m">2998863</span> write<span class="o">(</span>3, <span class="s2">&#34;P\246\256 ]\255\&#34;D\312\324\355PT\305\5\n\231\272\270\2373\220\234\5S\227\252\26*\302\210\0&#34;</span>..., 4096<span class="o">)</span> <span class="o">=</span> <span class="m">4096</span>
+<span class="m">2998863</span> write<span class="o">(</span>3, <span class="s2">&#34;\331K\250\225w\224xe{\211\310\314\272G\&#34;\23/\221\333\24\223\342#\36%\362\3\232\344\361\3\v&#34;</span>..., 4096<span class="o">)</span> <span class="o">=</span> <span class="m">4096</span>
+// ... 共 <span class="m">256</span> 个 write
+<span class="m">2998863</span> write<span class="o">(</span>3, <span class="s2">&#34;F\364\251\310\340\266-Z\210&gt;\362\36\207R?\4\321G\232\304\327Z\374\n\372\310\252\324\r\251j\n&#34;</span>..., 4096<span class="o">)</span> <span class="o">=</span> <span class="m">4096</span>
+</code></pre></td></tr></table>
+</div>
+</div><p><em>注意，这里一定要加<code>-f</code>，因为 fio 会创建子线程，并通过子线程完成 benchmark，如果不加<code>-f</code>的话，我们只能观察到主线程的行为，真正发生的 IO 却看不到。</em></p>
+<p>打开<code>strace</code>日志，可以看到在真正的 benchmark 之前，有这么几个关键的 IO 调用</p>
+<ol>
+<li>调用<code>fallocate</code>，失败了，因为底层文件系统目前还不支持这个语义</li>
+<li>然后就顺序写各个 block，每次写一个字节，直到写满特定的 size</li>
+<li>挨个写完以后，又来了一次<code>ftruncate</code>调用</li>
+<li>接着又从头写了一遍文件，不过不同的是，这次每个 block 都填满了，写的是随机内容（随机程度跟 fio 那几个 buffer 参数有关）</li>
+</ol>
+<p>原来所谓的<code>Laying out IO files</code>就是在随机创建文件啊，就这.gif？</p>
+<p>但为啥会写两遍呢？明明有了第4步就够了，为啥要多做第2步，让我们多等一倍的时间？</p>
+<p>这个迷惑的行为困扰了我很久，后来才无意中发现，这很有可能是 glibc 的行为，即在发现底层文件系统不支持<code>fallocate</code>之后，它模拟了一遍<code>fallocate</code>的语义，通过用<code>\0</code>来填充的方式，确保底层文件系统能预留指定的空间大小？</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-c" data-lang="c"><span class="c1">// https://code.woboq.org/userspace/glibc/sysdeps/posix/posix_fallocate.c.html#96
+</span><span class="c1"></span><span class="cm">/* Write a null byte to every block */</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">offset</span> <span class="o">+</span><span class="o">=</span> <span class="p">(</span><span class="n">len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">increment</span><span class="p">;</span> <span class="n">len</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">;</span> <span class="n">offset</span> <span class="o">+</span><span class="o">=</span> <span class="n">increment</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">len</span> <span class="o">-</span><span class="o">=</span> <span class="n">increment</span><span class="p">;</span>
+    <span class="c1">// ...
+</span><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">__pwrite</span> <span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="sa"></span><span class="s">&#34;</span><span class="s">&#34;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span> <span class="o">!</span><span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">errno</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>所以为了提升<code>Laying out IO file(s)</code>的速度，我们大概有两种思路：</p>
+<ol>
+<li>要么就不要删掉测试文件，让 fio 可以复用。</li>
+<li>要么就通过参数<code>--fallocate=none</code>，直接告诉它不要预调用<code>fallocate</code>，免得又触发 glibc 的一次顺序写，从而节省一半的时间。</li>
+</ol>
+<h2 id="io-pattern">IO Pattern</h2>
+<p>fio 的<code>--rw</code>参数支持多种 IO 模式，比如常见的顺序读写、随机读写。但在真正 benchmark 的过程中，发出的 IO 请求是怎样的，随机程度怎样，是否覆盖了所有的文件地址空间？</p>
+<p>这个问题同样可以用<code>strace</code>来解答，我们截取了后半部分 IO 调用。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-lisp" data-lang="lisp"><span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pread,</span> <span class="nv">fildes=3,</span> <span class="nv">buf=0x7f2484010000,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=61440}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pwrite,</span> <span class="nv">fildes=3,</span> <span class="nv">str=</span><span class="s">&#34;4\371\3152\217F\34\212&amp;\277\277\351j\357g\1\344\367\244}\r\211\1\21\374\236\3023Or\325\33&#34;</span><span class="o">.</span><span class="o">.</span><span class="o">.</span><span class="o">,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=774144}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pwrite,</span> <span class="nv">fildes=3,</span> <span class="nv">str=</span><span class="s">&#34;\0\32\310\207^&gt;\33\\@\3\371\303\347#T\2h \337v\200\242\26\25\r\344\247~\340\230:\32&#34;</span><span class="o">.</span><span class="o">.</span><span class="o">.</span><span class="o">,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=880640}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pread,</span> <span class="nv">fildes=3,</span> <span class="nv">buf=0x7f248400d000,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=491520}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pwrite,</span> <span class="nv">fildes=3,</span> <span class="nv">str=</span><span class="s">&#34;|\263\316\244`\5\255Io\326\333\272DN\351\37\315\372#\254Z\314#\nY\377\35Xy#r\7&#34;</span><span class="o">.</span><span class="o">.</span><span class="o">.</span><span class="o">,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=417792}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pwrite,</span> <span class="nv">fildes=3,</span> <span class="nv">str=</span><span class="s">&#34;X4o\263\207U\221x\213\346A\\\371P\266\34\0\0\f\0\0\0\0\0\232\327\237h^\307\274\33&#34;</span><span class="o">.</span><span class="o">.</span><span class="o">.</span><span class="o">,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=786432}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pwrite,</span> <span class="nv">fildes=3,</span> <span class="nv">str=</span><span class="s">&#34;\\\376HS=\224\353\17\313\37;+\343\310b\5\371\343\201\325~\303\7\4\177\274\263\350\256\215P\20&#34;</span><span class="o">.</span><span class="o">.</span><span class="o">.</span><span class="o">,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=397312}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pread,</span> <span class="nv">fildes=3,</span> <span class="nv">buf=0x7f2484009000,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=368640}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pwrite,</span> <span class="nv">fildes=3,</span> <span class="nv">str=</span><span class="s">&#34;\23\211R`R\246Rh\&#34;\321\200\7\241$\246\20$\32_\270\323@2\7D\343\371\351\352kx\36&#34;</span><span class="o">.</span><span class="o">.</span><span class="o">.</span><span class="o">,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=954368}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pwrite,</span> <span class="nv">fildes=3,</span> <span class="nv">str=</span><span class="s">&#34;\364\264\206\255\246\21\3\247\236\3266{q\v\271\21\323\332\27\304\322cP\vZ{\31kn\252\205\22&#34;</span><span class="o">.</span><span class="o">.</span><span class="o">.</span><span class="o">,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=69632}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pwrite,</span> <span class="nv">fildes=3,</span> <span class="nv">str=</span><span class="s">&#34;|\331\327\237\375\332&#39;\215/\373&lt;\307s+\212\7e\37P\373\317a\300\t\354\203\267\357\221\16\323\26&#34;</span><span class="o">.</span><span class="o">.</span><span class="o">.</span><span class="o">,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=892928}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pwrite,</span> <span class="nv">fildes=3,</span> <span class="nv">str=</span><span class="s">&#34;\24\234#l8SyK\202sz?U\364^\17pN.n\315&gt;\317\27\316\311\215\206\3020\243\f&#34;</span><span class="o">.</span><span class="o">.</span><span class="o">.</span><span class="o">,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=679936}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pwrite,</span> <span class="nv">fildes=3,</span> <span class="nv">str=</span><span class="s">&#34;\223\214&#39;\242\326\251\345L\222q\373\r&#39;d\366\0032n\366(\207E\351\f\306\315\5\2565\224\267\35&#34;</span><span class="o">.</span><span class="o">.</span><span class="o">.</span><span class="o">,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=970752}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pwrite,</span> <span class="nv">fildes=3,</span> <span class="nv">str=</span><span class="s">&#34;,%!\364JNk\224\245$\356\313\270\357\233\24\224D+\7\0\30\372\5\222h\233^j?\313\37&#34;</span><span class="o">.</span><span class="o">.</span><span class="o">.</span><span class="o">,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=258048}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pread,</span> <span class="nv">fildes=3,</span> <span class="nv">buf=0x7f2484002000,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=409600}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pread,</span> <span class="nv">fildes=3,</span> <span class="nv">buf=0x7f2484001000,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=585728}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_getevents</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{data=0,</span> <span class="nv">obj=0x7f24840153e0,</span> <span class="nv">res=4096,</span> <span class="nv">res2=0}],</span> <span class="nv">NULL</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pread,</span> <span class="nv">fildes=3,</span> <span class="nv">buf=0x7f248400f000,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=458752}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_getevents</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{data=0,</span> <span class="nv">obj=0x7f2484015120,</span> <span class="nv">res=4096,</span> <span class="nv">res2=0}],</span> <span class="nv">NULL</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+<span class="mi">2998936</span> <span class="nv">io_submit</span><span class="p">(</span><span class="nv">0x7f24bdae7000,</span> <span class="mi">1</span><span class="o">,</span> <span class="nv">[{pread,</span> <span class="nv">fildes=3,</span> <span class="nv">buf=0x7f248400e000,</span> <span class="nv">nbytes=4096,</span> <span class="nv">offset=839680}]</span><span class="p">)</span> <span class="nf">=</span> <span class="mi">1</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>由于我们的 ioengine 是<code>libaio</code>，所以 IO 请求通过<code>io_submit</code>来完成。可以看到，fio 一次发出了一批<code>io_submit</code>调用，然后调用<code>io_getevents</code>一次只等待一个结果，拿到结果后又立即发出一个<code>io_submit</code>请求，这样确保 in-flight 的请求正好是16个，正符合<code>--iodepth=16</code>设定的参数👏🏻。</p>
+<p>但这个 log 观察 IO Pattern 就有点麻烦了，因为<code>strace</code>的输出里还夹杂着其他的系统调用。这时，我又找到了另一个 fio 的参数——<code>--write_iolog</code>，它可以将 IO 相关的参数直接 dump 出来，让用户有个量化的感知：</p>
+<h3 id="顺序读read">顺序读——read</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">open</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">read</span> <span class="mi">0</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">read</span> <span class="mi">4096</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">read</span> <span class="mi">8192</span> <span class="mi">4096</span>
+<span class="c1">// ... 共256个读
+</span><span class="c1"></span><span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">read</span> <span class="mi">1044480</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">close</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>看起来很符合预期，顺序读就是按顺序每个 block 读取一遍。</p>
+<h3 id="顺序写write">顺序写——write</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">open</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">write</span> <span class="mi">0</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">write</span> <span class="mi">4096</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">write</span> <span class="mi">8192</span> <span class="mi">4096</span>
+<span class="c1">// ... 共256个写
+</span><span class="c1"></span><span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">write</span> <span class="mi">1044480</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">close</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>行为同上。</p>
+<h3 id="随机读randread">随机读——randread</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">add</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">open</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">read</span> <span class="mi">61440</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">read</span> <span class="mi">774144</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">read</span> <span class="mi">880640</span> <span class="mi">4096</span>
+<span class="c1">// ... 共256个读
+</span><span class="c1"></span><span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">read</span> <span class="mi">782336</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">close</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>随机读看起来是每次随机选取一个 offset，来读取一个 block 。而且统计后能发现，fio 把每个地址空间都<strong>不多不少的访问了一次</strong>。</p>
+<h3 id="随机写randwrite">随机写——randwrite</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">add</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">open</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">write</span> <span class="mi">61440</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">write</span> <span class="mi">774144</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">write</span> <span class="mi">880640</span> <span class="mi">4096</span>
+<span class="c1">// ... 共256个写
+</span><span class="c1"></span><span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">write</span> <span class="mi">782336</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">close</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>行为同上。</p>
+<h3 id="随机读写randrw">随机读写——randrw</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-go" data-lang="go"><span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">add</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">open</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">read</span> <span class="mi">61440</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">write</span> <span class="mi">774144</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">write</span> <span class="mi">880640</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">read</span> <span class="mi">491520</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">write</span> <span class="mi">417792</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">write</span> <span class="mi">786432</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">write</span> <span class="mi">397312</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">read</span> <span class="mi">368640</span> <span class="mi">4096</span>
+<span class="c1">// ...
+</span><span class="c1"></span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">write</span> <span class="mi">745472</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">read</span> <span class="mi">749568</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">write</span> <span class="mi">765952</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">read</span> <span class="mi">782336</span> <span class="mi">4096</span>
+<span class="o">/</span><span class="nx">mnt</span><span class="o">/</span><span class="nx">fio</span><span class="o">/</span><span class="nx">out</span><span class="p">.</span><span class="nx">fio</span> <span class="nx">close</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>看起来是读写操作穿插着进行，而且每一个 offset 仅且<strong>仅读写一次</strong>。</p>
+<h2 id="参考资料">参考资料</h2>
+<ul>
+<li><a href="https://www.virtono.com/community/tutorial-how-to/fio-basics/">https://www.virtono.com/community/tutorial-how-to/fio-basics/</a></li>
+<li><a href="http://oliveryang.net/2016/07/linux-block-driver-basic-2/">http://oliveryang.net/2016/07/linux-block-driver-basic-2/</a></li>
+<li><a href="https://www.n0derunner.com/2021/05/understanding-fio-norandommap-and-randrepeat-parameters/">https://www.n0derunner.com/2021/05/understanding-fio-norandommap-and-randrepeat-parameters/</a></li>
+</ul>
+
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content"><a href="//blog.betacat.io">喵叔</a></span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">
+      2021-07-05
+      
+    </span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>（转载请注明出处）</span>
+  </p>
+</div>
+
+
+    
+    
+
+    <footer class="post-footer">
+      
+
+      
+      <nav class="post-nav">
+        
+          <a class="prev" href="/post/2021/10/nfs-mount-protocol/">
+            
+            <i class="iconfont">
+              <svg  class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M691.908486 949.511495l75.369571-89.491197c10.963703-12.998035 10.285251-32.864502-1.499144-44.378743L479.499795 515.267417 757.434875 204.940602c11.338233-12.190647 11.035334-32.285311-0.638543-44.850487l-80.46666-86.564541c-11.680017-12.583596-30.356378-12.893658-41.662889-0.716314L257.233596 494.235404c-11.332093 12.183484-11.041474 32.266891 0.657986 44.844348l80.46666 86.564541c1.772366 1.910513 3.706415 3.533476 5.750981 4.877077l306.620399 321.703933C662.505829 963.726242 680.945807 962.528973 691.908486 949.511495z"></path>
+</svg>
+
+            </i>
+            <span class="prev-text nav-default">NFS 协议 Mount 过程揭秘</span>
+            <span class="prev-text nav-mobile">上一篇</span>
+          </a>
+        
+          <a class="next" href="/post/2020/10/reverse-go-code-to-thrift-file/">
+            <span class="next-text nav-default">利用 AST 从代码反推出 thrift 文件</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            
+            <i class="iconfont">
+              <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M332.091514 74.487481l-75.369571 89.491197c-10.963703 12.998035-10.285251 32.864502 1.499144 44.378743l286.278095 300.375162L266.565125 819.058374c-11.338233 12.190647-11.035334 32.285311 0.638543 44.850487l80.46666 86.564541c11.680017 12.583596 30.356378 12.893658 41.662889 0.716314l377.434212-421.426145c11.332093-12.183484 11.041474-32.266891-0.657986-44.844348l-80.46666-86.564541c-1.772366-1.910513-3.706415-3.533476-5.750981-4.877077L373.270379 71.774697C361.493148 60.273758 343.054193 61.470003 332.091514 74.487481z"></path>
+</svg>
+
+            </i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+
+  
+  
+
+  
+  
+
+  
+
+  
+  
+    <div class="post bg-white">
+      <script src="https://utteranc.es/client.js"
+            repo= "polyrabbit/polyrabbit.github.io"
+            issue-term="title"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+      </script>
+    </div>
+  
+
+  
+
+  
+
+  
+
+    
+
+  
+
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="icon-links">
+  
+  
+    <a href="/email.gif" rel="me noopener" class="iconfont"
+      title="email"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1451 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M664.781909 681.472759 0 97.881301C0 3.997201 71.046997 0 71.046997 0L474.477909 0 961.649408 0 1361.641813 0C1361.641813 0 1432.688811 3.997201 1432.688811 97.881301L771.345323 681.472759C771.345323 681.472759 764.482731 685.154773 753.594283 688.65053L753.594283 688.664858C741.602731 693.493018 729.424896 695.068979 718.077952 694.839748 706.731093 695.068979 694.553173 693.493018 682.561621 688.664858L682.561621 688.65053C671.644501 685.140446 664.781909 681.472759 664.781909 681.472759L664.781909 681.472759ZM718.063616 811.603883C693.779541 811.016482 658.879232 802.205449 619.10784 767.734955 542.989056 701.759633 0 212.052267 0 212.052267L0 942.809523C0 942.809523 0 1024 83.726336 1024L682.532949 1024 753.579947 1024 1348.948139 1024C1432.688811 1024 1432.688811 942.809523 1432.688811 942.809523L1432.688811 212.052267C1432.688811 212.052267 893.138176 701.759633 817.019477 767.734955 777.248 802.205449 742.347691 811.03081 718.063616 811.603883L718.063616 811.603883Z"></path>
+</svg>
+
+    </a>
+  
+    <a href="javascript:alert%28%27My%20tweets%20are%20protected%20now%27%29" rel="me noopener" class="iconfont"
+      title="twitter"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1264 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M1229.8616 18.043658c0 0-117.852626 63.135335-164.151872 67.344358-105.225559-164.151872-505.082682-92.598492-437.738325 223.078185C278.622548 312.675223 89.216542 47.506814 89.216542 47.506814s-117.852626 189.406006 75.762402 345.139833C127.097743 396.85567 55.544363 371.601535 55.544363 371.601535S26.081207 535.753407 253.368414 615.724832c-21.045112 29.463156-113.643603 8.418045-113.643603 8.418045s25.254134 143.10676 231.496229 180.987961c-143.10676 130.479693-387.230056 92.598492-370.393967 105.225559 206.242095 189.406006 1119.599946 231.496229 1128.01799-643.98042C1179.353331 249.539887 1263.533778 123.269217 1263.533778 123.269217s-130.479693 37.881201-138.897738 33.672179C1225.652577 98.015083 1229.8616 18.043658 1229.8616 18.043658"></path>
+</svg>
+
+    </a>
+  
+    <a href="https://www.linkedin.com/in/%E6%98%8C%E6%96%B0-%E7%BC%AA-b46b8591/" rel="me noopener" class="iconfont"
+      title="linkedin"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="33" height="33">
+  <path d="M872.405333 872.618667h-151.637333v-237.610667c0-56.661333-1.152-129.578667-79.018667-129.578667-79.061333 0-91.136 61.653333-91.136 125.397334v241.792H398.976V384h145.664v66.602667h1.962667c20.352-38.4 69.845333-78.933333 143.786666-78.933334 153.642667 0 182.058667 101.12 182.058667 232.746667v268.202667zM227.712 317.141333a87.978667 87.978667 0 0 1-88.021333-88.106666 88.064 88.064 0 1 1 88.021333 88.106666z m76.032 555.477334H151.68V384h152.064v488.618667zM948.266667 0H75.562667C33.792 0 0 33.024 0 73.770667v876.458666C0 991.018667 33.792 1024 75.562667 1024h872.576C989.866667 1024 1024 991.018667 1024 950.229333V73.770667C1024 33.024 989.866667 0 948.138667 0h0.128z"></path>
+</svg>
+
+    </a>
+  
+    <a href="https://github.com/polyrabbit" rel="me noopener" class="iconfont"
+      title="github"  target="_blank"
+      >
+      <svg class="icon" style="" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M512 12.672c-282.88 0-512 229.248-512 512 0 226.261333 146.688 418.133333 350.08 485.76 25.6 4.821333 34.986667-11.008 34.986667-24.618667 0-12.16-0.426667-44.373333-0.64-87.04-142.421333 30.890667-172.458667-68.693333-172.458667-68.693333C188.672 770.986667 155.008 755.2 155.008 755.2c-46.378667-31.744 3.584-31.104 3.584-31.104 51.413333 3.584 78.421333 52.736 78.421333 52.736 45.653333 78.293333 119.850667 55.68 149.12 42.581333 4.608-33.109333 17.792-55.68 32.426667-68.48-113.706667-12.8-233.216-56.832-233.216-253.013333 0-55.893333 19.84-101.546667 52.693333-137.386667-5.76-12.928-23.04-64.981333 4.48-135.509333 0 0 42.88-13.738667 140.8 52.48 40.96-11.392 84.48-17.024 128-17.28 43.52 0.256 87.04 5.888 128 17.28 97.28-66.218667 140.16-52.48 140.16-52.48 27.52 70.528 10.24 122.581333 5.12 135.509333 32.64 35.84 52.48 81.493333 52.48 137.386667 0 196.693333-119.68 240-233.6 252.586667 17.92 15.36 34.56 46.762667 34.56 94.72 0 68.522667-0.64 123.562667-0.64 140.202666 0 13.44 8.96 29.44 35.2 24.32C877.44 942.592 1024 750.592 1024 524.672c0-282.752-229.248-512-512-512"></path>
+</svg>
+
+    </a>
+
+
+<a href="//blog.betacat.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
+    class="iconfont" title="rss" target="_blank">
+    <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="30" height="30">
+  <path d="M819.157333 1024C819.157333 574.592 449.408 204.8 0 204.8V0c561.706667 0 1024 462.293333 1024 1024h-204.842667zM140.416 743.04a140.8 140.8 0 0 1 140.501333 140.586667A140.928 140.928 0 0 1 140.074667 1024C62.72 1024 0 961.109333 0 883.626667s62.933333-140.544 140.416-140.586667zM678.784 1024h-199.04c0-263.210667-216.533333-479.786667-479.744-479.786667V345.173333c372.352 0 678.784 306.517333 678.784 678.826667z"></path>
+</svg>
+
+  </a>
+   
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy;
+    
+      2018 -
+    2021
+    <span class="heart">
+      
+      <i class="iconfont">
+        <svg class="icon" viewBox="0 0 1025 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="14" height="14">
+  <path d="M1000.1 247.9c-15.5-37.3-37.6-70.6-65.7-98.9-54.4-54.8-125.8-85-201-85-85.7 0-166 39-221.4 107.4C456.6 103 376.3 64 290.6 64c-75.1 0-146.5 30.4-201.1 85.6-28.2 28.5-50.4 61.9-65.8 99.3-16 38.8-24 79.9-23.6 122.2 0.7 91.7 40.1 177.2 108.1 234.8 3.1 2.6 6 5.1 8.9 7.8 14.9 13.4 58 52.8 112.6 102.7 93.5 85.5 209.9 191.9 257.5 234.2 7 6.1 15.8 9.5 24.9 9.5 9.2 0 18.1-3.4 24.9-9.5 34.5-30.7 105.8-95.9 181.4-165 74.2-67.8 150.9-138 195.8-178.2 69.5-57.9 109.6-144.4 109.9-237.3 0.1-42.5-8-83.6-24-122.2z"
+   fill="#8a8a8a"></path>
+</svg>
+
+      </i>
+    </span><span class="author">
+        <a href="//blog.betacat.io">喵叔</a>
+        
+      </span></span>
+
+  
+  
+
+  
+    <span>
+      <a class="beian" href="http://www.beian.miit.gov.cn/" target="_blank">沪ICP备17033881号-1</a>
+    </span>
+  
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont">
+        
+        <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="35" height="35">
+  <path d="M510.866688 227.694839 95.449397 629.218702l235.761562 0-2.057869 328.796468 362.40389 0L691.55698 628.188232l241.942331-3.089361L510.866688 227.694839zM63.840492 63.962777l894.052392 0 0 131.813095L63.840492 195.775872 63.840492 63.962777 63.840492 63.962777zM63.840492 63.962777"></path>
+</svg>
+
+      </i>
+    </div>
+  </div>
+  
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+
+
+
+
+<script type="text/javascript" src="/js/main.638251f4230630f0335d8c6748e53a96f94b72670920b60c09a56fdc8bece214.js" integrity="sha256-Y4JR9CMGMPAzXYxnSOU6lvlLcmcJILYMCaVv3Ivs4hQ=" crossorigin="anonymous"></script>
+
+
+
+
+
+
+<script id="baidu_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+    hm.src = "https://hm.baidu.com/hm.js?1d8c3618a611e95c78e0fcaf38baf230";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+  
+    <script type="text/javascript" src="/js/load-photoswipe.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe.min.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe-ui-default.min.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

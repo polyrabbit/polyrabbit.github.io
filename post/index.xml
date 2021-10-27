@@ -6,10 +6,28 @@
     <description>Recent content in Posts on 喵叔没话说</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 23 Oct 2020 11:51:13 +0800</lastBuildDate>
+    <lastBuildDate>Wed, 27 Oct 2021 12:03:16 +0800</lastBuildDate>
     
 	<atom:link href="//blog.betacat.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>NFS 协议 Mount 过程揭秘</title>
+      <link>//blog.betacat.io/post/2021/10/nfs-mount-protocol/</link>
+      <pubDate>Wed, 27 Oct 2021 12:03:16 +0800</pubDate>
+      
+      <guid>//blog.betacat.io/post/2021/10/nfs-mount-protocol/</guid>
+      <description>NFS 协议经过20多年的发展，已经变得非常复杂，本文以 mount 过程中发生的交互为切入点，带大家走进 nfs，走近科学… Mount 可以类比于其他协议中的握手过程，</description>
+    </item>
+    
+    <item>
+      <title>FIO 到底在干什么</title>
+      <link>//blog.betacat.io/post/2021/07/fio-internal/</link>
+      <pubDate>Mon, 05 Jul 2021 11:45:24 +0800</pubDate>
+      
+      <guid>//blog.betacat.io/post/2021/07/fio-internal/</guid>
+      <description>fio 是一个常见的 IO 性能测试工具。它功能强大，上至文件系统，下至裸盘都能支持，但同时也参数繁多，目前的最新版本（3.27）中已经定义了至少237</description>
+    </item>
     
     <item>
       <title>利用 AST 从代码反推出 thrift 文件</title>
