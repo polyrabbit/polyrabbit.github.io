@@ -323,7 +323,7 @@ if (!doNotTrack) {
 <pre class="chroma"><code><span class="lnt">1
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-bash" data-lang="bash">fio -directory<span class="o">=</span>/mnt/fio/ --ramp_time<span class="o">=</span><span class="m">60</span> --nrfiles<span class="o">=</span><span class="m">10</span> --size<span class="o">=</span>2560m --thread --group_reporting --direct<span class="o">=</span><span class="m">1</span> --ioengine<span class="o">=</span>libaio --bs<span class="o">=</span>4k --rw<span class="o">=</span>randrw --iodepth<span class="o">=</span><span class="m">64</span> --iodepth_batch_submit<span class="o">=</span><span class="m">8</span> --iodepth_batch_complete<span class="o">=</span><span class="m">8</span> --name<span class="o">=</span>randrw_perfile<span class="o">[</span>256m<span class="o">]</span>_bs<span class="o">[</span>4k<span class="o">]</span>_iodepth<span class="o">[</span>64<span class="o">]</span> --time_based<span class="o">=</span><span class="m">1</span> --runtime<span class="o">=</span><span class="k">$((</span><span class="m">120</span><span class="o">*</span><span class="m">60</span><span class="k">))</span> --continue_on_error<span class="o">=</span>none
+<pre class="chroma"><code class="language-bash" data-lang="bash">fio -directory<span class="o">=</span>/mnt/fio/ --ramp_time<span class="o">=</span><span class="m">60</span> --nrfiles<span class="o">=</span><span class="m">10</span> --size<span class="o">=</span>2560m --thread --group_reporting --direct<span class="o">=</span><span class="m">1</span> --ioengine<span class="o">=</span>libaio --bs<span class="o">=</span>4k --rw<span class="o">=</span>randrw --iodepth<span class="o">=</span><span class="m">64</span> --iodepth_batch_submit<span class="o">=</span><span class="m">8</span> --iodepth_batch_complete<span class="o">=</span><span class="m">8</span> --name<span class="o">=</span>randrw_perfile<span class="o">[</span>256m<span class="o">]</span>_bs<span class="o">[</span>4k<span class="o">]</span>_iodepth<span class="o">[</span>64<span class="o">]</span> --time_based<span class="o">=</span><span class="m">1</span> --runtime<span class="o">=</span><span class="k">$((</span><span class="m">10</span><span class="o">*</span><span class="m">60</span><span class="k">))</span> --continue_on_error<span class="o">=</span>none
 </code></pre></td></tr></table>
 </div>
 </div><p>但在反复的性能测试中，我观察到 fio 不合常理的慢，它经常卡在一个叫<code>Laying out IO file(s)</code>的阶段，有时甚至比它跑 benchmark 的时间还要长。对于这样的浪费我自然是不能忍受的，所以不禁好奇，fio 到底在干什么？</p>
@@ -768,7 +768,7 @@ if (!doNotTrack) {
     &copy;
     
       2018 -
-    2021
+    2022
     <span class="heart">
       
       <i class="iconfont">
