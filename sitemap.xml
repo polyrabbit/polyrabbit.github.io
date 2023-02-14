@@ -1,133 +1,140 @@
-<?xml-stylesheet type="text/xsl" href="//blog.betacat.io/sitemap.xsl"?>
+<?xml-stylesheet type="text/xsl" href="https://blog.betacat.io/sitemap.xsl"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>//blog.betacat.io/about/</loc>
+    <loc>https://blog.betacat.io/about/</loc>
     <lastmod>2018-12-15T23:04:52+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/post/2021/10/nfs-mount-protocol/</loc>
+    <loc>https://blog.betacat.io/post/2023/02/how-boltdb-saves-data/</loc>
+    <lastmod>2023-02-27T22:14:47+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.betacat.io/post/</loc>
+    <lastmod>2023-02-27T22:14:47+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.betacat.io/</loc>
+    <lastmod>2023-02-27T22:14:47+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.betacat.io/post/2021/10/nfs-mount-protocol/</loc>
     <lastmod>2021-10-27T12:03:16+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/post/</loc>
-    <lastmod>2021-10-27T12:03:16+08:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>//blog.betacat.io/</loc>
-    <lastmod>2021-10-27T12:03:16+08:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>//blog.betacat.io/post/2021/07/fio-internal/</loc>
+    <loc>https://blog.betacat.io/post/2021/07/fio-internal/</loc>
     <lastmod>2021-07-05T11:45:24+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/</loc>
+    <loc>https://blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/</loc>
     <lastmod>2020-12-18T11:51:13+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/post/2020/08/how-to-mount-etcd-as-a-filesystem/</loc>
+    <loc>https://blog.betacat.io/post/2020/08/how-to-mount-etcd-as-a-filesystem/</loc>
     <lastmod>2020-08-07T21:32:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/post/2020/03/a-pattern-for-writing-testable-go-code/</loc>
+    <loc>https://blog.betacat.io/post/2020/03/a-pattern-for-writing-testable-go-code/</loc>
     <lastmod>2020-03-28T21:32:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/post/2019/08/learn-transaction-isolation-levels-from-etcd/</loc>
+    <loc>https://blog.betacat.io/post/2019/08/learn-transaction-isolation-levels-from-etcd/</loc>
     <lastmod>2020-01-03T22:56:24+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/post/develop-and-debug-k8s-microservices-locally-using-telepresence/</loc>
+    <loc>https://blog.betacat.io/post/develop-and-debug-k8s-microservices-locally-using-telepresence/</loc>
     <lastmod>2019-11-11T23:07:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/post/golang-atomic-value-exploration/</loc>
+    <loc>https://blog.betacat.io/post/golang-atomic-value-exploration/</loc>
     <lastmod>2020-08-04T21:32:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/post/introduction-to-paging/</loc>
+    <loc>https://blog.betacat.io/post/introduction-to-paging/</loc>
     <lastmod>2019-02-10T11:31:31+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/post/mvcc-implementation-in-etcd/</loc>
+    <loc>https://blog.betacat.io/post/mvcc-implementation-in-etcd/</loc>
     <lastmod>2020-01-15T17:16:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/post/raft-implementation-in-etcd/</loc>
+    <loc>https://blog.betacat.io/post/raft-implementation-in-etcd/</loc>
     <lastmod>2020-03-20T21:32:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/post/introduction-to-ibm-mainframe/</loc>
+    <loc>https://blog.betacat.io/post/introduction-to-ibm-mainframe/</loc>
     <lastmod>2020-05-20T21:32:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/post/how-to-extract-main-content-from-web-pages-using-machine-learning/</loc>
+    <loc>https://blog.betacat.io/post/how-to-extract-main-content-from-web-pages-using-machine-learning/</loc>
     <lastmod>2018-09-18T01:15:57+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/post/how-wecron-schedules/</loc>
+    <loc>https://blog.betacat.io/post/how-wecron-schedules/</loc>
     <lastmod>2018-08-08T21:11:37+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/categories/</loc>
+    <loc>https://blog.betacat.io/categories/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>//blog.betacat.io/tags/</loc>
+    <loc>https://blog.betacat.io/tags/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>

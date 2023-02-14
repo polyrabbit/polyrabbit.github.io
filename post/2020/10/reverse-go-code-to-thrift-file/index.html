@@ -32,10 +32,10 @@
 
 
 
-<meta name="generator" content="Hugo 0.64.0" />
+<meta name="generator" content="Hugo 0.101.0" />
 
 
-<link rel="canonical" href="//blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/" />
+<link rel="canonical" href="https://blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/" />
 
 
 
@@ -53,7 +53,7 @@
 
 
 
-<link rel="stylesheet" href="/sass/jane.min.0995afa14b62cd93e93cfc066b646c4c17a3eddca0e9d52a1d9dcf5d90aaacd3.css" integrity="sha256-CZWvoUtizZPpPPwGa2RsTBej7dyg6dUqHZ3PXZCqrNM=" media="screen" crossorigin="anonymous">
+<link rel="stylesheet" href="/sass/jane.min.444f741ba7b684e63dff9a3b61ec1fb750c9b563b5a0b64153f1af8025c5fac1.css" integrity="sha256-RE90G6e2hOY9/5o7Yewft1DJtWO1oLZBU/GvgCXF&#43;sE=" media="screen" crossorigin="anonymous">
 
 
 
@@ -62,17 +62,14 @@
 <meta property="og:title" content="利用 AST 从代码反推出 thrift 文件" />
 <meta property="og:description" content="众所周知 (?)，字节跳动内部主要使用 Thrift 作为 RPC 的序列化及传输协议。据说这套技术栈是从 99 房继承过来的，那个时候创业公司也没几个 RPC 框架可选，国内小" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="//blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/" />
+<meta property="og:url" content="https://blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/" /><meta property="article:section" content="post" />
 <meta property="article:published_time" content="2020-10-23T11:51:13+08:00" />
 <meta property="article:modified_time" content="2020-12-18T11:51:13+08:00" />
+
 <meta itemprop="name" content="利用 AST 从代码反推出 thrift 文件">
-<meta itemprop="description" content="众所周知 (?)，字节跳动内部主要使用 Thrift 作为 RPC 的序列化及传输协议。据说这套技术栈是从 99 房继承过来的，那个时候创业公司也没几个 RPC 框架可选，国内小">
-<meta itemprop="datePublished" content="2020-10-23T11:51:13&#43;08:00" />
-<meta itemprop="dateModified" content="2020-12-18T11:51:13&#43;08:00" />
-<meta itemprop="wordCount" content="3481">
-
-
-
+<meta itemprop="description" content="众所周知 (?)，字节跳动内部主要使用 Thrift 作为 RPC 的序列化及传输协议。据说这套技术栈是从 99 房继承过来的，那个时候创业公司也没几个 RPC 框架可选，国内小"><meta itemprop="datePublished" content="2020-10-23T11:51:13+08:00" />
+<meta itemprop="dateModified" content="2020-12-18T11:51:13+08:00" />
+<meta itemprop="wordCount" content="3483">
 <meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="利用 AST 从代码反推出 thrift 文件"/>
 <meta name="twitter:description" content="众所周知 (?)，字节跳动内部主要使用 Thrift 作为 RPC 的序列化及传输协议。据说这套技术栈是从 99 房继承过来的，那个时候创业公司也没几个 RPC 框架可选，国内小"/>
@@ -121,21 +118,21 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/">Home</a>
           
         
       </li><li class="mobile-menu-item">
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/post/">Archives</a>
           
         
       </li><li class="mobile-menu-item">
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/about/">About</a>
           
         
       </li>
@@ -227,7 +224,7 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/">Home</a>
           
 
         
@@ -238,7 +235,7 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/post/">Archives</a>
           
 
         
@@ -249,7 +246,7 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/about/">About</a>
           
 
         
@@ -280,7 +277,7 @@ if (!doNotTrack) {
           2020-10-23
         </time>
         
-        <span class="more-meta"> 约 3481 字 </span>
+        <span class="more-meta"> 约 3483 字 </span>
           <span class="more-meta"> 预计阅读 7 分钟 </span>
 
         
@@ -340,7 +337,7 @@ if (!doNotTrack) {
 <p>类型由包中定义的常量表示，比如一个变量申明语句<code>var sum int = 3 + 2</code>解析出来的 token 就会带上这样的类型属性：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
@@ -351,25 +348,25 @@ if (!doNotTrack) {
 </span><span class="lnt">9
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">var</span> <span class="nx">sum</span> <span class="kt">int</span> <span class="p">=</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">2</span>
- <span class="p">|</span>   <span class="p">|</span>   <span class="p">|</span>  <span class="p">|</span> <span class="p">|</span> <span class="p">|</span> <span class="p">|</span>
- <span class="p">|</span>   <span class="p">|</span>   <span class="p">|</span>  <span class="p">|</span> <span class="p">|</span> <span class="p">|</span> <span class="nx">token</span><span class="p">.</span><span class="nx">INT</span>
- <span class="p">|</span>   <span class="p">|</span>   <span class="p">|</span>  <span class="p">|</span> <span class="p">|</span> <span class="nx">token</span><span class="p">.</span><span class="nx">ADD</span>
- <span class="p">|</span>   <span class="p">|</span>   <span class="p">|</span>  <span class="p">|</span> <span class="nx">token</span><span class="p">.</span><span class="nx">INT</span>
- <span class="p">|</span>   <span class="p">|</span>   <span class="p">|</span>  <span class="nx">token</span><span class="p">.</span><span class="nx">ASSIGN</span>
- <span class="p">|</span>   <span class="p">|</span>   <span class="nx">token</span><span class="p">.</span><span class="nx">IDENT</span>
- <span class="p">|</span>   <span class="nx">token</span><span class="p">.</span><span class="nx">IDENT</span>
- <span class="nx">token</span><span class="p">.</span><span class="nx">VAR</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">var</span> <span class="nx">sum</span> <span class="kt">int</span> <span class="p">=</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">2</span>
+</span></span><span class="line"><span class="cl"> <span class="p">|</span>   <span class="p">|</span>   <span class="p">|</span>  <span class="p">|</span> <span class="p">|</span> <span class="p">|</span> <span class="p">|</span>
+</span></span><span class="line"><span class="cl"> <span class="p">|</span>   <span class="p">|</span>   <span class="p">|</span>  <span class="p">|</span> <span class="p">|</span> <span class="p">|</span> <span class="nx">token</span><span class="p">.</span><span class="nx">INT</span>
+</span></span><span class="line"><span class="cl"> <span class="p">|</span>   <span class="p">|</span>   <span class="p">|</span>  <span class="p">|</span> <span class="p">|</span> <span class="nx">token</span><span class="p">.</span><span class="nx">ADD</span>
+</span></span><span class="line"><span class="cl"> <span class="p">|</span>   <span class="p">|</span>   <span class="p">|</span>  <span class="p">|</span> <span class="nx">token</span><span class="p">.</span><span class="nx">INT</span>
+</span></span><span class="line"><span class="cl"> <span class="p">|</span>   <span class="p">|</span>   <span class="p">|</span>  <span class="nx">token</span><span class="p">.</span><span class="nx">ASSIGN</span>
+</span></span><span class="line"><span class="cl"> <span class="p">|</span>   <span class="p">|</span>   <span class="nx">token</span><span class="p">.</span><span class="nx">IDENT</span>
+</span></span><span class="line"><span class="cl"> <span class="p">|</span>   <span class="nx">token</span><span class="p">.</span><span class="nx">IDENT</span>
+</span></span><span class="line"><span class="cl"> <span class="nx">token</span><span class="p">.</span><span class="nx">VAR</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>而位置信息则由<a href="https://golang.org/pkg/go/token/#Position">Position</a>表示，它包含的信息有该 token 所在的文件、行号和列号。比如我们常见的编译错误前面的位置信息就由它提供。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">main</span><span class="p">.</span><span class="k">go</span><span class="p">:</span><span class="mi">14</span><span class="p">:</span><span class="mi">2</span><span class="p">:</span> <span class="nx">undefined</span><span class="p">:</span> <span class="nx">abc</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">main</span><span class="p">.</span><span class="k">go</span><span class="p">:</span><span class="mi">14</span><span class="p">:</span><span class="mi">2</span><span class="p">:</span> <span class="nx">undefined</span><span class="p">:</span> <span class="nx">abc</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>如果一次编译中涉及到多个源文件，那我们就需要用<a href="https://golang.org/pkg/go/token/#FileSet">FileSet</a>来记录多个文件中的 token 位置信息。</p>
 <p>接下来再看看怎样拿到这些 token 信息。</p>
@@ -377,7 +374,7 @@ if (!doNotTrack) {
 <p><code>Scanner</code>有时也被称作<code>Lexer</code>，它的输入是代表源代码的<code>[]byte</code>数组，输出是一个个的<code>token</code>（包括位置信息）。用法是不断的调用<a href="https://golang.org/pkg/go/scanner/#Scanner.Scan">Scan方法</a>，直到遇到 <code>token.EOF</code>：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -397,25 +394,25 @@ if (!doNotTrack) {
 </span><span class="lnt">18
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">main</span><span class="p">(</span><span class="p">)</span> <span class="p">{</span>
-	<span class="nx">src</span> <span class="o">:=</span> <span class="p">[</span><span class="p">]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`</span><span class="s">var sum int = 3 + 2</span><span class="s">`</span><span class="p">)</span>
-
-	<span class="c1">// 初始化一个 scanner
-</span><span class="c1"></span>	<span class="kd">var</span> <span class="nx">s</span> <span class="nx">scanner</span><span class="p">.</span><span class="nx">Scanner</span>
-	<span class="nx">fset</span> <span class="o">:=</span> <span class="nx">token</span><span class="p">.</span><span class="nf">NewFileSet</span><span class="p">(</span><span class="p">)</span>
-	<span class="nx">file</span> <span class="o">:=</span> <span class="nx">fset</span><span class="p">.</span><span class="nf">AddFile</span><span class="p">(</span><span class="s">&#34;demo&#34;</span><span class="p">,</span> <span class="nx">fset</span><span class="p">.</span><span class="nf">Base</span><span class="p">(</span><span class="p">)</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">src</span><span class="p">)</span><span class="p">)</span> <span class="c1">// 这里使用一个假文件
-</span><span class="c1"></span>	<span class="nx">s</span><span class="p">.</span><span class="nf">Init</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">src</span><span class="p">,</span> <span class="kc">nil</span><span class="p">,</span> <span class="nx">scanner</span><span class="p">.</span><span class="nx">ScanComments</span><span class="p">)</span>           <span class="c1">// 需要识别出注释
-</span><span class="c1"></span>
-	<span class="c1">// 启动 scanner
-</span><span class="c1"></span>	<span class="k">for</span> <span class="p">{</span>
-		<span class="nx">pos</span><span class="p">,</span> <span class="nx">tok</span><span class="p">,</span> <span class="nx">lit</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nf">Scan</span><span class="p">(</span><span class="p">)</span>
-		<span class="k">if</span> <span class="nx">tok</span> <span class="o">==</span> <span class="nx">token</span><span class="p">.</span><span class="nx">EOF</span> <span class="p">{</span>
-			<span class="k">break</span>
-		<span class="p">}</span>
-		<span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;%s\t%s\t%q\n&#34;</span><span class="p">,</span> <span class="nx">fset</span><span class="p">.</span><span class="nf">Position</span><span class="p">(</span><span class="nx">pos</span><span class="p">)</span><span class="p">,</span> <span class="nx">tok</span><span class="p">,</span> <span class="nx">lit</span><span class="p">)</span>
-	<span class="p">}</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">src</span> <span class="o">:=</span> <span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`var sum int = 3 + 2`</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// 初始化一个 scanner
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kd">var</span> <span class="nx">s</span> <span class="nx">scanner</span><span class="p">.</span><span class="nx">Scanner</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">fset</span> <span class="o">:=</span> <span class="nx">token</span><span class="p">.</span><span class="nf">NewFileSet</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">file</span> <span class="o">:=</span> <span class="nx">fset</span><span class="p">.</span><span class="nf">AddFile</span><span class="p">(</span><span class="s">&#34;demo&#34;</span><span class="p">,</span> <span class="nx">fset</span><span class="p">.</span><span class="nf">Base</span><span class="p">(),</span> <span class="nb">len</span><span class="p">(</span><span class="nx">src</span><span class="p">))</span> <span class="c1">// 这里使用一个假文件
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">s</span><span class="p">.</span><span class="nf">Init</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">src</span><span class="p">,</span> <span class="kc">nil</span><span class="p">,</span> <span class="nx">scanner</span><span class="p">.</span><span class="nx">ScanComments</span><span class="p">)</span>           <span class="c1">// 需要识别出注释
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// 启动 scanner
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">for</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">pos</span><span class="p">,</span> <span class="nx">tok</span><span class="p">,</span> <span class="nx">lit</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nf">Scan</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="nx">tok</span> <span class="o">==</span> <span class="nx">token</span><span class="p">.</span><span class="nx">EOF</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">break</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;%s\t%s\t%q\n&#34;</span><span class="p">,</span> <span class="nx">fset</span><span class="p">.</span><span class="nf">Position</span><span class="p">(</span><span class="nx">pos</span><span class="p">),</span> <span class="nx">tok</span><span class="p">,</span> <span class="nx">lit</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>有了 token 之后，我们就需要来理解这些 token 了，比如怎么知道上面是一条变量申明语句？这时就需要构建出 AST了。</p>
 <h3 id="goparser">go/parser</h3>
@@ -424,7 +421,7 @@ if (!doNotTrack) {
 <p>在它的封装下，我们从源代码构建出 AST 就是一个函数调用的事情，底层的 Scanner 和 Token 都被屏蔽掉了：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -444,25 +441,25 @@ if (!doNotTrack) {
 </span><span class="lnt">18
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">main</span><span class="p">(</span><span class="p">)</span> <span class="p">{</span>
-	<span class="nx">src</span> <span class="o">:=</span> <span class="p">[</span><span class="p">]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`</span><span class="s">
-</span><span class="s">package main
-</span><span class="s">func ssa() int </span><span class="s">{</span><span class="s">
-</span><span class="s">	var sum int = 3 + 2
-</span><span class="s">	return sum
-</span><span class="s">}</span><span class="s">`</span><span class="p">)</span>
-
-	<span class="nx">fset</span> <span class="o">:=</span> <span class="nx">token</span><span class="p">.</span><span class="nf">NewFileSet</span><span class="p">(</span><span class="p">)</span>
-	<span class="c1">// 这里的参数基本是原封不动的传给了scanner的Init函数
-</span><span class="c1"></span>	<span class="nx">node</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">parser</span><span class="p">.</span><span class="nf">ParseFile</span><span class="p">(</span><span class="nx">fset</span><span class="p">,</span> <span class="s">&#34;demo&#34;</span><span class="p">,</span> <span class="nx">src</span><span class="p">,</span> <span class="nx">parser</span><span class="p">.</span><span class="nx">ParseComments</span><span class="p">)</span>
-	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
-		<span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
-	<span class="p">}</span>
-
- 	<span class="c1">// 以层次结构输出语法树
-</span><span class="c1"></span>	<span class="nx">ast</span><span class="p">.</span><span class="nf">Fprint</span><span class="p">(</span><span class="nx">os</span><span class="p">.</span><span class="nx">Stdout</span><span class="p">,</span> <span class="nx">fset</span><span class="p">,</span> <span class="nx">node</span><span class="p">,</span> <span class="kc">nil</span><span class="p">)</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">src</span> <span class="o">:=</span> <span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`
+</span></span></span><span class="line"><span class="cl"><span class="s">package main
+</span></span></span><span class="line"><span class="cl"><span class="s">func ssa() int {
+</span></span></span><span class="line"><span class="cl"><span class="s">	var sum int = 3 + 2
+</span></span></span><span class="line"><span class="cl"><span class="s">	return sum
+</span></span></span><span class="line"><span class="cl"><span class="s">}`</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">fset</span> <span class="o">:=</span> <span class="nx">token</span><span class="p">.</span><span class="nf">NewFileSet</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// 这里的参数基本是原封不动的传给了scanner的Init函数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">node</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">parser</span><span class="p">.</span><span class="nf">ParseFile</span><span class="p">(</span><span class="nx">fset</span><span class="p">,</span> <span class="s">&#34;demo&#34;</span><span class="p">,</span> <span class="nx">src</span><span class="p">,</span> <span class="nx">parser</span><span class="p">.</span><span class="nx">ParseComments</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nb">panic</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"> 	<span class="c1">// 以层次结构输出语法树
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">ast</span><span class="p">.</span><span class="nf">Fprint</span><span class="p">(</span><span class="nx">os</span><span class="p">.</span><span class="nx">Stdout</span><span class="p">,</span> <span class="nx">fset</span><span class="p">,</span> <span class="nx">node</span><span class="p">,</span> <span class="kc">nil</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><h3 id="goast">go/ast</h3>
 <p>上一步会输出非常详细的 AST，结果也很长，限于篇幅我就不贴了，感兴趣的同学可以自行运行一下看看完整的 AST 结构，也可以通过在线的<a href="https://yuroyoro.github.io/goast-viewer/index.html">GoAst Viewer</a>查看。这里只画一张函数<code>ssa</code>的简图：</p>
@@ -471,7 +468,7 @@ if (!doNotTrack) {
 <p>我们以刚刚最后的加法语句<code>3 + 2</code>为例，它在 AST 中的节点就是一个<a href="https://golang.org/pkg/go/ast/#BinaryExpr">BinaryExpr</a>：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
@@ -479,19 +476,19 @@ if (!doNotTrack) {
 </span><span class="lnt">6
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">BinaryExpr</span> <span class="kd">struct</span> <span class="p">{</span>
-    <span class="nx">X</span>     <span class="nx">Expr</span>        <span class="c1">// left operand
-</span><span class="c1"></span>    <span class="nx">OpPos</span> <span class="nx">token</span><span class="p">.</span><span class="nx">Pos</span>   <span class="c1">// position of Op
-</span><span class="c1"></span>    <span class="nx">Op</span>    <span class="nx">token</span><span class="p">.</span><span class="nx">Token</span> <span class="c1">// operator
-</span><span class="c1"></span>    <span class="nx">Y</span>     <span class="nx">Expr</span>        <span class="c1">// right operand
-</span><span class="c1"></span><span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">BinaryExpr</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">X</span>     <span class="nx">Expr</span>        <span class="c1">// left operand
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">OpPos</span> <span class="nx">token</span><span class="p">.</span><span class="nx">Pos</span>   <span class="c1">// position of Op
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">Op</span>    <span class="nx">token</span><span class="p">.</span><span class="nx">Token</span> <span class="c1">// operator
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">Y</span>     <span class="nx">Expr</span>        <span class="c1">// right operand
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>其中的<code>Op</code>就是加号<code>+</code>，<code>X</code> 为<code>3</code>，<code>Y</code>为<code>2</code>。</p>
 <p>同样的再往上一层，<code>var sum int = 3 + 2</code>需要一个<a href="https://golang.org/pkg/go/ast/#ValueSpec">ValueSpec</a>类型来表示：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
@@ -500,14 +497,14 @@ if (!doNotTrack) {
 </span><span class="lnt">7
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">ValueSpec</span> <span class="kd">struct</span> <span class="p">{</span>
-    <span class="nx">Doc</span>     <span class="o">*</span><span class="nx">CommentGroup</span> <span class="c1">// associated documentation; or nil
-</span><span class="c1"></span>    <span class="nx">Names</span>   <span class="p">[</span><span class="p">]</span><span class="o">*</span><span class="nx">Ident</span>      <span class="c1">// value names (len(Names) &gt; 0)
-</span><span class="c1"></span>    <span class="nx">Type</span>    <span class="nx">Expr</span>          <span class="c1">// value type; or nil
-</span><span class="c1"></span>    <span class="nx">Values</span>  <span class="p">[</span><span class="p">]</span><span class="nx">Expr</span>        <span class="c1">// initial values; or nil
-</span><span class="c1"></span>    <span class="nx">Comment</span> <span class="o">*</span><span class="nx">CommentGroup</span> <span class="c1">// line comments; or nil
-</span><span class="c1"></span><span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">ValueSpec</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">Doc</span>     <span class="o">*</span><span class="nx">CommentGroup</span> <span class="c1">// associated documentation; or nil
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">Names</span>   <span class="p">[]</span><span class="o">*</span><span class="nx">Ident</span>      <span class="c1">// value names (len(Names) &gt; 0)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">Type</span>    <span class="nx">Expr</span>          <span class="c1">// value type; or nil
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">Values</span>  <span class="p">[]</span><span class="nx">Expr</span>        <span class="c1">// initial values; or nil
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">Comment</span> <span class="o">*</span><span class="nx">CommentGroup</span> <span class="c1">// line comments; or nil
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>它的<code>Names</code>数组只有一项，是变量名<code>sum</code>；<code>Type</code>则是<code>int</code>；而<code>Values</code>数组也只有一项，就是刚刚分析过的<code>BinaryExpr</code>。</p>
 <p>这样一层一层的叠加起来，我们就得到了一棵语法树 AST。</p>
@@ -515,7 +512,7 @@ if (!doNotTrack) {
 <p>一棵 AST 信息量非常大，我们可能只对其中某些节点感兴趣，这时候就需要对它的节点进行遍历了。根据<code>go/ast</code>中定义的类型信息，我们很容易写出这样的代码：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -534,29 +531,29 @@ if (!doNotTrack) {
 </span><span class="lnt">17
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">node</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">parser</span><span class="p">.</span><span class="nf">ParseFile</span><span class="p">(</span><span class="nx">fset</span><span class="p">,</span> <span class="s">&#34;demo&#34;</span><span class="p">,</span> <span class="nx">src</span><span class="p">,</span> <span class="nx">parser</span><span class="p">.</span><span class="nx">ParseComments</span><span class="p">)</span>
-<span class="c1">// 遍历所有的申明
-</span><span class="c1"></span><span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">decl</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">node</span><span class="p">.</span><span class="nx">Decls</span> <span class="p">{</span>
-  <span class="c1">// 寻找其中的函数申明
-</span><span class="c1"></span>  <span class="nx">fn</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">decl</span><span class="p">.</span><span class="p">(</span><span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">FuncDecl</span><span class="p">)</span>
-  <span class="k">if</span> <span class="p">!</span><span class="nx">ok</span> <span class="p">{</span>
-    <span class="k">continue</span>
-  <span class="p">}</span>
-  <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">stmt</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">fn</span><span class="p">.</span><span class="nx">Body</span><span class="p">.</span><span class="nx">List</span> <span class="p">{</span>
-    <span class="c1">// 寻找函数体中的变量申明
-</span><span class="c1"></span>    <span class="nx">declStamt</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">stmt</span><span class="p">.</span><span class="p">(</span><span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">DeclStmt</span><span class="p">)</span>
-    <span class="k">if</span> <span class="p">!</span><span class="nx">ok</span> <span class="p">{</span>
-      <span class="k">continue</span>
-    <span class="p">}</span>
-    <span class="c1">// 对变量申明递归下去，可以找到其中的ValueSpce, BinaryExpr等...
-</span><span class="c1"></span>  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">node</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">parser</span><span class="p">.</span><span class="nf">ParseFile</span><span class="p">(</span><span class="nx">fset</span><span class="p">,</span> <span class="s">&#34;demo&#34;</span><span class="p">,</span> <span class="nx">src</span><span class="p">,</span> <span class="nx">parser</span><span class="p">.</span><span class="nx">ParseComments</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 遍历所有的申明
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">decl</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">node</span><span class="p">.</span><span class="nx">Decls</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 寻找其中的函数申明
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="nx">fn</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">decl</span><span class="p">.(</span><span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">FuncDecl</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">!</span><span class="nx">ok</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">continue</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">stmt</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">fn</span><span class="p">.</span><span class="nx">Body</span><span class="p">.</span><span class="nx">List</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 寻找函数体中的变量申明
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">declStamt</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">stmt</span><span class="p">.(</span><span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">DeclStmt</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="p">!</span><span class="nx">ok</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="k">continue</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 对变量申明递归下去，可以找到其中的ValueSpce, BinaryExpr等...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>由于这是一个很常见的场景，用的代码几乎也是千篇一律的，所以标准库也进行了抽象——它允许业务代码以<strong>访问者</strong>（Visitor）的模式注入进来，这样，在对整颗树进行了深度优先遍历的时候，就能让访问者有机会处理到 AST 中的每一个节点。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
@@ -567,16 +564,16 @@ if (!doNotTrack) {
 </span><span class="lnt">9
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">node</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">parser</span><span class="p">.</span><span class="nf">ParseFile</span><span class="p">(</span><span class="nx">fset</span><span class="p">,</span> <span class="s">&#34;demo&#34;</span><span class="p">,</span> <span class="nx">src</span><span class="p">,</span> <span class="nx">parser</span><span class="p">.</span><span class="nx">ParseComments</span><span class="p">)</span>
-<span class="c1">// 遍历并回调业务代码
-</span><span class="c1"></span><span class="nx">ast</span><span class="p">.</span><span class="nf">Inspect</span><span class="p">(</span><span class="nx">node</span><span class="p">,</span> <span class="kd">func</span><span class="p">(</span><span class="nx">n</span> <span class="nx">ast</span><span class="p">.</span><span class="nx">Node</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
-  <span class="nx">binaryExpr</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">n</span><span class="p">.</span><span class="p">(</span><span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">BinaryExpr</span><span class="p">)</span>
-  <span class="k">if</span> <span class="p">!</span><span class="nx">ok</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="kc">true</span>
-  <span class="p">}</span>
-  <span class="c1">// 直接拿到深层的BinaryExpr，并进行处理...
-</span><span class="c1"></span><span class="p">}</span><span class="p">)</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">node</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">parser</span><span class="p">.</span><span class="nf">ParseFile</span><span class="p">(</span><span class="nx">fset</span><span class="p">,</span> <span class="s">&#34;demo&#34;</span><span class="p">,</span> <span class="nx">src</span><span class="p">,</span> <span class="nx">parser</span><span class="p">.</span><span class="nx">ParseComments</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 遍历并回调业务代码
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nx">ast</span><span class="p">.</span><span class="nf">Inspect</span><span class="p">(</span><span class="nx">node</span><span class="p">,</span> <span class="kd">func</span><span class="p">(</span><span class="nx">n</span> <span class="nx">ast</span><span class="p">.</span><span class="nx">Node</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nx">binaryExpr</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">n</span><span class="p">.(</span><span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">BinaryExpr</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">!</span><span class="nx">ok</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">// 直接拿到深层的BinaryExpr，并进行处理...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">})</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>代码是不是瞬间简单明了了很多？！</p>
 <h2 id="反推-thrift">反推 thrift</h2>
@@ -596,39 +593,39 @@ if (!doNotTrack) {
 <p>举个栗子🌰，thrift 中<code>struct</code>的定义大概长这个样子：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">struct</span> <span class="nx">Demo</span> <span class="p">{</span>
-  <span class="mi">1</span><span class="p">:</span> <span class="nx">i32</span> <span class="nx">id</span><span class="p">,</span>
-  <span class="mi">2</span><span class="p">:</span> <span class="nx">optional</span> <span class="kt">string</span> <span class="nx">comment</span><span class="p">,</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">struct</span> <span class="nx">Demo</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="mi">1</span><span class="p">:</span> <span class="nx">i32</span> <span class="nx">id</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="mi">2</span><span class="p">:</span> <span class="nx">optional</span> <span class="kt">string</span> <span class="nx">comment</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>由它生成的代码大概是这样子的：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">Demo</span> <span class="kd">struct</span> <span class="p">{</span>
-	<span class="nx">Id</span> <span class="kt">int32</span> <span class="s">`</span><span class="s">thrift:&#34;id,1&#34; json:&#34;id&#34;</span><span class="s">`</span>
-	<span class="nx">Comment</span> <span class="o">*</span><span class="kt">string</span> <span class="s">`</span><span class="s">thrift:&#34;comment,2&#34; json:&#34;comment,omitempty&#34;</span><span class="s">`</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">Demo</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Id</span> <span class="kt">int32</span> <span class="s">`thrift:&#34;id,1&#34; json:&#34;id&#34;`</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Comment</span> <span class="o">*</span><span class="kt">string</span> <span class="s">`thrift:&#34;comment,2&#34; json:&#34;comment,omitempty&#34;`</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>这里的特征就很明显了，<code>Demo</code>类型中的字段都有<code>thrift</code>这个 tag，且该 tag 的第一个参数表示它在源 thrift 文件中的名字，第二个参数表示该字段的 id。字段<code>Comment</code>是<code>*string</code>指针类型，表明它在 thrift 中有<code>optional</code>修饰符。</p>
 <p>根据这些条件，我们可以写出相应的解析规则，这里提供一份伪代码供参考。</p>
 <p>首先定义一下期望转换后的 model：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -643,25 +640,25 @@ if (!doNotTrack) {
 </span><span class="lnt">13
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// ThriftStruct is similar to go struct, except its field name comes from the thrift tag
-</span><span class="c1"></span><span class="kd">type</span> <span class="nx">ThriftStruct</span> <span class="kd">struct</span> <span class="p">{</span>
-	<span class="nx">Name</span>   <span class="kt">string</span>
-	<span class="nx">Fields</span> <span class="p">[</span><span class="p">]</span><span class="nx">ThriftStructField</span>
-<span class="p">}</span>
-<span class="c1">// ThriftStructField represents a field in thrift struct, eg. Id int32 `thrift:&#34;id,1&#34; json:&#34;id&#34;`
-</span><span class="c1"></span><span class="kd">type</span> <span class="nx">ThriftStructField</span> <span class="kd">struct</span> <span class="p">{</span>
-	<span class="nx">ID</span>       <span class="kt">string</span>
-	<span class="nx">Name</span>     <span class="kt">string</span>
-	<span class="nx">Type</span>     <span class="kt">string</span>
-	<span class="nx">Required</span> <span class="kt">string</span>
-	<span class="nx">IsArray</span>  <span class="kt">bool</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// ThriftStruct is similar to go struct, except its field name comes from the thrift tag
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">ThriftStruct</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Name</span>   <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Fields</span> <span class="p">[]</span><span class="nx">ThriftStructField</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// ThriftStructField represents a field in thrift struct, eg. Id int32 `thrift:&#34;id,1&#34; json:&#34;id&#34;`
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">ThriftStructField</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ID</span>       <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Name</span>     <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Type</span>     <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Required</span> <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">IsArray</span>  <span class="kt">bool</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>在遍历 AST 的过程中插入检查代码：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -698,49 +695,49 @@ if (!doNotTrack) {
 </span><span class="lnt">35
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">ast</span><span class="p">.</span><span class="nf">Inspect</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="kd">func</span><span class="p">(</span><span class="nx">n</span> <span class="nx">ast</span><span class="p">.</span><span class="nx">Node</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
-    <span class="k">switch</span> <span class="nx">node</span> <span class="o">:=</span> <span class="nx">n</span><span class="p">.</span><span class="p">(</span><span class="kd">type</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">case</span> <span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">TypeSpec</span><span class="p">:</span>
-        <span class="k">if</span> <span class="p">!</span><span class="nx">node</span><span class="p">.</span><span class="nx">Name</span><span class="p">.</span><span class="nf">IsExported</span><span class="p">(</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="kc">false</span>
-        <span class="p">}</span>
-        <span class="k">switch</span> <span class="nx">structType</span> <span class="o">:=</span> <span class="nx">node</span><span class="p">.</span><span class="nx">Type</span><span class="p">.</span><span class="p">(</span><span class="kd">type</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">case</span> <span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">StructType</span><span class="p">:</span> <span class="c1">// 如果是struct定义，就检查它是不是有thrift生成的痕迹
-</span><span class="c1"></span>            <span class="nx">sd</span> <span class="o">:=</span> <span class="nx">ThriftStruct</span><span class="p">{</span> <span class="c1">// 初始化自己的model
-</span><span class="c1"></span>                <span class="nx">Name</span><span class="p">:</span>   <span class="nx">node</span><span class="p">.</span><span class="nx">Name</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span>
-            <span class="p">}</span>
-            <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">f</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">structType</span><span class="p">.</span><span class="nx">Fields</span><span class="p">.</span><span class="nx">List</span> <span class="p">{</span>
-                <span class="k">for</span> <span class="k">range</span> <span class="nx">f</span><span class="p">.</span><span class="nx">Names</span> <span class="p">{</span>
-                    <span class="nx">tags</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">structtag</span><span class="p">.</span><span class="nf">Parse</span><span class="p">(</span><span class="nx">strings</span><span class="p">.</span><span class="nf">Trim</span><span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">Tag</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="s">&#34;`&#34;</span><span class="p">)</span><span class="p">)</span>
-                    <span class="nx">thriftTag</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">tags</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="s">&#34;thrift&#34;</span><span class="p">)</span> <span class="c1">// 检查 field tag。限于篇幅其他的检查已被省略
-</span><span class="c1"></span>                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nx">thriftTag</span><span class="p">.</span><span class="nx">Options</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
-                        <span class="k">return</span> <span class="kc">false</span>
-                    <span class="p">}</span>
-                    <span class="nx">required</span> <span class="o">:=</span> <span class="kc">true</span> <span class="c1">// 检查是不是可选的
-</span><span class="c1"></span>                    <span class="k">if</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">f</span><span class="p">.</span><span class="nx">Type</span><span class="p">.</span><span class="p">(</span><span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">StarExpr</span><span class="p">)</span><span class="p">;</span> <span class="nx">ok</span> <span class="p">{</span>
-                        <span class="nx">required</span> <span class="p">=</span> <span class="kc">false</span>
-                    <span class="p">}</span>
-                    <span class="nx">sd</span><span class="p">.</span><span class="nx">Fields</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">sd</span><span class="p">.</span><span class="nx">Fields</span><span class="p">,</span> <span class="nx">ThriftStructField</span><span class="p">{</span>
-                        <span class="nx">ID</span><span class="p">:</span>       <span class="nx">thriftTag</span><span class="p">.</span><span class="nx">Options</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="p">,</span>
-                        <span class="nx">Name</span><span class="p">:</span>     <span class="nx">thriftTag</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span>
-                        <span class="nx">Type</span><span class="p">:</span>     <span class="nf">PrintExpr</span><span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">Type</span><span class="p">)</span><span class="p">,</span>
-                        <span class="nx">Required</span><span class="p">:</span> <span class="nx">required</span><span class="p">,</span>
-                    <span class="p">}</span><span class="p">)</span>
-                <span class="p">}</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-        <span class="k">return</span> <span class="kc">false</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="kc">true</span>
-<span class="p">}</span><span class="p">)</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">ast</span><span class="p">.</span><span class="nf">Inspect</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="kd">func</span><span class="p">(</span><span class="nx">n</span> <span class="nx">ast</span><span class="p">.</span><span class="nx">Node</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">switch</span> <span class="nx">node</span> <span class="o">:=</span> <span class="nx">n</span><span class="p">.(</span><span class="kd">type</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">TypeSpec</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">!</span><span class="nx">node</span><span class="p">.</span><span class="nx">Name</span><span class="p">.</span><span class="nf">IsExported</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">switch</span> <span class="nx">structType</span> <span class="o">:=</span> <span class="nx">node</span><span class="p">.</span><span class="nx">Type</span><span class="p">.(</span><span class="kd">type</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">case</span> <span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">StructType</span><span class="p">:</span> <span class="c1">// 如果是struct定义，就检查它是不是有thrift生成的痕迹
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="nx">sd</span> <span class="o">:=</span> <span class="nx">ThriftStruct</span><span class="p">{</span> <span class="c1">// 初始化自己的model
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                <span class="nx">Name</span><span class="p">:</span>   <span class="nx">node</span><span class="p">.</span><span class="nx">Name</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">f</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">structType</span><span class="p">.</span><span class="nx">Fields</span><span class="p">.</span><span class="nx">List</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="k">for</span> <span class="k">range</span> <span class="nx">f</span><span class="p">.</span><span class="nx">Names</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="nx">tags</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">structtag</span><span class="p">.</span><span class="nf">Parse</span><span class="p">(</span><span class="nx">strings</span><span class="p">.</span><span class="nf">Trim</span><span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">Tag</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="s">&#34;`&#34;</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">                    <span class="nx">thriftTag</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">tags</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="s">&#34;thrift&#34;</span><span class="p">)</span> <span class="c1">// 检查 field tag。限于篇幅其他的检查已被省略
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nx">thriftTag</span><span class="p">.</span><span class="nx">Options</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="k">return</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                    <span class="nx">required</span> <span class="o">:=</span> <span class="kc">true</span> <span class="c1">// 检查是不是可选的
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                    <span class="k">if</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">f</span><span class="p">.</span><span class="nx">Type</span><span class="p">.(</span><span class="o">*</span><span class="nx">ast</span><span class="p">.</span><span class="nx">StarExpr</span><span class="p">);</span> <span class="nx">ok</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="nx">required</span> <span class="p">=</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                    <span class="nx">sd</span><span class="p">.</span><span class="nx">Fields</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">sd</span><span class="p">.</span><span class="nx">Fields</span><span class="p">,</span> <span class="nx">ThriftStructField</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">                        <span class="nx">ID</span><span class="p">:</span>       <span class="nx">thriftTag</span><span class="p">.</span><span class="nx">Options</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">                        <span class="nx">Name</span><span class="p">:</span>     <span class="nx">thriftTag</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                        <span class="nx">Type</span><span class="p">:</span>     <span class="nf">PrintExpr</span><span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">Type</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">                        <span class="nx">Required</span><span class="p">:</span> <span class="nx">required</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">})</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl"><span class="p">})</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>好了，一个 thrift <code>struct</code>类型就解析好了，我们拿到了自己的<code>ThriftStruct</code>类型。</p>
 <h3 id="代码生成">代码生成</h3>
 <p>代码生成可以理解为对自定义 model 的一种序列化操作，还拿刚才的🌰：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -757,35 +754,35 @@ if (!doNotTrack) {
 </span><span class="lnt">15
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">ts</span> <span class="o">*</span><span class="nx">ThriftStruct</span><span class="p">)</span> <span class="nf">String</span><span class="p">(</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
-	<span class="nx">fields</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="p">[</span><span class="p">]</span><span class="kt">string</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">ts</span><span class="p">.</span><span class="nx">Fields</span><span class="p">)</span><span class="p">)</span>
-	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">sf</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">ts</span><span class="p">.</span><span class="nx">Fields</span> <span class="p">{</span>
-		<span class="nx">fields</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">fields</span><span class="p">,</span> <span class="nx">sf</span><span class="p">.</span><span class="nf">String</span><span class="p">(</span><span class="p">)</span><span class="p">)</span>
-	<span class="p">}</span>
-	<span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;struct %s {\n\t%s\n}&#34;</span><span class="p">,</span> <span class="nx">ts</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span> <span class="nx">strings</span><span class="p">.</span><span class="nf">Join</span><span class="p">(</span><span class="nx">fields</span><span class="p">,</span> <span class="s">&#34;,\n\t&#34;</span><span class="p">)</span><span class="p">)</span>
-<span class="p">}</span>
-
-<span class="kd">func</span> <span class="p">(</span><span class="nx">sf</span> <span class="o">*</span><span class="nx">ThriftStructField</span><span class="p">)</span> <span class="nf">String</span><span class="p">(</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
-	<span class="nx">thriftType</span> <span class="o">:=</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">Type</span>
-	<span class="k">if</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">IsArray</span> <span class="p">{</span>
-		<span class="nx">thriftType</span> <span class="p">=</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;list&lt;%s&gt;&#34;</span><span class="p">,</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">Type</span><span class="p">)</span>
-	<span class="p">}</span>
-	<span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;%s: %s %s %s&#34;</span><span class="p">,</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">ID</span><span class="p">,</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">Required</span><span class="p">,</span> <span class="nx">thriftType</span><span class="p">,</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">Name</span><span class="p">)</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">ts</span> <span class="o">*</span><span class="nx">ThriftStruct</span><span class="p">)</span> <span class="nf">String</span><span class="p">()</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">fields</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">string</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">ts</span><span class="p">.</span><span class="nx">Fields</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">sf</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">ts</span><span class="p">.</span><span class="nx">Fields</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">fields</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">fields</span><span class="p">,</span> <span class="nx">sf</span><span class="p">.</span><span class="nf">String</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;struct %s {\n\t%s\n}&#34;</span><span class="p">,</span> <span class="nx">ts</span><span class="p">.</span><span class="nx">Name</span><span class="p">,</span> <span class="nx">strings</span><span class="p">.</span><span class="nf">Join</span><span class="p">(</span><span class="nx">fields</span><span class="p">,</span> <span class="s">&#34;,\n\t&#34;</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">sf</span> <span class="o">*</span><span class="nx">ThriftStructField</span><span class="p">)</span> <span class="nf">String</span><span class="p">()</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">thriftType</span> <span class="o">:=</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">Type</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">IsArray</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">thriftType</span> <span class="p">=</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;list&lt;%s&gt;&#34;</span><span class="p">,</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">Type</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;%s: %s %s %s&#34;</span><span class="p">,</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">ID</span><span class="p">,</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">Required</span><span class="p">,</span> <span class="nx">thriftType</span><span class="p">,</span> <span class="nx">sf</span><span class="p">.</span><span class="nx">Name</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>其实就是<code>ThriftStruct</code>按照 thrift 的语法模板，填充自己的属性字段。对于复杂类型<code>ThriftStructField</code>，递归调用它自己的代码生成逻辑。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">struct</span> <span class="err">$</span><span class="p">{</span><span class="nx">name</span><span class="p">}</span> <span class="p">{</span>
-  <span class="err">$</span><span class="p">{</span><span class="nx">field</span><span class="p">}</span><span class="o">...</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">struct</span> <span class="err">$</span><span class="p">{</span><span class="nx">name</span><span class="p">}</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="err">$</span><span class="p">{</span><span class="nx">field</span><span class="p">}</span><span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>而 thrift 中其他类型，比如<code>exception</code>、<code>service</code>我们都可以进行同样的操作，识别出它的特征，生成对应的 model，再输出成 thrift 格式。</p>
 <h2 id="总结">总结</h2>
@@ -804,7 +801,7 @@ if (!doNotTrack) {
 <div class="post-copyright">
   <p class="copyright-item">
     <span class="item-title">文章作者</span>
-    <span class="item-content"><a href="//blog.betacat.io">喵叔</a></span>
+    <span class="item-content"><a href="https://blog.betacat.io">喵叔</a></span>
   </p>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
@@ -945,7 +942,7 @@ if (!doNotTrack) {
     </a>
 
 
-<a href="//blog.betacat.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
+<a href="https://blog.betacat.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
     class="iconfont" title="rss" target="_blank">
     <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
   xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -970,7 +967,7 @@ if (!doNotTrack) {
     &copy;
     
       2018 -
-    2022
+    2023
     <span class="heart">
       
       <i class="iconfont">
@@ -983,7 +980,7 @@ if (!doNotTrack) {
 
       </i>
     </span><span class="author">
-        <a href="//blog.betacat.io">喵叔</a>
+        <a href="https://blog.betacat.io">喵叔</a>
         
       </span></span>
 

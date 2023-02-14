@@ -32,10 +32,10 @@
 
 
 
-<meta name="generator" content="Hugo 0.64.0" />
+<meta name="generator" content="Hugo 0.101.0" />
 
 
-<link rel="canonical" href="//blog.betacat.io/post/develop-and-debug-k8s-microservices-locally-using-telepresence/" />
+<link rel="canonical" href="https://blog.betacat.io/post/develop-and-debug-k8s-microservices-locally-using-telepresence/" />
 
 
 
@@ -53,7 +53,7 @@
 
 
 
-<link rel="stylesheet" href="/sass/jane.min.0995afa14b62cd93e93cfc066b646c4c17a3eddca0e9d52a1d9dcf5d90aaacd3.css" integrity="sha256-CZWvoUtizZPpPPwGa2RsTBej7dyg6dUqHZ3PXZCqrNM=" media="screen" crossorigin="anonymous">
+<link rel="stylesheet" href="/sass/jane.min.444f741ba7b684e63dff9a3b61ec1fb750c9b563b5a0b64153f1af8025c5fac1.css" integrity="sha256-RE90G6e2hOY9/5o7Yewft1DJtWO1oLZBU/GvgCXF&#43;sE=" media="screen" crossorigin="anonymous">
 
 
 
@@ -62,17 +62,14 @@
 <meta property="og:title" content="使用 Telepresence 在本地调试 Kubernetes 微服务" />
 <meta property="og:description" content="微服务作为一种全新的软件架构现在正变得越来越火。基本原因我觉得有两点：一方面软件系统越做越复杂，通过拆分将一个大系统解耦成一个个独立的子系统" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="//blog.betacat.io/post/develop-and-debug-k8s-microservices-locally-using-telepresence/" />
+<meta property="og:url" content="https://blog.betacat.io/post/develop-and-debug-k8s-microservices-locally-using-telepresence/" /><meta property="article:section" content="post" />
 <meta property="article:published_time" content="2019-07-24T23:10:21+08:00" />
 <meta property="article:modified_time" content="2019-11-11T23:07:23+08:00" />
+
 <meta itemprop="name" content="使用 Telepresence 在本地调试 Kubernetes 微服务">
-<meta itemprop="description" content="微服务作为一种全新的软件架构现在正变得越来越火。基本原因我觉得有两点：一方面软件系统越做越复杂，通过拆分将一个大系统解耦成一个个独立的子系统">
-<meta itemprop="datePublished" content="2019-07-24T23:10:21&#43;08:00" />
-<meta itemprop="dateModified" content="2019-11-11T23:07:23&#43;08:00" />
-<meta itemprop="wordCount" content="2485">
-
-
-
+<meta itemprop="description" content="微服务作为一种全新的软件架构现在正变得越来越火。基本原因我觉得有两点：一方面软件系统越做越复杂，通过拆分将一个大系统解耦成一个个独立的子系统"><meta itemprop="datePublished" content="2019-07-24T23:10:21+08:00" />
+<meta itemprop="dateModified" content="2019-11-11T23:07:23+08:00" />
+<meta itemprop="wordCount" content="2493">
 <meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="使用 Telepresence 在本地调试 Kubernetes 微服务"/>
 <meta name="twitter:description" content="微服务作为一种全新的软件架构现在正变得越来越火。基本原因我觉得有两点：一方面软件系统越做越复杂，通过拆分将一个大系统解耦成一个个独立的子系统"/>
@@ -121,21 +118,21 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/">Home</a>
           
         
       </li><li class="mobile-menu-item">
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/post/">Archives</a>
           
         
       </li><li class="mobile-menu-item">
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/about/">About</a>
           
         
       </li>
@@ -227,7 +224,7 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/">Home</a>
           
 
         
@@ -238,7 +235,7 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/post/">Archives</a>
           
 
         
@@ -249,7 +246,7 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/about/">About</a>
           
 
         
@@ -280,7 +277,7 @@ if (!doNotTrack) {
           2019-07-24
         </time>
         
-        <span class="more-meta"> 约 2485 字 </span>
+        <span class="more-meta"> 约 2493 字 </span>
           <span class="more-meta"> 预计阅读 5 分钟 </span>
 
         
@@ -320,7 +317,7 @@ if (!doNotTrack) {
 <p>业界有朋友用 <code>docker-compose</code> 来模拟集群中的场景。这个方案的不足之处在于它需要把 Kubernetes 的那一套逻辑用 <code>docker-compose.yml</code> 文件重写一遍，这给我们带来了维护成本。另一方面，本地机器很可能不具备某些微服务所依赖的资源。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -344,29 +341,29 @@ if (!doNotTrack) {
 </span><span class="lnt">22
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="k">ratesvc</span><span class="p">:</span><span class="w">
-</span><span class="w"></span><span class="w">  </span><span class="k">image</span><span class="p">:</span><span class="w"> </span>kubeapps/ratesvc<span class="p">:</span>latest<span class="w">
-</span><span class="w">  </span><span class="k">environment</span><span class="p">:</span><span class="w">
-</span><span class="w"></span><span class="w">    </span>- JWT_KEY=secret<span class="w">  </span><span class="c"># &lt;------------------------ 手工维护</span><span class="w">
-</span><span class="w">  </span><span class="k">command</span><span class="p">:</span><span class="w">
-</span><span class="w"></span><span class="w">    </span>- /ratesvc<span class="w">
-</span><span class="w">    </span>- --mongo-url=mongodb<span class="p">:</span>//root@mongodb<span class="w">  </span><span class="c"># &lt;---- 手工维护</span><span class="w">
-</span><span class="w">    </span>- --mongo-database=ratesvc<span class="w">
-</span><span class="w">
-</span><span class="w"></span><span class="k">mongodb</span><span class="p">:</span><span class="w">
-</span><span class="w"></span><span class="w">  </span><span class="k">image</span><span class="p">:</span><span class="w"> </span>bitnami/mongodb<span class="p">:</span><span class="m">3</span><span class="w">
-</span><span class="w">  </span><span class="k">environment</span><span class="p">:</span><span class="w">
-</span><span class="w"></span><span class="w">    </span>- MONGODB_ROOT_PASSWORD=password123<span class="w">
-</span><span class="w">
-</span><span class="w"></span><span class="k">auth</span><span class="p">:</span><span class="w">
-</span><span class="w"></span><span class="w">  </span><span class="k">image</span><span class="p">:</span><span class="w"> </span>kubeapps/oauth2-bitnami<span class="p">:</span>latest<span class="w">
-</span><span class="w">  </span><span class="k">volumes</span><span class="p">:</span><span class="w">
-</span><span class="w"></span><span class="w">    </span>- ./config.yaml<span class="p">:</span>/config/monocular.yaml<span class="w">  </span><span class="c"># &lt;-- 手工维护</span><span class="w">
-</span><span class="w">  </span>...<span class="w">
-</span><span class="w">
-</span><span class="w"></span><span class="k">volumnes</span><span class="p">:</span><span class="w"> </span><span class="w"> </span><span class="c"># &lt;----------------------------------- 手工维护</span><span class="w">
-</span><span class="w">  </span><span class="k">monocular-data</span><span class="p">:</span><span class="w">
-</span></code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="nt">ratesvc</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l">kubeapps/ratesvc:latest</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">environment</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="l">JWT_KEY=secret </span><span class="w"> </span><span class="c"># &lt;------------------------ 手工维护</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">command</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="l">/ratesvc</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- --<span class="l">mongo-url=mongodb://root@mongodb </span><span class="w"> </span><span class="c"># &lt;---- 手工维护</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- --<span class="l">mongo-database=ratesvc</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">mongodb</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l">bitnami/mongodb:3</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">environment</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="l">MONGODB_ROOT_PASSWORD=password123</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">auth</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l">kubeapps/oauth2-bitnami:latest</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">volumes</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="l">./config.yaml:/config/monocular.yaml </span><span class="w"> </span><span class="c"># &lt;-- 手工维护</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="l">...</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="nt">volumnes</span><span class="p">:</span><span class="w">  </span><span class="c"># &lt;----------------------------------- 手工维护</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">monocular-data</span><span class="p">:</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
 </div>
 </div><p>另一种解决方案就是我这里要介绍的 Telepresence 了，它能够在不修改程序代码的情况下，让本地应用程序无感的接入到 Kubernetes 集群中，这样我们就可以直接在本地开发调试微服务了。</p>
 <h2 id="简介">简介</h2>
@@ -383,39 +380,39 @@ if (!doNotTrack) {
 <p>macOS:</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-bash" data-lang="bash">brew cask install osxfuse  <span class="c1"># required by sshfs to mount the pod&#39;s filesystem</span>
-brew install datawire/blackbird/telepresence
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">brew cask install osxfuse  <span class="c1"># required by sshfs to mount the pod&#39;s filesystem</span>
+</span></span><span class="line"><span class="cl">brew install datawire/blackbird/telepresence
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>其他平台请参考：<a href="https://www.telepresence.io/reference/install">https://www.telepresence.io/reference/install</a></p>
 <p>如果官方的安装包没有覆盖到你的平台，其实也可以从源代码安装，因为它本身就是用 Python3 写的，熟悉 Python 的朋友安装这个程序应该不难，我自己就在 CentOS 7 上安装成功了。</p>
 <h2 id="使用场景">使用场景</h2>
 <p>假设我们有两个服务 A 和 B，服务 A 是依赖于服务 B 的。下面分两个场景来看看如何用 Telepresence  分别调试 A 和 B。</p>
-<p><img src="/image/telepresence/service-a-b.svg" alt="Service A&B"></p>
+<p><img src="/image/telepresence/service-a-b.svg" alt="Service A&amp;B"></p>
 <h3 id="调试服务-a---本地与远端服务联调">调试服务 A - 本地与远端服务联调</h3>
 <p>服务 A 在本地运行，服务 B 运行在远端集群中。借助 Telepresence 搭建的代理，A 就能直接访问到 B。比方说我们的服务 B 是这样一个程序，它监听在8000端口上。每当有人访问时它就返回<code>Hello, world!</code>。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-bash" data-lang="bash">$ kubectl run service-b --image<span class="o">=</span>datawire/hello-world --port<span class="o">=</span><span class="m">8000</span> --expose
-$ kubectl get service service-b
-NAME        CLUSTER-IP   EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>    AGE
-service-b   10.0.0.12    &lt;none&gt;        8000/TCP   1m
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ kubectl run service-b --image<span class="o">=</span>datawire/hello-world --port<span class="o">=</span><span class="m">8000</span> --expose
+</span></span><span class="line"><span class="cl">$ kubectl get service service-b
+</span></span><span class="line"><span class="cl">NAME        CLUSTER-IP   EXTERNAL-IP   PORT<span class="o">(</span>S<span class="o">)</span>    AGE
+</span></span><span class="line"><span class="cl">service-b   10.0.0.12    &lt;none&gt;        8000/TCP   1m
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>现在在本地用默认参数启动 Telepresence ，等它连接好集群：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -429,30 +426,30 @@ service-b   10.0.0.12    &lt;none&gt;        8000/TCP   1m
 </span><span class="lnt">12
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-bash" data-lang="bash">$ telepresence
-T: Starting proxy with method <span class="s1">&#39;vpn-tcp&#39;</span>, which has the following limitations: All processes are affected, only one telepresence can run per machine, and you
-T: can<span class="err">&#39;</span>t use other VPNs. You may need to add cloud hosts and headless services with --also-proxy. For a full list of method limitations see
-T: https://telepresence.io/reference/methods.html
-T: Volumes are rooted at <span class="nv">$TELEPRESENCE_ROOT</span>. See https://telepresence.io/howto/volumes.html <span class="k">for</span> details.
-T: Starting network proxy to cluster using new Deployment telepresence-1566230249-7112632-14485
-
-T: No traffic is being forwarded from the remote Deployment to your <span class="nb">local</span> machine. You can use the --expose option to specify which ports you want to
-T: forward.
-
-T: Setup complete. Launching your command.
-@test_cluster<span class="p">|</span>bash-4.2#
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ telepresence
+</span></span><span class="line"><span class="cl">T: Starting proxy with method <span class="s1">&#39;vpn-tcp&#39;</span>, which has the following limitations: All processes are affected, only one telepresence can run per machine, and you
+</span></span><span class="line"><span class="cl">T: can<span class="err">&#39;</span>t use other VPNs. You may need to add cloud hosts and headless services with --also-proxy. For a full list of method limitations see
+</span></span><span class="line"><span class="cl">T: https://telepresence.io/reference/methods.html
+</span></span><span class="line"><span class="cl">T: Volumes are rooted at <span class="nv">$TELEPRESENCE_ROOT</span>. See https://telepresence.io/howto/volumes.html <span class="k">for</span> details.
+</span></span><span class="line"><span class="cl">T: Starting network proxy to cluster using new Deployment telepresence-1566230249-7112632-14485
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">T: No traffic is being forwarded from the remote Deployment to your <span class="nb">local</span> machine. You can use the --expose option to specify which ports you want to
+</span></span><span class="line"><span class="cl">T: forward.
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">T: Setup complete. Launching your command.
+</span></span><span class="line"><span class="cl">@test_cluster<span class="p">|</span>bash-4.2#
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>这时候就可以开始调试服务 A 了，因为服务 B 暴露出来的接口本地已经可以直接访问到：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-bash" data-lang="bash">$ curl http://service-b:8000/
-Hello, world!
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ curl http://service-b:8000/
+</span></span><span class="line"><span class="cl">Hello, world!
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>这里要说明一下这背后发生的事情：</p>
 <ol>
@@ -465,13 +462,13 @@ Hello, world!
 <p>除此之外 Telepresence 还将远端的文件系统通过<code>sshfs</code>挂载到本地<code>$TELEPRESENCE_ROOT</code>下面（也支持通过参数<code>--mount &lt;MOUNT_PATH&gt;</code>指定挂载的路径）。这样，我们的应用程序就可以在本地访问到远端的文件系统：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-bash" data-lang="bash">$ ls <span class="nv">$TELEPRESENCE_ROOT</span>/var/run/secrets/kubernetes.io/serviceaccount
-ca.crt  namespace  token
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ ls <span class="nv">$TELEPRESENCE_ROOT</span>/var/run/secrets/kubernetes.io/serviceaccount
+</span></span><span class="line"><span class="cl">ca.crt  namespace  token
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>如果我们退出 Telepresence 对应的 Shell，它也会做一些清理工作，比如取消本地 VPN、删除刚刚创建的<code>Deployment</code>等。</p>
 <h3 id="调试服务-b---集群内服务与本地联调">调试服务 B - 集群内服务与本地联调</h3>
@@ -479,11 +476,11 @@ ca.crt  namespace  token
 <p>Telepresence 提供这样一个参数，<code>--swap-deployment &lt;DEPLOYMENT_NAME[:CONTAINER]&gt;</code>，用来将集群中的一个<code>Deployment</code>替换为本地的服务。对于上面的<code>service-b</code>，我们可以这样替换：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-bash" data-lang="bash">$ telepresence --swap-deployment service-b --expose 8000:8000
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ telepresence --swap-deployment service-b --expose 8000:8000
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>这个时候集群中的服务 A 再想访问服务 B 的8000端口时，Telepresence 就会将这个请求转发到本地的8000端口。即新的拓扑结构变成：</p>
 <p><img src="/image/telepresence/local-service-b.svg" alt="Local Service B"></p>
@@ -496,14 +493,14 @@ ca.crt  namespace  token
 <p>通过这样的方法，我们就有机会将集群中的请求转发到本地，然后在本地查看到具体的请求数据，调试逻辑，以及生成新的回复。</p>
 <h2 id="总结">总结</h2>
 <p>这篇文章里我先提出了微服务开发中一个常见的问题，然后介绍了 Telepresence 项目，并且举例说明了怎样用它来调试两种常见的微服务场景。当然，Telepresence 还在不断的演进，本文中使用的是<a href="https://github.com/telepresenceio/telepresence/tree/0.103">v0.103</a>版本，后续版本很可能有些不一样的地方，也欢迎大家不断指正。</p>
-<section class="footnotes" role="doc-endnotes">
+<div class="footnotes" role="doc-endnotes">
 <hr>
 <ol>
-<li id="fn:1" role="doc-endnote">
-<p>Cloud Native Computing Foundation，致力于推广云原生应用，旗下的代表项目有 Kubernetes，etcd等。 <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<li id="fn:1">
+<p>Cloud Native Computing Foundation，致力于推广云原生应用，旗下的代表项目有 Kubernetes，etcd等。&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 </ol>
-</section>
+</div>
 
     </div>
 
@@ -512,7 +509,7 @@ ca.crt  namespace  token
 <div class="post-copyright">
   <p class="copyright-item">
     <span class="item-title">文章作者</span>
-    <span class="item-content"><a href="//blog.betacat.io">喵叔</a></span>
+    <span class="item-content"><a href="https://blog.betacat.io">喵叔</a></span>
   </p>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
@@ -653,7 +650,7 @@ ca.crt  namespace  token
     </a>
 
 
-<a href="//blog.betacat.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
+<a href="https://blog.betacat.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
     class="iconfont" title="rss" target="_blank">
     <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
   xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -678,7 +675,7 @@ ca.crt  namespace  token
     &copy;
     
       2018 -
-    2022
+    2023
     <span class="heart">
       
       <i class="iconfont">
@@ -691,7 +688,7 @@ ca.crt  namespace  token
 
       </i>
     </span><span class="author">
-        <a href="//blog.betacat.io">喵叔</a>
+        <a href="https://blog.betacat.io">喵叔</a>
         
       </span></span>
 

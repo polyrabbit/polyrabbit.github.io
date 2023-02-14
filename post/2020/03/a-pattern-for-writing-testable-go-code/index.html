@@ -32,10 +32,10 @@
 
 
 
-<meta name="generator" content="Hugo 0.64.0" />
+<meta name="generator" content="Hugo 0.101.0" />
 
 
-<link rel="canonical" href="//blog.betacat.io/post/2020/03/a-pattern-for-writing-testable-go-code/" />
+<link rel="canonical" href="https://blog.betacat.io/post/2020/03/a-pattern-for-writing-testable-go-code/" />
 
 
 
@@ -53,7 +53,7 @@
 
 
 
-<link rel="stylesheet" href="/sass/jane.min.0995afa14b62cd93e93cfc066b646c4c17a3eddca0e9d52a1d9dcf5d90aaacd3.css" integrity="sha256-CZWvoUtizZPpPPwGa2RsTBej7dyg6dUqHZ3PXZCqrNM=" media="screen" crossorigin="anonymous">
+<link rel="stylesheet" href="/sass/jane.min.444f741ba7b684e63dff9a3b61ec1fb750c9b563b5a0b64153f1af8025c5fac1.css" integrity="sha256-RE90G6e2hOY9/5o7Yewft1DJtWO1oLZBU/GvgCXF&#43;sE=" media="screen" crossorigin="anonymous">
 
 
 
@@ -62,17 +62,14 @@
 <meta property="og:title" content="编写可测试 Go 代码的一种模式" />
 <meta property="og:description" content="UT（单元测试）是个好东西，我们每个人都爱它。当写完一段功能复杂的逻辑时，各种变态的测试样例能增强我们对这段逻辑的信心；当更改别人的代码时，" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="//blog.betacat.io/post/2020/03/a-pattern-for-writing-testable-go-code/" />
+<meta property="og:url" content="https://blog.betacat.io/post/2020/03/a-pattern-for-writing-testable-go-code/" /><meta property="article:section" content="post" />
 <meta property="article:published_time" content="2020-03-07T20:41:16+08:00" />
 <meta property="article:modified_time" content="2020-03-28T21:32:23+08:00" />
+
 <meta itemprop="name" content="编写可测试 Go 代码的一种模式">
-<meta itemprop="description" content="UT（单元测试）是个好东西，我们每个人都爱它。当写完一段功能复杂的逻辑时，各种变态的测试样例能增强我们对这段逻辑的信心；当更改别人的代码时，">
-<meta itemprop="datePublished" content="2020-03-07T20:41:16&#43;08:00" />
-<meta itemprop="dateModified" content="2020-03-28T21:32:23&#43;08:00" />
+<meta itemprop="description" content="UT（单元测试）是个好东西，我们每个人都爱它。当写完一段功能复杂的逻辑时，各种变态的测试样例能增强我们对这段逻辑的信心；当更改别人的代码时，"><meta itemprop="datePublished" content="2020-03-07T20:41:16+08:00" />
+<meta itemprop="dateModified" content="2020-03-28T21:32:23+08:00" />
 <meta itemprop="wordCount" content="3672">
-
-
-
 <meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="编写可测试 Go 代码的一种模式"/>
 <meta name="twitter:description" content="UT（单元测试）是个好东西，我们每个人都爱它。当写完一段功能复杂的逻辑时，各种变态的测试样例能增强我们对这段逻辑的信心；当更改别人的代码时，"/>
@@ -121,21 +118,21 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/">Home</a>
           
         
       </li><li class="mobile-menu-item">
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/post/">Archives</a>
           
         
       </li><li class="mobile-menu-item">
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/about/">About</a>
           
         
       </li>
@@ -227,7 +224,7 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/">Home</a>
           
 
         
@@ -238,7 +235,7 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/post/">Archives</a>
           
 
         
@@ -249,7 +246,7 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/about/">About</a>
           
 
         
@@ -340,7 +337,7 @@ if (!doNotTrack) {
 <p>比方说我们有一个电商系统中的交易类<code>transaction</code>，用来记录每笔订单的交易情况。其中的<code>Execute()</code>函数负责执行转账操作，将钱从买家的账户转移到卖家的账户中，而真正的转账操作则是通过调用银行（支付宝、微信）的 SDK 完成的：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -367,32 +364,32 @@ if (!doNotTrack) {
 </span><span class="lnt">25
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">transaction</span> <span class="kd">struct</span> <span class="p">{</span>
-    <span class="nx">ID</span>       <span class="kt">string</span>
-    <span class="nx">BuyerID</span>  <span class="kt">int</span>
-    <span class="nx">SellerID</span> <span class="kt">int</span>
-    <span class="nx">Amount</span>   <span class="kt">float64</span>
-    <span class="nx">createdAt</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span>
-    <span class="nx">Status</span> <span class="nx">TransactionStatus</span>
-<span class="p">}</span>
-
-<span class="kd">func</span> <span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">transaction</span><span class="p">)</span> <span class="nf">Execute</span><span class="p">(</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="o">==</span> <span class="nx">Executed</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="kc">true</span>
-    <span class="p">}</span>
-    <span class="k">if</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">(</span><span class="p">)</span> <span class="o">-</span> <span class="nx">t</span><span class="p">.</span><span class="nx">createdAt</span> <span class="p">&gt;</span> <span class="mf">24.</span><span class="nx">hours</span> <span class="p">{</span> <span class="c1">// 交易有有效期
-</span><span class="c1"></span>        <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="nx">Expired</span>
-        <span class="k">return</span> <span class="kc">false</span>
-    <span class="p">}</span>
-    <span class="nx">client</span> <span class="o">:=</span> <span class="nx">BankClient</span><span class="p">.</span><span class="nf">New</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">token</span><span class="p">)</span> <span class="c1">// 调用银行的 SDK 执行转账
-</span><span class="c1"></span>    <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">client</span><span class="p">.</span><span class="nf">TransferMoney</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">BuyerID</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">SellerID</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Amount</span><span class="p">)</span><span class="p">;</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
-        <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="nx">Failed</span>
-        <span class="k">return</span> <span class="kc">false</span>
-    <span class="p">}</span>
-    <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="nx">Executed</span>
-    <span class="k">return</span> <span class="kc">true</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">transaction</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">ID</span>       <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">BuyerID</span>  <span class="kt">int</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">SellerID</span> <span class="kt">int</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">Amount</span>   <span class="kt">float64</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">createdAt</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">Status</span> <span class="nx">TransactionStatus</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">transaction</span><span class="p">)</span> <span class="nf">Execute</span><span class="p">()</span> <span class="kt">bool</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="o">==</span> <span class="nx">Executed</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">()</span> <span class="o">-</span> <span class="nx">t</span><span class="p">.</span><span class="nx">createdAt</span> <span class="p">&gt;</span> <span class="mf">24.</span><span class="nx">hours</span> <span class="p">{</span> <span class="c1">// 交易有有效期
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="nx">Expired</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">client</span> <span class="o">:=</span> <span class="nx">BankClient</span><span class="p">.</span><span class="nf">New</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">token</span><span class="p">)</span> <span class="c1">// 调用银行的 SDK 执行转账
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">client</span><span class="p">.</span><span class="nf">TransferMoney</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">BuyerID</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">SellerID</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Amount</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="nx">Failed</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="nx">Executed</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>这个类最重要的功能集中在<code>Execute()</code>函数中，但它却不好测试，因为它有两个外部依赖：</p>
 <ol>
@@ -404,20 +401,20 @@ if (!doNotTrack) {
 <p>按照上面的理论，先将代码里使用到的方法抽象成一个接口（目前这个接口只包含一个方法，当然实际的场景下抽象出来的接口肯定比这个复杂）：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">Transferer</span> <span class="kd">interface</span> <span class="p">{</span>
-    <span class="nf">TransferMoney</span><span class="p">(</span><span class="nx">id</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">buyerID</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">sellerID</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">float64</span><span class="p">)</span> <span class="kt">error</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">Transferer</span> <span class="kd">interface</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">TransferMoney</span><span class="p">(</span><span class="nx">id</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">buyerID</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">sellerID</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">float64</span><span class="p">)</span> <span class="kt">error</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>然后将创建<code>BankClient</code>的行为上移到调用者那边去，相当于调用者创建了一个满足<code>Transferer</code>接口的实例，再注入进我们的代码。所以<code>transaction</code>这边就需要有个地方来接受这个实例，一个方法是通过<code>Execute()</code>函数的参数，但如果依赖过多的话，会造成函数参数爆炸，另一个则是放到<code>transaction</code>的成员属性中。这里我们采用更常见的第二个方法，因此重构后的<code>transaction</code>类及其构造函数就变成了这样：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -448,41 +445,41 @@ if (!doNotTrack) {
 </span><span class="lnt">29
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">transaction</span> <span class="kd">struct</span> <span class="p">{</span>
-    <span class="nx">ID</span>       <span class="kt">string</span>
-    <span class="nx">BuyerID</span>  <span class="kt">int</span>
-    <span class="nx">SellerID</span> <span class="kt">int</span>
-    <span class="nx">Amount</span>   <span class="kt">float64</span>
-    <span class="nx">createdAt</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span>
-    <span class="nx">Status</span> <span class="nx">TransactionStatus</span>
-    <span class="c1">// 增加了一个存放接口的属性
-</span><span class="c1"></span>    <span class="nx">transferer</span> <span class="nx">Transferer</span>
-<span class="p">}</span>
-
-<span class="kd">func</span> <span class="nf">New</span><span class="p">(</span><span class="nx">buyerID</span><span class="p">,</span> <span class="nx">sellerID</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">float64</span><span class="p">,</span> <span class="nx">transferer</span> <span class="nx">Transferer</span><span class="p">)</span> <span class="o">*</span><span class="nx">transaction</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">&amp;</span><span class="nx">transaction</span><span class="p">{</span>
-        <span class="nx">ID</span><span class="p">:</span>         <span class="nx">IdGenerator</span><span class="p">.</span><span class="nf">generate</span><span class="p">(</span><span class="p">)</span><span class="p">,</span>
-        <span class="nx">BuyerID</span><span class="p">:</span>    <span class="nx">buyerID</span><span class="p">,</span>
-        <span class="nx">SellerID</span><span class="p">:</span>   <span class="nx">sellerID</span><span class="p">,</span>
-        <span class="nx">Amount</span><span class="p">:</span>     <span class="nx">amount</span><span class="p">,</span>
-        <span class="nx">createdAt</span><span class="p">:</span>  <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">(</span><span class="p">)</span><span class="p">,</span>
-        <span class="nx">Status</span><span class="p">:</span>     <span class="nx">TO_BE_EXECUTD</span><span class="p">,</span>
-        <span class="nx">transferer</span><span class="p">:</span> <span class="nx">transferer</span><span class="p">,</span> <span class="c1">// 注入进 transaction 类中
-</span><span class="c1"></span>    <span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kd">func</span> <span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">transaction</span><span class="p">)</span> <span class="nf">Execute</span><span class="p">(</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
-    <span class="c1">//...
-</span><span class="c1"></span>    <span class="c1">//不直接创建，而是使用别人注入的接口实例
-</span><span class="c1"></span>    <span class="nx">t</span><span class="p">.</span><span class="nx">transferer</span><span class="p">.</span><span class="nf">TransferMoney</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">BuyerID</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">SellerID</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Amount</span><span class="p">)</span>
-    <span class="c1">//...
-</span><span class="c1"></span><span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">transaction</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">ID</span>       <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">BuyerID</span>  <span class="kt">int</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">SellerID</span> <span class="kt">int</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">Amount</span>   <span class="kt">float64</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">createdAt</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">Status</span> <span class="nx">TransactionStatus</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 增加了一个存放接口的属性
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">transferer</span> <span class="nx">Transferer</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">New</span><span class="p">(</span><span class="nx">buyerID</span><span class="p">,</span> <span class="nx">sellerID</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">float64</span><span class="p">,</span> <span class="nx">transferer</span> <span class="nx">Transferer</span><span class="p">)</span> <span class="o">*</span><span class="nx">transaction</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="o">&amp;</span><span class="nx">transaction</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">ID</span><span class="p">:</span>         <span class="nx">IdGenerator</span><span class="p">.</span><span class="nf">generate</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">BuyerID</span><span class="p">:</span>    <span class="nx">buyerID</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">SellerID</span><span class="p">:</span>   <span class="nx">sellerID</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">Amount</span><span class="p">:</span>     <span class="nx">amount</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">createdAt</span><span class="p">:</span>  <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">Status</span><span class="p">:</span>     <span class="nx">TO_BE_EXECUTD</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">transferer</span><span class="p">:</span> <span class="nx">transferer</span><span class="p">,</span> <span class="c1">// 注入进 transaction 类中
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">transaction</span><span class="p">)</span> <span class="nf">Execute</span><span class="p">()</span> <span class="kt">bool</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">//不直接创建，而是使用别人注入的接口实例
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">t</span><span class="p">.</span><span class="nx">transferer</span><span class="p">.</span><span class="nf">TransferMoney</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">BuyerID</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">SellerID</span><span class="p">,</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Amount</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>现在，我们在单元测试中就能够很方便的替换掉那个成本高昂的支付接口的调用了。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -503,26 +500,26 @@ if (!doNotTrack) {
 </span><span class="lnt">19
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// 定义一个满足 Transferer 接口的 mock 类
-</span><span class="c1"></span><span class="kd">type</span> <span class="nx">MockedClient</span> <span class="kd">struct</span> <span class="p">{</span>
-    <span class="nx">responseError</span> <span class="kt">error</span> <span class="c1">// 实例化的时候可以将期望的返回值保存进来
-</span><span class="c1"></span><span class="p">}</span>
-
-<span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <span class="o">*</span><span class="nx">MockedClient</span><span class="p">)</span> <span class="nf">TransferMoney</span><span class="p">(</span><span class="nx">id</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">buyerID</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">sellerID</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">float64</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">m</span><span class="p">.</span><span class="nx">responseError</span>
-<span class="p">}</span>
-
-<span class="kd">func</span> <span class="nf">Test_transaction_Execute</span><span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">T</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// 实例化一个可以自由控制结果的 client
-</span><span class="c1"></span>    <span class="nx">transferer</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">MockedClient</span><span class="p">{</span>
-        <span class="nx">responseError</span><span class="p">:</span> <span class="nx">errors</span><span class="p">.</span><span class="nf">New</span><span class="p">(</span><span class="s">&#34;insufficient balance&#34;</span><span class="p">)</span><span class="p">,</span>
-    <span class="p">}</span>
-    <span class="nx">tnx</span> <span class="o">:=</span> <span class="nf">New</span><span class="p">(</span><span class="nx">buyerID</span><span class="p">,</span> <span class="nx">sellerID</span><span class="p">,</span> <span class="nx">amount</span><span class="p">,</span> <span class="nx">transferer</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nx">succeeded</span> <span class="o">:=</span> <span class="nx">tnx</span><span class="p">.</span><span class="nf">Execute</span><span class="p">(</span><span class="p">)</span><span class="p">;</span> <span class="nx">succeeded</span> <span class="o">!=</span> <span class="kc">false</span> <span class="p">{</span>
-        <span class="nx">t</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="s">&#34;Execute() = %v, want %v&#34;</span><span class="p">,</span> <span class="nx">succeeded</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// 定义一个满足 Transferer 接口的 mock 类
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">MockedClient</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">responseError</span> <span class="kt">error</span> <span class="c1">// 实例化的时候可以将期望的返回值保存进来
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <span class="o">*</span><span class="nx">MockedClient</span><span class="p">)</span> <span class="nf">TransferMoney</span><span class="p">(</span><span class="nx">id</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">buyerID</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">sellerID</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">float64</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">m</span><span class="p">.</span><span class="nx">responseError</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">Test_transaction_Execute</span><span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">T</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 实例化一个可以自由控制结果的 client
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">transferer</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">MockedClient</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">responseError</span><span class="p">:</span> <span class="nx">errors</span><span class="p">.</span><span class="nf">New</span><span class="p">(</span><span class="s">&#34;insufficient balance&#34;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">tnx</span> <span class="o">:=</span> <span class="nf">New</span><span class="p">(</span><span class="nx">buyerID</span><span class="p">,</span> <span class="nx">sellerID</span><span class="p">,</span> <span class="nx">amount</span><span class="p">,</span> <span class="nx">transferer</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">succeeded</span> <span class="o">:=</span> <span class="nx">tnx</span><span class="p">.</span><span class="nf">Execute</span><span class="p">();</span> <span class="nx">succeeded</span> <span class="o">!=</span> <span class="kc">false</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">t</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="s">&#34;Execute() = %v, want %v&#34;</span><span class="p">,</span> <span class="nx">succeeded</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>第三方 SDK 的替换问题解决了，我们再来看看对交易过期这种情况的测试。</p>
 <p>最直观的方法就是将<code>createdAt</code>属性设为24小时之前，这样就可以模拟出过期这个场景了。但这不是一个好的解决方案，因为在我们的实现中，<code>createdAt</code>是个私有属性，它是在交易生成时（即构造函数中）自动获取的系统时间，外界不应该去干预它，否则就破坏了类的封装性。所以我们应该想办法去替换掉<code>time.Now</code>的行为。</p>
@@ -531,7 +528,7 @@ if (!doNotTrack) {
 <p>即业务代码不直接通过调用<code>time.Now</code>获得当前时间，而是通过一个中间人获得，而这个中间人被外界赋值为了<code>time.Now</code>。跟上面一样，这个中间人可以通过成员属性和函数参数的方式注入进来，或者偷懒直接定义为一个全局变量。下面来看看这种偷懒的做法（如果单元测试是并行执行的<code>t.Parallel()</code>，最好不要这么做）：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -545,24 +542,24 @@ if (!doNotTrack) {
 </span><span class="lnt">12
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">var</span> <span class="nx">nowFn</span> <span class="p">=</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Now</span> <span class="c1">//一个全局变量，用来解耦time.Now的生产者和消费者
-</span><span class="c1"></span>
-<span class="kd">func</span> <span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">transaction</span><span class="p">)</span> <span class="nf">Execute</span><span class="p">(</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="o">==</span> <span class="nx">Executed</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="kc">true</span>
-    <span class="p">}</span>
-    <span class="k">if</span> <span class="nf">nowFn</span><span class="p">(</span><span class="p">)</span> <span class="o">-</span> <span class="nx">t</span><span class="p">.</span><span class="nx">createdAt</span> <span class="p">&gt;</span> <span class="mf">24.</span><span class="nx">hours</span> <span class="p">{</span> <span class="c1">// 不直接调用time.Now()
-</span><span class="c1"></span>        <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="nx">Expired</span>
-        <span class="k">return</span> <span class="kc">false</span>
-    <span class="p">}</span>
-    <span class="c1">//...
-</span><span class="c1"></span><span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">var</span> <span class="nx">nowFn</span> <span class="p">=</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Now</span> <span class="c1">//一个全局变量，用来解耦time.Now的生产者和消费者
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">transaction</span><span class="p">)</span> <span class="nf">Execute</span><span class="p">()</span> <span class="kt">bool</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="o">==</span> <span class="nx">Executed</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nf">nowFn</span><span class="p">()</span> <span class="o">-</span> <span class="nx">t</span><span class="p">.</span><span class="nx">createdAt</span> <span class="p">&gt;</span> <span class="mf">24.</span><span class="nx">hours</span> <span class="p">{</span> <span class="c1">// 不直接调用time.Now()
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nx">t</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="nx">Expired</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>这样，我们的单元测试就能随心所欲的改变“当前时间”了</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -577,20 +574,20 @@ if (!doNotTrack) {
 </span><span class="lnt">13
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">Test_expired_transaction_Execute</span><span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">T</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// 用同样的函数签名改写业务中需要的时间函数
-</span><span class="c1"></span>    <span class="c1">// 这里能改变私有的全局变量是因为测试代码跟业务代码处于同一个包中
-</span><span class="c1"></span>    <span class="nx">nowFn</span> <span class="p">=</span> <span class="kd">func</span><span class="p">(</span><span class="p">)</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">(</span><span class="p">)</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="o">-</span><span class="mi">24</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Hour</span><span class="p">)</span>
-    <span class="p">}</span>
-    <span class="c1">// 依旧需要实例化一个假的的 client
-</span><span class="c1"></span>    <span class="nx">transferer</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">MockedClient</span><span class="p">{</span>
-        <span class="nx">responseError</span><span class="p">:</span> <span class="kc">nil</span><span class="p">,</span>
-    <span class="p">}</span>
-    <span class="nx">tnx</span> <span class="o">:=</span> <span class="nf">New</span><span class="p">(</span><span class="nx">buyerID</span><span class="p">,</span> <span class="nx">sellerID</span><span class="p">,</span> <span class="nx">amount</span><span class="p">,</span> <span class="nx">transferer</span><span class="p">)</span>
-    <span class="c1">//...
-</span><span class="c1"></span><span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">Test_expired_transaction_Execute</span><span class="p">(</span><span class="nx">t</span> <span class="o">*</span><span class="nx">testing</span><span class="p">.</span><span class="nx">T</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 用同样的函数签名改写业务中需要的时间函数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 这里能改变私有的全局变量是因为测试代码跟业务代码处于同一个包中
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">nowFn</span> <span class="p">=</span> <span class="kd">func</span><span class="p">()</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">().</span><span class="nf">Add</span><span class="p">(</span><span class="o">-</span><span class="mi">24</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Hour</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 依旧需要实例化一个假的的 client
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">transferer</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">MockedClient</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">responseError</span><span class="p">:</span> <span class="kc">nil</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">tnx</span> <span class="o">:=</span> <span class="nf">New</span><span class="p">(</span><span class="nx">buyerID</span><span class="p">,</span> <span class="nx">sellerID</span><span class="p">,</span> <span class="nx">amount</span><span class="p">,</span> <span class="nx">transferer</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>这一次的 mock 虽然没有像上个那样显式的定义一个接口出来，但我们隐式的复用了<code>time.Now</code>的<strong>函数签名</strong>，将它当做一种“接口类型”来使用。可以看到，其实这两个 mock 用到的解耦思想都是一样的。</p>
 <h3 id="best-practices">Best Practices</h3>
@@ -635,7 +632,7 @@ if (!doNotTrack) {
 <div class="post-copyright">
   <p class="copyright-item">
     <span class="item-title">文章作者</span>
-    <span class="item-content"><a href="//blog.betacat.io">喵叔</a></span>
+    <span class="item-content"><a href="https://blog.betacat.io">喵叔</a></span>
   </p>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
@@ -776,7 +773,7 @@ if (!doNotTrack) {
     </a>
 
 
-<a href="//blog.betacat.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
+<a href="https://blog.betacat.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
     class="iconfont" title="rss" target="_blank">
     <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
   xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -801,7 +798,7 @@ if (!doNotTrack) {
     &copy;
     
       2018 -
-    2022
+    2023
     <span class="heart">
       
       <i class="iconfont">
@@ -814,7 +811,7 @@ if (!doNotTrack) {
 
       </i>
     </span><span class="author">
-        <a href="//blog.betacat.io">喵叔</a>
+        <a href="https://blog.betacat.io">喵叔</a>
         
       </span></span>
 

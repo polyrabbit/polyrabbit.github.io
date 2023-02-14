@@ -32,10 +32,10 @@
 
 
 
-<meta name="generator" content="Hugo 0.64.0" />
+<meta name="generator" content="Hugo 0.101.0" />
 
 
-<link rel="canonical" href="//blog.betacat.io/post/how-wecron-schedules/" />
+<link rel="canonical" href="https://blog.betacat.io/post/how-wecron-schedules/" />
 
 
 
@@ -53,7 +53,7 @@
 
 
 
-<link rel="stylesheet" href="/sass/jane.min.0995afa14b62cd93e93cfc066b646c4c17a3eddca0e9d52a1d9dcf5d90aaacd3.css" integrity="sha256-CZWvoUtizZPpPPwGa2RsTBej7dyg6dUqHZ3PXZCqrNM=" media="screen" crossorigin="anonymous">
+<link rel="stylesheet" href="/sass/jane.min.444f741ba7b684e63dff9a3b61ec1fb750c9b563b5a0b64153f1af8025c5fac1.css" integrity="sha256-RE90G6e2hOY9/5o7Yewft1DJtWO1oLZBU/GvgCXF&#43;sE=" media="screen" crossorigin="anonymous">
 
 
 
@@ -62,17 +62,14 @@
 <meta property="og:title" content="WeCron是怎样处理定时任务的" />
 <meta property="og:description" content="WeCron（微定时）是我开发的一个微信上的定时提醒机器人，它能解析用户输入的语音或者文字，提取其中的时间和事件信息，然后为用户设置提醒。这" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="//blog.betacat.io/post/how-wecron-schedules/" />
+<meta property="og:url" content="https://blog.betacat.io/post/how-wecron-schedules/" /><meta property="article:section" content="post" />
 <meta property="article:published_time" content="2018-08-08T21:11:37+08:00" />
 <meta property="article:modified_time" content="2018-08-08T21:11:37+08:00" />
+
 <meta itemprop="name" content="WeCron是怎样处理定时任务的">
-<meta itemprop="description" content="WeCron（微定时）是我开发的一个微信上的定时提醒机器人，它能解析用户输入的语音或者文字，提取其中的时间和事件信息，然后为用户设置提醒。这">
-<meta itemprop="datePublished" content="2018-08-08T21:11:37&#43;08:00" />
-<meta itemprop="dateModified" content="2018-08-08T21:11:37&#43;08:00" />
+<meta itemprop="description" content="WeCron（微定时）是我开发的一个微信上的定时提醒机器人，它能解析用户输入的语音或者文字，提取其中的时间和事件信息，然后为用户设置提醒。这"><meta itemprop="datePublished" content="2018-08-08T21:11:37+08:00" />
+<meta itemprop="dateModified" content="2018-08-08T21:11:37+08:00" />
 <meta itemprop="wordCount" content="914">
-
-
-
 <meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="WeCron是怎样处理定时任务的"/>
 <meta name="twitter:description" content="WeCron（微定时）是我开发的一个微信上的定时提醒机器人，它能解析用户输入的语音或者文字，提取其中的时间和事件信息，然后为用户设置提醒。这"/>
@@ -121,21 +118,21 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/">Home</a>
           
         
       </li><li class="mobile-menu-item">
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/post/">Archives</a>
           
         
       </li><li class="mobile-menu-item">
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/about/">About</a>
           
         
       </li>
@@ -227,7 +224,7 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/">Home</a>
           
 
         
@@ -238,7 +235,7 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/post/">Archives</a>
           
 
         
@@ -249,7 +246,7 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/about/">About</a>
           
 
         
@@ -351,7 +348,7 @@ if (!doNotTrack) {
 <p>每当这个调度器被唤醒，它会首先检查有没有提醒要发送，然后再找到最近一个将要触发的提醒，休眠相应的时间。下面是一个简短的实现：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -374,28 +371,28 @@ if (!doNotTrack) {
 </span><span class="lnt">21
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-python" data-lang="python">
-<span class="n">remind_event</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">(</span><span class="p">)</span>
-
-<span class="k">def</span> <span class="nf">event_loop</span><span class="p">(</span><span class="p">)</span><span class="p">:</span>
-    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-        <span class="n">wait_seconds</span> <span class="o">=</span> <span class="n">process_jobs</span><span class="p">(</span><span class="p">)</span>
-        <span class="c1"># This event wakes up on timeout or someone else sets it</span>
-        <span class="n">remind_event</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">wait_seconds</span><span class="p">)</span>
-
-<span class="k">def</span> <span class="nf">on_remind_update</span><span class="p">(</span><span class="p">)</span><span class="p">:</span>
-    <span class="c1"># This will wake up the remind_event</span>
-    <span class="n">remind_event</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="p">)</span>
-
-<span class="k">def</span> <span class="nf">process_jobs</span><span class="p">(</span><span class="p">)</span><span class="p">:</span>
-    <span class="c1"># Send reminds</span>
-    <span class="n">reminds</span> <span class="o">=</span> <span class="n">get_unfired_reminds_older_than_now</span><span class="p">(</span><span class="p">)</span>
-    <span class="n">send_notification</span><span class="p">(</span><span class="n">reminds</span><span class="p">)</span>
-
-    <span class="c1"># And get the most recent remind</span>
-    <span class="n">next_remind</span> <span class="o">=</span> <span class="n">get_unfired_reminds_newer_than_now</span><span class="p">(</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">next_remind</span><span class="o">.</span><span class="n">notify_time</span> <span class="o">-</span> <span class="n">now</span><span class="p">)</span><span class="o">.</span><span class="n">seconds</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">remind_event</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">event_loop</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">wait_seconds</span> <span class="o">=</span> <span class="n">process_jobs</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># This event wakes up on timeout or someone else sets it</span>
+</span></span><span class="line"><span class="cl">        <span class="n">remind_event</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">wait_seconds</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">on_remind_update</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># This will wake up the remind_event</span>
+</span></span><span class="line"><span class="cl">    <span class="n">remind_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">process_jobs</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># Send reminds</span>
+</span></span><span class="line"><span class="cl">    <span class="n">reminds</span> <span class="o">=</span> <span class="n">get_unfired_reminds_older_than_now</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">send_notification</span><span class="p">(</span><span class="n">reminds</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># And get the most recent remind</span>
+</span></span><span class="line"><span class="cl">    <span class="n">next_remind</span> <span class="o">=</span> <span class="n">get_unfired_reminds_newer_than_now</span><span class="p">()</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">(</span><span class="n">next_remind</span><span class="o">.</span><span class="n">notify_time</span> <span class="o">-</span> <span class="n">now</span><span class="p">)</span><span class="o">.</span><span class="n">seconds</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>另外，为了提高提醒的及时性，这里的调度器会被启动好几份。这时面临的一个问题就是同一个提醒可能会被多个调度器调度到，用户也就有可能重复收到提醒。所以WeCron在选择提醒项的时候使用了<code>select ... for update</code>语句，利用（行）锁来同步多个调度器。</p>
 <h1 id="结束">结束</h1>
@@ -421,7 +418,7 @@ if (!doNotTrack) {
 <div class="post-copyright">
   <p class="copyright-item">
     <span class="item-title">文章作者</span>
-    <span class="item-content"><a href="//blog.betacat.io">喵叔</a></span>
+    <span class="item-content"><a href="https://blog.betacat.io">喵叔</a></span>
   </p>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
@@ -549,7 +546,7 @@ if (!doNotTrack) {
     </a>
 
 
-<a href="//blog.betacat.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
+<a href="https://blog.betacat.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
     class="iconfont" title="rss" target="_blank">
     <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
   xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -574,7 +571,7 @@ if (!doNotTrack) {
     &copy;
     
       2018 -
-    2022
+    2023
     <span class="heart">
       
       <i class="iconfont">
@@ -587,7 +584,7 @@ if (!doNotTrack) {
 
       </i>
     </span><span class="author">
-        <a href="//blog.betacat.io">喵叔</a>
+        <a href="https://blog.betacat.io">喵叔</a>
         
       </span></span>
 

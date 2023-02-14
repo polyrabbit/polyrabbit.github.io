@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="zh-cn" itemscope itemtype="http://schema.org/WebPage">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>BoltDB 怎样写数据 - 喵叔没话说</title>
+  
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta name="MobileOptimized" content="width"/>
+<meta name="HandheldFriendly" content="true"/>
+
+
+<meta name="applicable-device" content="pc,mobile">
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="author" content="喵叔" />
+  <meta name="description" content="1. 简介 BoltDB 起源于 LMDB（Lightning Memory-Mapped Database），基本可以视作 LMDB 的 Golang 简易实现版(?)。 LMDB 目前仍广泛应用在机器学习领域，从名字也" />
+<meta name="keywords" content="go, golang, mvcc, db, database, btree, boltdb, lmdb, etcd, 事务" />
+
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.101.0" />
+
+
+<link rel="canonical" href="https://blog.betacat.io/post/2023/02/how-boltdb-saves-data/" />
+
+
+
+
+
+<link rel="icon" href="/favicon.ico" />
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/sass/jane.min.444f741ba7b684e63dff9a3b61ec1fb750c9b563b5a0b64153f1af8025c5fac1.css" integrity="sha256-RE90G6e2hOY9/5o7Yewft1DJtWO1oLZBU/GvgCXF&#43;sE=" media="screen" crossorigin="anonymous">
+
+
+
+
+
+<meta property="og:title" content="BoltDB 怎样写数据" />
+<meta property="og:description" content="1. 简介 BoltDB 起源于 LMDB（Lightning Memory-Mapped Database），基本可以视作 LMDB 的 Golang 简易实现版(?)。 LMDB 目前仍广泛应用在机器学习领域，从名字也" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://blog.betacat.io/post/2023/02/how-boltdb-saves-data/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2023-02-10T22:14:47+08:00" />
+<meta property="article:modified_time" content="2023-02-27T22:14:47+08:00" />
+
+<meta itemprop="name" content="BoltDB 怎样写数据">
+<meta itemprop="description" content="1. 简介 BoltDB 起源于 LMDB（Lightning Memory-Mapped Database），基本可以视作 LMDB 的 Golang 简易实现版(?)。 LMDB 目前仍广泛应用在机器学习领域，从名字也"><meta itemprop="datePublished" content="2023-02-10T22:14:47+08:00" />
+<meta itemprop="dateModified" content="2023-02-27T22:14:47+08:00" />
+<meta itemprop="wordCount" content="3165">
+<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="BoltDB 怎样写数据"/>
+<meta name="twitter:description" content="1. 简介 BoltDB 起源于 LMDB（Lightning Memory-Mapped Database），基本可以视作 LMDB 的 Golang 简易实现版(?)。 LMDB 目前仍广泛应用在机器学习领域，从名字也"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-36049801-4', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script type="text/javascript">
+    
+    if (window != top) top.location.href = window.location.href
+</script>
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">喵叔没话说</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://blog.betacat.io/">Home</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://blog.betacat.io/post/">Archives</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://blog.betacat.io/about/">About</a>
+          
+        
+      </li>
+    
+
+    
+  </ul>
+</nav>
+
+
+  
+    
+
+
+
+
+
+
+  <link rel="stylesheet" href="/lib/photoswipe/photoswipe.min.css" />
+  <link rel="stylesheet" href="/lib/photoswipe/default-skin/default-skin.min.css" />
+
+
+
+
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="pswp__bg"></div>
+
+<div class="pswp__scroll-wrap">
+    
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    
+    <div class="pswp__ui pswp__ui--hidden">
+    <div class="pswp__top-bar">
+      
+      <div class="pswp__counter"></div>
+      <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+      <button class="pswp__button pswp__button--share" title="Share"></button>
+      <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+      <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+      
+      
+      <div class="pswp__preloader">
+        <div class="pswp__preloader__icn">
+          <div class="pswp__preloader__cut">
+            <div class="pswp__preloader__donut"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+      <div class="pswp__share-tooltip"></div>
+    </div>
+    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+    </button>
+    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+    </button>
+    <div class="pswp__caption">
+      <div class="pswp__caption__center"></div>
+    </div>
+    </div>
+    </div>
+</div>
+
+  
+
+  
+
+  
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">
+    
+      喵叔没话说
+    
+  </a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://blog.betacat.io/">Home</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://blog.betacat.io/post/">Archives</a>
+          
+
+        
+
+      </li>
+    
+        <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://blog.betacat.io/about/">About</a>
+          
+
+        
+
+      </li>
+    
+
+    
+    
+
+    
+  </ul>
+</nav>
+
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">BoltDB 怎样写数据</h1>
+      
+      <div class="post-meta">
+        <time datetime="2023-02-10" class="post-time">
+          2023-02-10
+        </time>
+        
+        <span class="more-meta"> 约 3165 字 </span>
+          <span class="more-meta"> 预计阅读 7 分钟 </span>
+
+        
+        
+
+        
+        
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#1-简介">1. 简介</a></li>
+    <li><a href="#2-数据结构">2. 数据结构</a>
+      <ul>
+        <li><a href="#21-磁盘布局">2.1. 磁盘布局</a></li>
+        <li><a href="#22-内存布局">2.2. 内存布局</a></li>
+      </ul>
+    </li>
+    <li><a href="#3-事务">3. 事务</a></li>
+    <li><a href="#4-组合一下">4. 组合一下</a>
+      <ul>
+        <li><a href="#41-数据一致性保证">4.1. 数据一致性保证</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      <h2 id="1-简介">1. 简介</h2>
+<p><a href="https://github.com/boltdb/bolt/">BoltDB</a> 起源于 LMDB（<a href="http://www.lmdb.tech/doc/">Lightning Memory-Mapped Database</a>），基本可以视作 LMDB 的 Golang 简易实现版(?)。</p>
+<p>LMDB 目前仍广泛应用在机器学习领域，从名字也可以看出来它的主要卖点在于使用了内存映射(<a href="https://en.wikipedia.org/wiki/Mmap">mmap</a>)技术，这使得它的读性能有时甚至能赶上纯内存的数据库。BoltDB 同样也继承了这个优点，所以读请求居多的 <a href="https://etcd.io/">etcd</a> 才选择它作为底层存储(?)。</p>
+<p>BoltDB 使用<code>B+ tree</code>来索引数据，这在<code>LSM tree</code>政治正确的今天，它倒显得有些复古。LSM 的特点在于写入简单，读取复杂。而<code>B+ tree</code>正好相反，因此这里我们就以 BoltBD 的写入流程为例，重温一下这个古老的技艺。</p>
+<h2 id="2-数据结构">2. 数据结构</h2>
+<p>BoltDB 使用的数据模型比较简单，比较重要的有<code>page</code>、<code>node</code>、<code>freelist</code>、<code>meta</code>、<code>tx</code>。下面，按照自底向上的出场顺序，简单介绍下各个角色，更详细的解说请自行参阅代码。</p>
+<h3 id="21-磁盘布局">2.1. 磁盘布局</h3>
+<h4 id="211-page">2.1.1. Page</h4>
+<p>BoltDB 读写数据的基本单元是一个<code>page</code>，默认大小为 4KiB，与操作系统的<code>page size</code>对齐，这意味着即使用户只需读写<code>1 Byte</code>的内容，但实际发生的 IO 大小却是 4KiB 的整数倍。磁盘中的文件可以理解为一个一个的<code>page</code>顺序排列而成，每个<code>page</code>的布局如下：</p>
+<p><img src="/image/2023/02/boltdb/page.drawio.png" alt="page"></p>
+<p><code>Page Header</code>共占 16 Byte，字段含义：</p>
+<ul>
+<li><code>id</code> - page 在磁盘文件中的顺序编号，主要用于寻址。</li>
+<li><code>flags</code>用于表示该 page 所代表的类型，比如：<code>branch</code>, <code>leaf</code>, <code>meta</code> 或<code>freelist</code>。</li>
+<li><code>count</code> - 该 page 中目前所容纳的元素个数，不同的类型有不同的解释，比如在叶子节点可以理解为 KV 键值对个数。</li>
+<li><code>overflow</code> - 如果该 page 所承载的逻辑对象超过 4KiB，那<code>overflow</code>就代表接下来的若干个 page 表示的是同一逻辑对象。</li>
+</ul>
+<p>剩余一个通用的<code>ptr</code>字段用于指向实际内容，不同数据类型有着不同的解释方式。</p>
+<h4 id="212-读流程">2.1.2. 读流程</h4>
+<p>由于数据文件已经通过<code>mmap</code>映射到了<code>db.data</code>字段，所以读操作非常简单，我们把它当做一个无限长的一维数组，将<code>page id</code>作为数组下标寻址，再来一次类型强转的操作就行了，整个过程完全实现了<code>zero-copy</code>：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">db</span> <span class="o">*</span><span class="nx">DB</span><span class="p">)</span> <span class="nf">page</span><span class="p">(</span><span class="nx">id</span> <span class="nx">pgid</span><span class="p">)</span> <span class="o">*</span><span class="nx">page</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">   <span class="nx">pos</span> <span class="o">:=</span> <span class="nx">id</span> <span class="o">*</span> <span class="nf">pgid</span><span class="p">(</span><span class="nx">db</span><span class="p">.</span><span class="nx">pageSize</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">   <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="nx">page</span><span class="p">)(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">db</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">pos</span><span class="p">]))</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="213-写流程">2.1.3. 写流程</h4>
+<p>写操作并不是通过<code>mmap</code>完成，而是使用的<code>pwrite</code>——在特定的 offset 写入内存中强转为<code>byte</code>的数组：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">tx</span> <span class="o">*</span><span class="nx">Tx</span><span class="p">)</span> <span class="nf">write</span><span class="p">()</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">offset</span> <span class="o">:=</span> <span class="nb">int64</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span> <span class="o">*</span> <span class="nb">int64</span><span class="p">(</span><span class="nx">tx</span><span class="p">.</span><span class="nx">db</span><span class="p">.</span><span class="nx">pageSize</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">ptr</span> <span class="o">:=</span> <span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nx">maxAllocSize</span><span class="p">]</span><span class="kt">byte</span><span class="p">)(</span><span class="nx">unsafe</span><span class="p">.</span><span class="nf">Pointer</span><span class="p">(</span><span class="nx">p</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">buf</span> <span class="o">:=</span> <span class="nx">ptr</span><span class="p">[:</span><span class="nx">sz</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">tx</span><span class="p">.</span><span class="nx">db</span><span class="p">.</span><span class="nx">ops</span><span class="p">.</span><span class="nf">writeAt</span><span class="p">(</span><span class="nx">buf</span><span class="p">,</span> <span class="nx">offset</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>所以 BoltDB 对磁盘文件的读写非常简单粗暴，就是一个<code>byte</code>和<code>page</code>之间的强制类型转换——没有考虑考虑大小端，也没有序列化和反序列化的开销，甚至没有 crc 校验，直接一个 dump 了一个原始的内存结构。</p>
+<h3 id="22-内存布局">2.2. 内存布局</h3>
+<h4 id="221-node">2.2.1. Node</h4>
+<p>磁盘中的<code>page</code>，读取到内存中就是<code>node</code>对象，这个实例化的过程，代码中用<code>materialized</code>来描述。根据<code>page.overflow</code>的取值，一个<code>node</code>可能横跨多个<code>page</code>。<code>node</code>的逻辑含义代表一个<code>B+ tree</code>的节点，其中两个比较重要的字段：</p>
+<ul>
+<li><code>isLeaf</code> - 用来表示该<code>node</code>存放的是一个中间的分支节点（branch），还是叶子节点（leaf）。</li>
+<li><code>inodes</code> - 一个有序数组，代表该<code>page</code>中存放的 KV 对，通过二分查找可以快速定位指定的<code>key</code>。</li>
+</ul>
+<h4 id="222-branch-page">2.2.2. Branch Page</h4>
+<p>分支节点被划分成两段——指向<code>key</code>位置的<code>offset</code>和具体的<code>key</code>，可以理解为一种定长<code>header(offset)</code>+不定长<code>body(key)</code>的编码方式，但<code>offset</code>和<code>key</code>分开存放。这使得查找的时候，可以在定长的<code>offset</code>段通过二分快速定位到中间的某个<code>key</code>的指针，再读取<code>ksize</code>大小的内容，从而获得原始的<code>key</code>。</p>
+<p><img src="/image/2023/02/boltdb/branch_page.drawio.png" alt="branch_page"></p>
+<p>整体布局是不是有点类似类似关系数据库中的<code>Slotted Pages</code>？</p>
+<h4 id="223-leaf-page">2.2.3. Leaf Page</h4>
+<p>叶子节点跟分支节点很类似，只不过其中的<code>pgid</code>字段被替换成了<code>vsize</code>，代表存储的<code>value</code>长度，而<code>value</code>的值则被放置到了<code>key</code>后面：</p>
+<p><img src="/image/2023/02/boltdb/leaf_page.drawio.png" alt="leaf_page"></p>
+<p>除了上述的<code>B+ tree</code>节点外，还有两个元数据节点也比较重要：</p>
+<h4 id="224-freelist">2.2.4. Freelist</h4>
+<p>BoltDB 的<code>B+ tree</code>借鉴了 append-only 的写入方式，这样能让写请求和读请求隔离开，互不影响，但一直 append 的话磁盘容易写爆，LSM 的做法就是后台分层 dump，而 BoltDB 的做法则是维护一个<code>freelist</code>，用来记录已经<strong>被释放</strong>的<code>page</code>，下次分配时，优先从<code>freelist</code>中复用，实在没有再去<code>re-mmap</code>扩容。</p>
+<blockquote>
+<p>因此 BoltDB 的文件只会增大，而不会因为数据的删除而减少。</p>
+</blockquote>
+<p><code>freelist</code>的再分配也实现的非常简单粗暴——从前往后查找，直到找到符合要求的<code>n</code>个连续的页：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">f</span> <span class="o">*</span><span class="nx">freelist</span><span class="p">)</span> <span class="nf">allocate</span><span class="p">(</span><span class="nx">n</span> <span class="kt">int</span><span class="p">)</span> <span class="nx">pgid</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="nx">i</span><span class="p">,</span> <span class="nx">id</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">f</span><span class="p">.</span><span class="nx">ids</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// Reset initial page if this is not contiguous.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span> <span class="nx">previd</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span> <span class="nx">id</span><span class="o">-</span><span class="nx">previd</span> <span class="o">!=</span> <span class="mi">1</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">           <span class="nx">initial</span> <span class="p">=</span> <span class="nx">id</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// If we found a contiguous block then remove it and return it.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span> <span class="p">(</span><span class="nx">id</span><span class="o">-</span><span class="nx">initial</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span> <span class="o">==</span> <span class="nf">pgid</span><span class="p">(</span><span class="nx">n</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="nx">initial</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="225-meta">2.2.5. Meta</h4>
+<p><code>meta</code>页共两个（为什么使用两个我们下面会揭晓），固定在数据库文件的前两个 page 上。它提供了一些数据库全局的视角，比如：</p>
+<ul>
+<li><code>root</code> - 当前生效的<code>B+ tree</code>的根节点，写事务提交时，这个字段成功更新才意味事务成功提交了。</li>
+<li><code>freelist</code> - freelist 列表存在哪一页。</li>
+<li><code>pgid</code> - 当前已分配的<code>page</code>最高值，用来做高水位检测。</li>
+<li><code>txid</code> - 事务版本号，由写事务递增，读事务读取<code>txid</code>更高且<strong>有效</strong>的<code>meta</code>页。它的主要作用是用来控制只读事务的可见性，以及释放已经关闭的读事务所占据的脏页。</li>
+</ul>
+<blockquote>
+<p>官方文档提到，长时间不关闭的读事务会导致脏页无法被回收，因为一个读事务相当于 pin 住了它所有涉及的页，后续的写事务不能冒然回收并覆改。</p>
+</blockquote>
+<h2 id="3-事务">3. 事务</h2>
+<p>BoltDB 实现了一个 MVCC 语义的事务，读事务读不到在它之后开启的写事务的更改，哪怕这个写事务已经提交。因为每个事务开始的时候都会将<code>meta</code>信息 copy 一份在自己的内存里，相当于做了一个快照，这样之后不管磁盘上的<code>meta</code>页如果变化，都不会影响到自己内存的拷贝。而且写事务回刷脏页都会重新分配一个空闲页，而不是原地覆盖，这就使得读写事务无论在磁盘还是内存中，都没有交集，从而实现了无锁环境下的并发读写。</p>
+<p>整个 MVCC 的基础在于它的 COW(copy-on-write) 机制，写事务首先把要变更的页面读上来，在内存里完成业务的<code>Put/Delete</code>操作，然后在提交的时候做一次 B 树的分裂和合并，使得整个变更路径上的节点都能维持平衡。最后再写到新的页面上去。</p>
+<p><img src="/image/2023/02/boltdb/tx_cow.drawio.png" alt="tx_cow"></p>
+<p>BoltDB 通过简单的 COW 机制实现了事务，避免了使用复杂的 redo/undo log。</p>
+<h2 id="4-组合一下">4. 组合一下</h2>
+<p>介绍完上述概念后，我们终于可以理解 BoltDB 是怎样写数据的了：</p>
+<ol>
+<li>用户开启一个读写事务，BoltDB 内部完成一些初始化动作，包括拷贝一份<code>meta</code>页到内存中。</li>
+<li>用户调用更新接口<code>Put</code>，BoltDB 内部通过迭代器<code>Cursor</code>定位到具体的<code>page</code>和<code>page</code>上的<code>element</code>。</li>
+<li>将<code>page</code>反序列化成内存中的<code>node</code>，插入或更改对应的<code>KV</code>。</li>
+<li>用户调用<code>Commit</code>接口，BoltDB 通过合并和分裂操作，保持<code>B+ tree</code>的平衡性，并将所有操作过的<code>page</code>及其父节点标记为<code>dirty</code>。</li>
+<li>通过<code>freelist</code>搜索能容纳所有脏页的连续空闲列表，如果找不到，则扩大数据库文件，并重新<code>mmap</code>。</li>
+<li>脏页被回写到磁盘上，并通过<code>fdatasync</code>确保数据持久化成功。</li>
+<li>指向最新根节点的<code>meta</code>页通过覆盖写的方式，写到文件头部，并通过<code>fdatasync</code>确保<strong>元</strong>数据持久化成功。</li>
+</ol>
+<h3 id="41-数据一致性保证">4.1. 数据一致性保证</h3>
+<p>上述各个步骤都可能失败，我们来看看在各种异常场景下，BoltDB 是如何保证数据一致性的：</p>
+<ol>
+<li>用户调用<code>Commit</code>前失败，数据未落盘，没有一致性问题。</li>
+<li>用户调用<code>Commit</code>后，分配空闲页或者写脏页失败，<code>Commit</code>调用返回出错，用户感知。</li>
+<li>写脏页成功（包括<code>fdatasync</code>），表明数据页成功落盘，但更新<code>meta</code>页失败，<code>Commit</code>调用返回出错，用户感知。
+<ol>
+<li>这其中，如果<code>meta</code>页并没有原子性的写完，那下一个事务在查找<code>meta</code>的时候，<code>meta.validate()</code>方法就会校验失败，从而防止该事务读到一个损坏的记录，这就是为什么要使用<strong>两个<code>meta</code>页</strong>的原因。</li>
+<li><code>meta</code>更新失败并不影响原来的那棵 B 树，且新写入的<code>page</code>会在下一个事务中变成<code>free page</code>被覆盖。</li>
+</ol>
+</li>
+<li>更新<code>meta</code>页成功（包括<code>fdatasync</code>），表明数据和元数据都已经持久化成功，<code>Commit</code>可以给用户一个安全的承诺了。</li>
+</ol>
+
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content"><a href="https://blog.betacat.io">喵叔</a></span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">
+      2023-02-27
+      
+    </span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>（转载请注明出处）</span>
+  </p>
+</div>
+
+
+    
+    
+
+    <footer class="post-footer">
+      
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/2021/10/nfs-mount-protocol/">
+            <span class="next-text nav-default">NFS 协议 Mount 过程揭秘</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            
+            <i class="iconfont">
+              <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="18" height="18">
+  <path d="M332.091514 74.487481l-75.369571 89.491197c-10.963703 12.998035-10.285251 32.864502 1.499144 44.378743l286.278095 300.375162L266.565125 819.058374c-11.338233 12.190647-11.035334 32.285311 0.638543 44.850487l80.46666 86.564541c11.680017 12.583596 30.356378 12.893658 41.662889 0.716314l377.434212-421.426145c11.332093-12.183484 11.041474-32.266891-0.657986-44.844348l-80.46666-86.564541c-1.772366-1.910513-3.706415-3.533476-5.750981-4.877077L373.270379 71.774697C361.493148 60.273758 343.054193 61.470003 332.091514 74.487481z"></path>
+</svg>
+
+            </i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+
+  
+  
+
+  
+  
+
+  
+
+  
+  
+    <div class="post bg-white">
+      <script src="https://utteranc.es/client.js"
+            repo= "polyrabbit/polyrabbit.github.io"
+            issue-term="title"
+            theme="github-light"
+            crossorigin="anonymous"
+            async>
+      </script>
+    </div>
+  
+
+  
+
+  
+
+  
+
+    
+
+  
+
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="icon-links">
+  
+  
+    <a href="/email.gif" rel="me noopener" class="iconfont"
+      title="email"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1451 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M664.781909 681.472759 0 97.881301C0 3.997201 71.046997 0 71.046997 0L474.477909 0 961.649408 0 1361.641813 0C1361.641813 0 1432.688811 3.997201 1432.688811 97.881301L771.345323 681.472759C771.345323 681.472759 764.482731 685.154773 753.594283 688.65053L753.594283 688.664858C741.602731 693.493018 729.424896 695.068979 718.077952 694.839748 706.731093 695.068979 694.553173 693.493018 682.561621 688.664858L682.561621 688.65053C671.644501 685.140446 664.781909 681.472759 664.781909 681.472759L664.781909 681.472759ZM718.063616 811.603883C693.779541 811.016482 658.879232 802.205449 619.10784 767.734955 542.989056 701.759633 0 212.052267 0 212.052267L0 942.809523C0 942.809523 0 1024 83.726336 1024L682.532949 1024 753.579947 1024 1348.948139 1024C1432.688811 1024 1432.688811 942.809523 1432.688811 942.809523L1432.688811 212.052267C1432.688811 212.052267 893.138176 701.759633 817.019477 767.734955 777.248 802.205449 742.347691 811.03081 718.063616 811.603883L718.063616 811.603883Z"></path>
+</svg>
+
+    </a>
+  
+    <a href="javascript:alert%28%27My%20tweets%20are%20protected%20now%27%29" rel="me noopener" class="iconfont"
+      title="twitter"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1264 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M1229.8616 18.043658c0 0-117.852626 63.135335-164.151872 67.344358-105.225559-164.151872-505.082682-92.598492-437.738325 223.078185C278.622548 312.675223 89.216542 47.506814 89.216542 47.506814s-117.852626 189.406006 75.762402 345.139833C127.097743 396.85567 55.544363 371.601535 55.544363 371.601535S26.081207 535.753407 253.368414 615.724832c-21.045112 29.463156-113.643603 8.418045-113.643603 8.418045s25.254134 143.10676 231.496229 180.987961c-143.10676 130.479693-387.230056 92.598492-370.393967 105.225559 206.242095 189.406006 1119.599946 231.496229 1128.01799-643.98042C1179.353331 249.539887 1263.533778 123.269217 1263.533778 123.269217s-130.479693 37.881201-138.897738 33.672179C1225.652577 98.015083 1229.8616 18.043658 1229.8616 18.043658"></path>
+</svg>
+
+    </a>
+  
+    <a href="https://www.linkedin.com/in/%E6%98%8C%E6%96%B0-%E7%BC%AA-b46b8591/" rel="me noopener" class="iconfont"
+      title="linkedin"  target="_blank"
+      >
+      <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="33" height="33">
+  <path d="M872.405333 872.618667h-151.637333v-237.610667c0-56.661333-1.152-129.578667-79.018667-129.578667-79.061333 0-91.136 61.653333-91.136 125.397334v241.792H398.976V384h145.664v66.602667h1.962667c20.352-38.4 69.845333-78.933333 143.786666-78.933334 153.642667 0 182.058667 101.12 182.058667 232.746667v268.202667zM227.712 317.141333a87.978667 87.978667 0 0 1-88.021333-88.106666 88.064 88.064 0 1 1 88.021333 88.106666z m76.032 555.477334H151.68V384h152.064v488.618667zM948.266667 0H75.562667C33.792 0 0 33.024 0 73.770667v876.458666C0 991.018667 33.792 1024 75.562667 1024h872.576C989.866667 1024 1024 991.018667 1024 950.229333V73.770667C1024 33.024 989.866667 0 948.138667 0h0.128z"></path>
+</svg>
+
+    </a>
+  
+    <a href="https://github.com/polyrabbit" rel="me noopener" class="iconfont"
+      title="github"  target="_blank"
+      >
+      <svg class="icon" style="" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="36" height="36">
+  <path d="M512 12.672c-282.88 0-512 229.248-512 512 0 226.261333 146.688 418.133333 350.08 485.76 25.6 4.821333 34.986667-11.008 34.986667-24.618667 0-12.16-0.426667-44.373333-0.64-87.04-142.421333 30.890667-172.458667-68.693333-172.458667-68.693333C188.672 770.986667 155.008 755.2 155.008 755.2c-46.378667-31.744 3.584-31.104 3.584-31.104 51.413333 3.584 78.421333 52.736 78.421333 52.736 45.653333 78.293333 119.850667 55.68 149.12 42.581333 4.608-33.109333 17.792-55.68 32.426667-68.48-113.706667-12.8-233.216-56.832-233.216-253.013333 0-55.893333 19.84-101.546667 52.693333-137.386667-5.76-12.928-23.04-64.981333 4.48-135.509333 0 0 42.88-13.738667 140.8 52.48 40.96-11.392 84.48-17.024 128-17.28 43.52 0.256 87.04 5.888 128 17.28 97.28-66.218667 140.16-52.48 140.16-52.48 27.52 70.528 10.24 122.581333 5.12 135.509333 32.64 35.84 52.48 81.493333 52.48 137.386667 0 196.693333-119.68 240-233.6 252.586667 17.92 15.36 34.56 46.762667 34.56 94.72 0 68.522667-0.64 123.562667-0.64 140.202666 0 13.44 8.96 29.44 35.2 24.32C877.44 942.592 1024 750.592 1024 524.672c0-282.752-229.248-512-512-512"></path>
+</svg>
+
+    </a>
+
+
+<a href="https://blog.betacat.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
+    class="iconfont" title="rss" target="_blank">
+    <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="30" height="30">
+  <path d="M819.157333 1024C819.157333 574.592 449.408 204.8 0 204.8V0c561.706667 0 1024 462.293333 1024 1024h-204.842667zM140.416 743.04a140.8 140.8 0 0 1 140.501333 140.586667A140.928 140.928 0 0 1 140.074667 1024C62.72 1024 0 961.109333 0 883.626667s62.933333-140.544 140.416-140.586667zM678.784 1024h-199.04c0-263.210667-216.533333-479.786667-479.744-479.786667V345.173333c372.352 0 678.784 306.517333 678.784 678.826667z"></path>
+</svg>
+
+  </a>
+   
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy;
+    
+      2018 -
+    2023
+    <span class="heart">
+      
+      <i class="iconfont">
+        <svg class="icon" viewBox="0 0 1025 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="14" height="14">
+  <path d="M1000.1 247.9c-15.5-37.3-37.6-70.6-65.7-98.9-54.4-54.8-125.8-85-201-85-85.7 0-166 39-221.4 107.4C456.6 103 376.3 64 290.6 64c-75.1 0-146.5 30.4-201.1 85.6-28.2 28.5-50.4 61.9-65.8 99.3-16 38.8-24 79.9-23.6 122.2 0.7 91.7 40.1 177.2 108.1 234.8 3.1 2.6 6 5.1 8.9 7.8 14.9 13.4 58 52.8 112.6 102.7 93.5 85.5 209.9 191.9 257.5 234.2 7 6.1 15.8 9.5 24.9 9.5 9.2 0 18.1-3.4 24.9-9.5 34.5-30.7 105.8-95.9 181.4-165 74.2-67.8 150.9-138 195.8-178.2 69.5-57.9 109.6-144.4 109.9-237.3 0.1-42.5-8-83.6-24-122.2z"
+   fill="#8a8a8a"></path>
+</svg>
+
+      </i>
+    </span><span class="author">
+        <a href="https://blog.betacat.io">喵叔</a>
+        
+      </span></span>
+
+  
+  
+
+  
+    <span>
+      <a class="beian" href="http://www.beian.miit.gov.cn/" target="_blank">沪ICP备17033881号-1</a>
+    </span>
+  
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont">
+        
+        <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
+  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="35" height="35">
+  <path d="M510.866688 227.694839 95.449397 629.218702l235.761562 0-2.057869 328.796468 362.40389 0L691.55698 628.188232l241.942331-3.089361L510.866688 227.694839zM63.840492 63.962777l894.052392 0 0 131.813095L63.840492 195.775872 63.840492 63.962777 63.840492 63.962777zM63.840492 63.962777"></path>
+</svg>
+
+      </i>
+    </div>
+  </div>
+  
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+
+
+
+
+<script type="text/javascript" src="/js/main.638251f4230630f0335d8c6748e53a96f94b72670920b60c09a56fdc8bece214.js" integrity="sha256-Y4JR9CMGMPAzXYxnSOU6lvlLcmcJILYMCaVv3Ivs4hQ=" crossorigin="anonymous"></script>
+
+
+
+
+
+
+<script id="baidu_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+    hm.src = "https://hm.baidu.com/hm.js?1d8c3618a611e95c78e0fcaf38baf230";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+  
+    <script type="text/javascript" src="/js/load-photoswipe.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe.min.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe-ui-default.min.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

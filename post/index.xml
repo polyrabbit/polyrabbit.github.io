@@ -2,139 +2,144 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on 喵叔没话说</title>
-    <link>//blog.betacat.io/post/</link>
+    <link>https://blog.betacat.io/post/</link>
     <description>Recent content in Posts on 喵叔没话说</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 27 Oct 2021 12:03:16 +0800</lastBuildDate>
-    
-	<atom:link href="//blog.betacat.io/post/index.xml" rel="self" type="application/rss+xml" />
-    
+    <lastBuildDate>Fri, 10 Feb 2023 22:14:47 +0800</lastBuildDate><atom:link href="https://blog.betacat.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>BoltDB 怎样写数据</title>
+      <link>https://blog.betacat.io/post/2023/02/how-boltdb-saves-data/</link>
+      <pubDate>Fri, 10 Feb 2023 22:14:47 +0800</pubDate>
+      
+      <guid>https://blog.betacat.io/post/2023/02/how-boltdb-saves-data/</guid>
+      <description>1. 简介 BoltDB 起源于 LMDB（Lightning Memory-Mapped Database），基本可以视作 LMDB 的 Golang 简易实现版(?)。 LMDB 目前仍广泛应用在机器学习领域，从名字也</description>
+    </item>
     
     <item>
       <title>NFS 协议 Mount 过程揭秘</title>
-      <link>//blog.betacat.io/post/2021/10/nfs-mount-protocol/</link>
+      <link>https://blog.betacat.io/post/2021/10/nfs-mount-protocol/</link>
       <pubDate>Wed, 27 Oct 2021 12:03:16 +0800</pubDate>
       
-      <guid>//blog.betacat.io/post/2021/10/nfs-mount-protocol/</guid>
+      <guid>https://blog.betacat.io/post/2021/10/nfs-mount-protocol/</guid>
       <description>NFS 协议经过20多年的发展，已经变得非常复杂，本文以 mount 过程中发生的交互为切入点，带大家走进 nfs，走近科学… Mount 可以类比于其他协议中的握手过程，</description>
     </item>
     
     <item>
       <title>FIO 到底在干什么</title>
-      <link>//blog.betacat.io/post/2021/07/fio-internal/</link>
+      <link>https://blog.betacat.io/post/2021/07/fio-internal/</link>
       <pubDate>Mon, 05 Jul 2021 11:45:24 +0800</pubDate>
       
-      <guid>//blog.betacat.io/post/2021/07/fio-internal/</guid>
+      <guid>https://blog.betacat.io/post/2021/07/fio-internal/</guid>
       <description>fio 是一个常见的 IO 性能测试工具。它功能强大，上至文件系统，下至裸盘都能支持，但同时也参数繁多，目前的最新版本（3.27）中已经定义了至少237</description>
     </item>
     
     <item>
       <title>利用 AST 从代码反推出 thrift 文件</title>
-      <link>//blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/</link>
+      <link>https://blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/</link>
       <pubDate>Fri, 23 Oct 2020 11:51:13 +0800</pubDate>
       
-      <guid>//blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/</guid>
+      <guid>https://blog.betacat.io/post/2020/10/reverse-go-code-to-thrift-file/</guid>
       <description>众所周知 (?)，字节跳动内部主要使用 Thrift 作为 RPC 的序列化及传输协议。据说这套技术栈是从 99 房继承过来的，那个时候创业公司也没几个 RPC 框架可选，国内小</description>
     </item>
     
     <item>
       <title>怎样用文件浏览器查看etcd的内容</title>
-      <link>//blog.betacat.io/post/2020/08/how-to-mount-etcd-as-a-filesystem/</link>
+      <link>https://blog.betacat.io/post/2020/08/how-to-mount-etcd-as-a-filesystem/</link>
       <pubDate>Sat, 01 Aug 2020 11:47:09 +0800</pubDate>
       
-      <guid>//blog.betacat.io/post/2020/08/how-to-mount-etcd-as-a-filesystem/</guid>
+      <guid>https://blog.betacat.io/post/2020/08/how-to-mount-etcd-as-a-filesystem/</guid>
       <description>TL;DR 用 etcdfs 就可以，它能把一个 etcd 集群的 key-value 键值对，按照逻辑层级关系，映射成文件系统中的文件和文件夹，这样我们就能够用回熟悉的ls, grep, vim等工具了。</description>
     </item>
     
     <item>
       <title>编写可测试 Go 代码的一种模式</title>
-      <link>//blog.betacat.io/post/2020/03/a-pattern-for-writing-testable-go-code/</link>
+      <link>https://blog.betacat.io/post/2020/03/a-pattern-for-writing-testable-go-code/</link>
       <pubDate>Sat, 07 Mar 2020 20:41:16 +0800</pubDate>
       
-      <guid>//blog.betacat.io/post/2020/03/a-pattern-for-writing-testable-go-code/</guid>
+      <guid>https://blog.betacat.io/post/2020/03/a-pattern-for-writing-testable-go-code/</guid>
       <description>UT（单元测试）是个好东西，我们每个人都爱它。当写完一段功能复杂的逻辑时，各种变态的测试样例能增强我们对这段逻辑的信心；当更改别人的代码时，</description>
     </item>
     
     <item>
       <title>跟 etcd 学习数据库中事务隔离的实现</title>
-      <link>//blog.betacat.io/post/2019/08/learn-transaction-isolation-levels-from-etcd/</link>
+      <link>https://blog.betacat.io/post/2019/08/learn-transaction-isolation-levels-from-etcd/</link>
       <pubDate>Thu, 29 Aug 2019 10:17:24 +0800</pubDate>
       
-      <guid>//blog.betacat.io/post/2019/08/learn-transaction-isolation-levels-from-etcd/</guid>
+      <guid>https://blog.betacat.io/post/2019/08/learn-transaction-isolation-levels-from-etcd/</guid>
       <description>众所周知，etcd 的数据模型是建立在 MVCC 基础上的（如果你不知，那一定是没看过我的这篇博客🙃）。在当前的实现中1，etcd 不仅提供了原子性的事务</description>
     </item>
     
     <item>
       <title>使用 Telepresence 在本地调试 Kubernetes 微服务</title>
-      <link>//blog.betacat.io/post/develop-and-debug-k8s-microservices-locally-using-telepresence/</link>
+      <link>https://blog.betacat.io/post/develop-and-debug-k8s-microservices-locally-using-telepresence/</link>
       <pubDate>Wed, 24 Jul 2019 23:10:21 +0800</pubDate>
       
-      <guid>//blog.betacat.io/post/develop-and-debug-k8s-microservices-locally-using-telepresence/</guid>
+      <guid>https://blog.betacat.io/post/develop-and-debug-k8s-microservices-locally-using-telepresence/</guid>
       <description>微服务作为一种全新的软件架构现在正变得越来越火。基本原因我觉得有两点：一方面软件系统越做越复杂，通过拆分将一个大系统解耦成一个个独立的子系统</description>
     </item>
     
     <item>
       <title>Go 语言标准库中 atomic.Value 的前世今生</title>
-      <link>//blog.betacat.io/post/golang-atomic-value-exploration/</link>
+      <link>https://blog.betacat.io/post/golang-atomic-value-exploration/</link>
       <pubDate>Fri, 15 Mar 2019 21:30:47 +0800</pubDate>
       
-      <guid>//blog.betacat.io/post/golang-atomic-value-exploration/</guid>
+      <guid>https://blog.betacat.io/post/golang-atomic-value-exploration/</guid>
       <description>在 Go 语言标准库中，sync/atomic包将底层硬件提供的原子操作封装成了 Go 的函数。但这些操作只支持几种基本数据类型，因此为了扩大原子操作的</description>
     </item>
     
     <item>
       <title>【译】分页技术简介</title>
-      <link>//blog.betacat.io/post/introduction-to-paging/</link>
+      <link>https://blog.betacat.io/post/introduction-to-paging/</link>
       <pubDate>Sun, 10 Feb 2019 11:31:31 +0800</pubDate>
       
-      <guid>//blog.betacat.io/post/introduction-to-paging/</guid>
+      <guid>https://blog.betacat.io/post/introduction-to-paging/</guid>
       <description>译注：这篇文章节选自《用Rust编写一个操作系统》系列。它由浅入深的介绍了分页技术（Paging）的历史由来，以及在现代操作系统中的实现。这</description>
     </item>
     
     <item>
       <title>MVCC 在 etcd 中的实现</title>
-      <link>//blog.betacat.io/post/mvcc-implementation-in-etcd/</link>
+      <link>https://blog.betacat.io/post/mvcc-implementation-in-etcd/</link>
       <pubDate>Mon, 24 Dec 2018 18:26:52 +0800</pubDate>
       
-      <guid>//blog.betacat.io/post/mvcc-implementation-in-etcd/</guid>
+      <guid>https://blog.betacat.io/post/mvcc-implementation-in-etcd/</guid>
       <description>简介 在数据库领域，面对高并发环境下数据冲突的问题，业界常用的解决方案有两种： 想办法避免冲突。使用悲观锁来确保同一时刻只有一人能对数据进行更改</description>
     </item>
     
     <item>
       <title>Raft 在 etcd 中的实现</title>
-      <link>//blog.betacat.io/post/raft-implementation-in-etcd/</link>
+      <link>https://blog.betacat.io/post/raft-implementation-in-etcd/</link>
       <pubDate>Tue, 13 Nov 2018 19:47:17 +0800</pubDate>
       
-      <guid>//blog.betacat.io/post/raft-implementation-in-etcd/</guid>
+      <guid>https://blog.betacat.io/post/raft-implementation-in-etcd/</guid>
       <description>Raft是近年来比较流行的一个一致性算法。它的原理比较容易理解，网上也有很多相关的介绍，因此这里我就不再啰嗦原理了，而是打算以raft在et</description>
     </item>
     
     <item>
       <title>我所了解的IBM主机</title>
-      <link>//blog.betacat.io/post/introduction-to-ibm-mainframe/</link>
+      <link>https://blog.betacat.io/post/introduction-to-ibm-mainframe/</link>
       <pubDate>Tue, 16 Oct 2018 17:16:09 +0800</pubDate>
       
-      <guid>//blog.betacat.io/post/introduction-to-ibm-mainframe/</guid>
+      <guid>https://blog.betacat.io/post/introduction-to-ibm-mainframe/</guid>
       <description>我目前的工作主要是跟IBM主机打交道，但每次向别人介绍主机时，总觉得对方很难get到它的价值。一方面是因为主机这个系统太古老，又相对封闭，它</description>
     </item>
     
     <item>
       <title>[Practical Guide] How to Extract Main Content From Web Pages Using Machine-Learning</title>
-      <link>//blog.betacat.io/post/how-to-extract-main-content-from-web-pages-using-machine-learning/</link>
+      <link>https://blog.betacat.io/post/how-to-extract-main-content-from-web-pages-using-machine-learning/</link>
       <pubDate>Tue, 18 Sep 2018 01:15:57 +0800</pubDate>
       
-      <guid>//blog.betacat.io/post/how-to-extract-main-content-from-web-pages-using-machine-learning/</guid>
+      <guid>https://blog.betacat.io/post/how-to-extract-main-content-from-web-pages-using-machine-learning/</guid>
       <description>Following Jupyter Notebook is a step-by-step tutorial I took when making the Hacker News Digest, hope you find it helpful:
 How to extract main content from web pages using Machine-Learning</description>
     </item>
     
     <item>
       <title>WeCron是怎样处理定时任务的</title>
-      <link>//blog.betacat.io/post/how-wecron-schedules/</link>
+      <link>https://blog.betacat.io/post/how-wecron-schedules/</link>
       <pubDate>Wed, 08 Aug 2018 21:11:37 +0800</pubDate>
       
-      <guid>//blog.betacat.io/post/how-wecron-schedules/</guid>
+      <guid>https://blog.betacat.io/post/how-wecron-schedules/</guid>
       <description>WeCron（微定时）是我开发的一个微信上的定时提醒机器人，它能解析用户输入的语音或者文字，提取其中的时间和事件信息，然后为用户设置提醒。这</description>
     </item>
     

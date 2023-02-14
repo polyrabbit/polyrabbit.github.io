@@ -1,2 +1,2 @@
 User-agent: *
-Sitemap: //blog.betacat.io/sitemap.xml
+Sitemap: https://blog.betacat.io/sitemap.xml

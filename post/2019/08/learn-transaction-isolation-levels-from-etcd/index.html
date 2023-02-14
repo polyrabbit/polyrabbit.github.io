@@ -32,10 +32,10 @@
 
 
 
-<meta name="generator" content="Hugo 0.64.0" />
+<meta name="generator" content="Hugo 0.101.0" />
 
 
-<link rel="canonical" href="//blog.betacat.io/post/2019/08/learn-transaction-isolation-levels-from-etcd/" />
+<link rel="canonical" href="https://blog.betacat.io/post/2019/08/learn-transaction-isolation-levels-from-etcd/" />
 
 
 
@@ -53,7 +53,7 @@
 
 
 
-<link rel="stylesheet" href="/sass/jane.min.0995afa14b62cd93e93cfc066b646c4c17a3eddca0e9d52a1d9dcf5d90aaacd3.css" integrity="sha256-CZWvoUtizZPpPPwGa2RsTBej7dyg6dUqHZ3PXZCqrNM=" media="screen" crossorigin="anonymous">
+<link rel="stylesheet" href="/sass/jane.min.444f741ba7b684e63dff9a3b61ec1fb750c9b563b5a0b64153f1af8025c5fac1.css" integrity="sha256-RE90G6e2hOY9/5o7Yewft1DJtWO1oLZBU/GvgCXF&#43;sE=" media="screen" crossorigin="anonymous">
 
 
 
@@ -62,17 +62,14 @@
 <meta property="og:title" content="跟 etcd 学习数据库中事务隔离的实现" />
 <meta property="og:description" content="众所周知，etcd 的数据模型是建立在 MVCC 基础上的（如果你不知，那一定是没看过我的这篇博客🙃）。在当前的实现中1，etcd 不仅提供了原子性的事务" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="//blog.betacat.io/post/2019/08/learn-transaction-isolation-levels-from-etcd/" />
+<meta property="og:url" content="https://blog.betacat.io/post/2019/08/learn-transaction-isolation-levels-from-etcd/" /><meta property="article:section" content="post" />
 <meta property="article:published_time" content="2019-08-29T10:17:24+08:00" />
 <meta property="article:modified_time" content="2020-01-03T22:56:24+08:00" />
+
 <meta itemprop="name" content="跟 etcd 学习数据库中事务隔离的实现">
-<meta itemprop="description" content="众所周知，etcd 的数据模型是建立在 MVCC 基础上的（如果你不知，那一定是没看过我的这篇博客🙃）。在当前的实现中1，etcd 不仅提供了原子性的事务">
-<meta itemprop="datePublished" content="2019-08-29T10:17:24&#43;08:00" />
-<meta itemprop="dateModified" content="2020-01-03T22:56:24&#43;08:00" />
-<meta itemprop="wordCount" content="5250">
-
-
-
+<meta itemprop="description" content="众所周知，etcd 的数据模型是建立在 MVCC 基础上的（如果你不知，那一定是没看过我的这篇博客🙃）。在当前的实现中1，etcd 不仅提供了原子性的事务"><meta itemprop="datePublished" content="2019-08-29T10:17:24+08:00" />
+<meta itemprop="dateModified" content="2020-01-03T22:56:24+08:00" />
+<meta itemprop="wordCount" content="5248">
 <meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="跟 etcd 学习数据库中事务隔离的实现"/>
 <meta name="twitter:description" content="众所周知，etcd 的数据模型是建立在 MVCC 基础上的（如果你不知，那一定是没看过我的这篇博客🙃）。在当前的实现中1，etcd 不仅提供了原子性的事务"/>
@@ -121,21 +118,21 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/">Home</a>
           
         
       </li><li class="mobile-menu-item">
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/post/">Archives</a>
           
         
       </li><li class="mobile-menu-item">
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/about/">About</a>
           
         
       </li>
@@ -227,7 +224,7 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/">Home</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/">Home</a>
           
 
         
@@ -238,7 +235,7 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/post/">Archives</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/post/">Archives</a>
           
 
         
@@ -249,7 +246,7 @@ if (!doNotTrack) {
         
           
           
-            <a class="menu-item-link" href="//blog.betacat.io/about/">About</a>
+            <a class="menu-item-link" href="https://blog.betacat.io/about/">About</a>
           
 
         
@@ -280,7 +277,7 @@ if (!doNotTrack) {
           2019-08-29
         </time>
         
-        <span class="more-meta"> 约 5250 字 </span>
+        <span class="more-meta"> 约 5248 字 </span>
           <span class="more-meta"> 预计阅读 11 分钟 </span>
 
         
@@ -323,7 +320,7 @@ if (!doNotTrack) {
 
     
     <div class="post-content">
-      <p>众所周知，etcd 的数据模型是建立在 MVCC 基础上的（如果你不知，那一定是没看过我的<a href="//blog.betacat.io/post/mvcc-implementation-in-etcd/">这篇博客</a>🙃）。在当前的实现中<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>，etcd 不仅提供了原子性的事务操作，还对外暴露了实现这些原子操作的 MVCC 版本信息。要知道，在大部分使用了 MVCC 机制的数据库中，你很难找到底层 MVCC 的影子，因为上层的数据库都把它屏蔽掉了，用户只能使用数据库封装好的一些能力。而在 etcd 中，最底层的版本信息是公开的，这就给我们提供了很多种可能性。比如在官方的客户端 clientv3 中，有一个 <a href="https://github.com/etcd-io/etcd/tree/v3.3.10/clientv3/concurrency">concurrency</a> 包，这里面封装好的能力就足以覆盖 etcd 常见的几种使用场景：</p>
+      <p>众所周知，etcd 的数据模型是建立在 MVCC 基础上的（如果你不知，那一定是没看过我的<a href="https://blog.betacat.io/post/mvcc-implementation-in-etcd/">这篇博客</a>🙃）。在当前的实现中<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>，etcd 不仅提供了原子性的事务操作，还对外暴露了实现这些原子操作的 MVCC 版本信息。要知道，在大部分使用了 MVCC 机制的数据库中，你很难找到底层 MVCC 的影子，因为上层的数据库都把它屏蔽掉了，用户只能使用数据库封装好的一些能力。而在 etcd 中，最底层的版本信息是公开的，这就给我们提供了很多种可能性。比如在官方的客户端 clientv3 中，有一个 <a href="https://github.com/etcd-io/etcd/tree/v3.3.10/clientv3/concurrency">concurrency</a> 包，这里面封装好的能力就足以覆盖 etcd 常见的几种使用场景：</p>
 <ul>
 <li><a href="https://github.com/etcd-io/etcd/blob/v3.3.10/clientv3/concurrency/mutex.go">mutex.go</a> 一个分布式锁的实现</li>
 <li><a href="https://github.com/etcd-io/etcd/blob/v3.3.10/clientv3/concurrency/election.go">election.go</a> 一个分布式选举的实现，多用来实现 Active-Standby 的高可用模式</li>
@@ -351,7 +348,7 @@ if (!doNotTrack) {
 <p>这里的概念有点像 Linux 文件系统里的各种时间。整个系统的时钟是一直往前走的（Revision），我们在08:01创建了一个文件<code>my.file</code>（CreateRevision），08:07分又更改了它（ModRevision）。系统会记录下这几个时间点：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
@@ -359,24 +356,24 @@ if (!doNotTrack) {
 </span><span class="lnt">6
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-bash" data-lang="bash">$ stat my.file
-...
-Access: 2019-08-29 08:01:43.345815131 +0800
-Modify: 2019-08-29 09:07:46.461380645 +0800
-Change: 2019-08-29 09:07:46.461380645 +0800
- Birth: -
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ stat my.file
+</span></span><span class="line"><span class="cl">...
+</span></span><span class="line"><span class="cl">Access: 2019-08-29 08:01:43.345815131 +0800
+</span></span><span class="line"><span class="cl">Modify: 2019-08-29 09:07:46.461380645 +0800
+</span></span><span class="line"><span class="cl">Change: 2019-08-29 09:07:46.461380645 +0800
+</span></span><span class="line"><span class="cl"> Birth: -
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>有了这个 Revision 之后，我们就像有了时光机一样，可以获取到系统在过去某个时间点的状态。比如<code>GET</code>函数就支持传入一个<code>WithRev(revision)</code>参数，来得到指定的 key 在指定的 revision 时的值。</p>
 <h3 id="etcd-中的微事务">etcd 中的微事务</h3>
 <p>etcd v3 中引入了一个微事务的概念（mini-transaction），允许用户在一次修改中批量执行多个操作，这意味着这一组操作被绑定成一个原子操作，并共享同一个修订号。它的写法有点类似一个 <a href="https://zh.wikipedia.org/wiki/%E6%AF%94%E8%BE%83%E5%B9%B6%E4%BA%A4%E6%8D%A2">CAS</a> ：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="nf">Txn</span><span class="p">(</span><span class="p">)</span><span class="p">.</span><span class="nf">If</span><span class="p">(</span><span class="nx">cond1</span><span class="p">,</span> <span class="nx">cond2</span><span class="p">,</span> <span class="err">…</span><span class="p">)</span><span class="p">.</span><span class="nf">Then</span><span class="p">(</span><span class="nx">op1</span><span class="p">,</span> <span class="nx">op2</span><span class="p">,</span> <span class="err">…</span><span class="p">)</span><span class="p">.</span><span class="nf">Else</span><span class="p">(</span><span class="nx">op1</span><span class="err">’</span><span class="p">,</span> <span class="nx">op2</span><span class="err">’</span><span class="p">,</span> <span class="err">…</span><span class="p">)</span><span class="p">.</span><span class="nf">commit</span><span class="p">(</span><span class="p">)</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nf">Txn</span><span class="p">().</span><span class="nf">If</span><span class="p">(</span><span class="nx">cond1</span><span class="p">,</span> <span class="nx">cond2</span><span class="p">,</span> <span class="err">…</span><span class="p">).</span><span class="nf">Then</span><span class="p">(</span><span class="nx">op1</span><span class="p">,</span> <span class="nx">op2</span><span class="p">,</span> <span class="err">…</span><span class="p">).</span><span class="nf">Else</span><span class="p">(</span><span class="nx">op1</span><span class="err">’</span><span class="p">,</span> <span class="nx">op2</span><span class="err">’</span><span class="p">,</span> <span class="err">…</span><span class="p">).</span><span class="nf">commit</span><span class="p">()</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>如果<code>If</code>语句中的条件全部为真，则整个事务的返回值为<code>true</code>，并且<code>Then</code>中的操作会被执行，否则返回<code>false</code>并执行<code>Else</code>中的操作。</p>
 <h2 id="使用姿势">使用姿势</h2>
@@ -385,7 +382,7 @@ Change: 2019-08-29 09:07:46.461380645 +0800
 <p>根据这个思路写出来的代码：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -427,52 +424,52 @@ Change: 2019-08-29 09:07:46.461380645 +0800
 </span><span class="lnt">40
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">txnXfer</span><span class="p">(</span><span class="nx">etcd</span> <span class="o">*</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Client</span><span class="p">,</span> <span class="nx">from</span><span class="p">,</span> <span class="nx">to</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">uint</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
-    <span class="k">for</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="nx">ok</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nf">doTxnXfer</span><span class="p">(</span><span class="nx">etcd</span><span class="p">,</span> <span class="nx">from</span><span class="p">,</span> <span class="nx">to</span><span class="p">,</span> <span class="nx">amount</span><span class="p">)</span><span class="p">;</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="nx">err</span> <span class="c1">// 发生了错误，则直接给用户返回错误
-</span><span class="c1"></span>        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">ok</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="kc">nil</span>  <span class="c1">// 转账成功就返回
-</span><span class="c1"></span>        <span class="p">}</span>
-        <span class="c1">// 发生冲突了，需要重试
-</span><span class="c1"></span>    <span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kd">func</span> <span class="nf">doTxnXfer</span><span class="p">(</span><span class="nx">etcd</span> <span class="o">*</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Client</span><span class="p">,</span> <span class="nx">from</span><span class="p">,</span> <span class="nx">to</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">uint</span><span class="p">)</span> <span class="p">(</span><span class="kt">bool</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// 利用 Txn 的原子性同时获取A和B的余额以及ModRevision
-</span><span class="c1"></span>    <span class="nx">getResp</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">etcd</span><span class="p">.</span><span class="nf">Txn</span><span class="p">(</span><span class="nx">etcd</span><span class="p">.</span><span class="nf">Ctx</span><span class="p">(</span><span class="p">)</span><span class="p">)</span><span class="p">.</span><span class="nf">Then</span><span class="p">(</span><span class="nf">OpGet</span><span class="p">(</span><span class="nx">from</span><span class="p">)</span><span class="p">,</span> <span class="nf">OpGet</span><span class="p">(</span><span class="nx">to</span><span class="p">)</span><span class="p">)</span><span class="p">.</span><span class="nf">Commit</span><span class="p">(</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
-         <span class="k">return</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">err</span>
-    <span class="p">}</span>
-    <span class="c1">// 读取在当前时刻A和B的值
-</span><span class="c1"></span>    <span class="nx">fromKV</span> <span class="o">:=</span> <span class="nx">getResp</span><span class="p">.</span><span class="nx">Responses</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="p">.</span><span class="nf">GetRangeResponse</span><span class="p">(</span><span class="p">)</span><span class="p">.</span><span class="nx">Kvs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="nx">toKV</span> <span class="o">:=</span> <span class="nx">getResp</span><span class="p">.</span><span class="nx">Responses</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="p">.</span><span class="nf">GetRangeResponse</span><span class="p">(</span><span class="p">)</span><span class="p">.</span><span class="nx">Kvs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="nx">fromValue</span><span class="p">,</span> <span class="nx">toValue</span> <span class="o">:=</span> <span class="nf">toUInt64</span><span class="p">(</span><span class="nx">fromKV</span><span class="p">.</span><span class="nx">Value</span><span class="p">)</span><span class="p">,</span> <span class="nf">toUint64</span><span class="p">(</span><span class="nx">toKV</span><span class="p">.</span><span class="nx">Value</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nx">fromValue</span> <span class="p">&lt;</span> <span class="nx">amount</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="err">“</span><span class="nx">insufficient</span> <span class="nx">value</span><span class="err">”</span><span class="p">)</span>
-    <span class="p">}</span>
-    <span class="c1">// 再准备一个事务，其中的比较部分是查看 ModRevision 有没有变化
-</span><span class="c1"></span>    <span class="nx">txn</span> <span class="o">:=</span> <span class="nx">etcd</span><span class="p">.</span><span class="nf">Txn</span><span class="p">(</span><span class="nx">etcd</span><span class="p">.</span><span class="nf">Ctx</span><span class="p">(</span><span class="p">)</span><span class="p">)</span><span class="p">.</span><span class="nf">If</span><span class="p">(</span>
-        <span class="nx">v3</span><span class="p">.</span><span class="nf">Compare</span><span class="p">(</span><span class="nx">v3</span><span class="p">.</span><span class="nf">ModRevision</span><span class="p">(</span><span class="nx">from</span><span class="p">)</span><span class="p">,</span> <span class="s">&#34;=&#34;</span><span class="p">,</span> <span class="nx">fromKV</span><span class="p">.</span><span class="nx">ModRevision</span><span class="p">)</span><span class="p">,</span>
-        <span class="nx">v3</span><span class="p">.</span><span class="nf">Compare</span><span class="p">(</span><span class="nx">v3</span><span class="p">.</span><span class="nf">ModRevision</span><span class="p">(</span><span class="nx">to</span><span class="p">)</span><span class="p">,</span> <span class="s">&#34;=&#34;</span><span class="p">,</span> <span class="nx">toKV</span><span class="p">.</span><span class="nx">ModRevision</span><span class="p">)</span><span class="p">)</span>
-    <span class="c1">// 如果从上次读取到现在还没有别人更改过，那就写入处理后的值
-</span><span class="c1"></span>    <span class="nx">txn</span> <span class="p">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nf">Then</span><span class="p">(</span>
-        <span class="nf">OpPut</span><span class="p">(</span><span class="nx">from</span><span class="p">,</span> <span class="nf">fromUint64</span><span class="p">(</span><span class="nx">fromValue</span> <span class="o">-</span> <span class="nx">amount</span><span class="p">)</span><span class="p">)</span><span class="p">,</span>
-        <span class="nf">OpPut</span><span class="p">(</span><span class="nx">to</span><span class="p">,</span> <span class="nf">fromUint64</span><span class="p">(</span><span class="nx">toValue</span> <span class="o">-</span> <span class="nx">amount</span><span class="p">)</span><span class="p">)</span>
-    <span class="c1">// 提交第二个事务
-</span><span class="c1"></span>    <span class="nx">putResp</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">txn</span><span class="p">.</span><span class="nf">Commit</span><span class="p">(</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">err</span>
-    <span class="p">}</span>
-    <span class="c1">// 如果事务的比较部分为真，putResp.Succeeded就是true，否则为false
-</span><span class="c1"></span>    <span class="k">return</span> <span class="nx">putResp</span><span class="p">.</span><span class="nx">Succeeded</span><span class="p">,</span> <span class="kc">nil</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">txnXfer</span><span class="p">(</span><span class="nx">etcd</span> <span class="o">*</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Client</span><span class="p">,</span> <span class="nx">from</span><span class="p">,</span> <span class="nx">to</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">uint</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nx">ok</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nf">doTxnXfer</span><span class="p">(</span><span class="nx">etcd</span><span class="p">,</span> <span class="nx">from</span><span class="p">,</span> <span class="nx">to</span><span class="p">,</span> <span class="nx">amount</span><span class="p">);</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="nx">err</span> <span class="c1">// 发生了错误，则直接给用户返回错误
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">ok</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="kc">nil</span>  <span class="c1">// 转账成功就返回
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 发生冲突了，需要重试
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">doTxnXfer</span><span class="p">(</span><span class="nx">etcd</span> <span class="o">*</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Client</span><span class="p">,</span> <span class="nx">from</span><span class="p">,</span> <span class="nx">to</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">uint</span><span class="p">)</span> <span class="p">(</span><span class="kt">bool</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 利用 Txn 的原子性同时获取A和B的余额以及ModRevision
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">getResp</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">etcd</span><span class="p">.</span><span class="nf">Txn</span><span class="p">(</span><span class="nx">etcd</span><span class="p">.</span><span class="nf">Ctx</span><span class="p">()).</span><span class="nf">Then</span><span class="p">(</span><span class="nf">OpGet</span><span class="p">(</span><span class="nx">from</span><span class="p">),</span> <span class="nf">OpGet</span><span class="p">(</span><span class="nx">to</span><span class="p">)).</span><span class="nf">Commit</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">         <span class="k">return</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">err</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 读取在当前时刻A和B的值
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">fromKV</span> <span class="o">:=</span> <span class="nx">getResp</span><span class="p">.</span><span class="nx">Responses</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nf">GetRangeResponse</span><span class="p">().</span><span class="nx">Kvs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">toKV</span> <span class="o">:=</span> <span class="nx">getResp</span><span class="p">.</span><span class="nx">Responses</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nf">GetRangeResponse</span><span class="p">().</span><span class="nx">Kvs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">fromValue</span><span class="p">,</span> <span class="nx">toValue</span> <span class="o">:=</span> <span class="nf">toUInt64</span><span class="p">(</span><span class="nx">fromKV</span><span class="p">.</span><span class="nx">Value</span><span class="p">),</span> <span class="nf">toUint64</span><span class="p">(</span><span class="nx">toKV</span><span class="p">.</span><span class="nx">Value</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">fromValue</span> <span class="p">&lt;</span> <span class="nx">amount</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="err">“</span><span class="nx">insufficient</span> <span class="nx">value</span><span class="err">”</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 再准备一个事务，其中的比较部分是查看 ModRevision 有没有变化
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">txn</span> <span class="o">:=</span> <span class="nx">etcd</span><span class="p">.</span><span class="nf">Txn</span><span class="p">(</span><span class="nx">etcd</span><span class="p">.</span><span class="nf">Ctx</span><span class="p">()).</span><span class="nf">If</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">v3</span><span class="p">.</span><span class="nf">Compare</span><span class="p">(</span><span class="nx">v3</span><span class="p">.</span><span class="nf">ModRevision</span><span class="p">(</span><span class="nx">from</span><span class="p">),</span> <span class="s">&#34;=&#34;</span><span class="p">,</span> <span class="nx">fromKV</span><span class="p">.</span><span class="nx">ModRevision</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">v3</span><span class="p">.</span><span class="nf">Compare</span><span class="p">(</span><span class="nx">v3</span><span class="p">.</span><span class="nf">ModRevision</span><span class="p">(</span><span class="nx">to</span><span class="p">),</span> <span class="s">&#34;=&#34;</span><span class="p">,</span> <span class="nx">toKV</span><span class="p">.</span><span class="nx">ModRevision</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 如果从上次读取到现在还没有别人更改过，那就写入处理后的值
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">txn</span> <span class="p">=</span> <span class="nx">txn</span><span class="p">.</span><span class="nf">Then</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">OpPut</span><span class="p">(</span><span class="nx">from</span><span class="p">,</span> <span class="nf">fromUint64</span><span class="p">(</span><span class="nx">fromValue</span> <span class="o">-</span> <span class="nx">amount</span><span class="p">)),</span>
+</span></span><span class="line"><span class="cl">        <span class="nf">OpPut</span><span class="p">(</span><span class="nx">to</span><span class="p">,</span> <span class="nf">fromUint64</span><span class="p">(</span><span class="nx">toValue</span> <span class="o">-</span> <span class="nx">amount</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 提交第二个事务
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">putResp</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">txn</span><span class="p">.</span><span class="nf">Commit</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">err</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 如果事务的比较部分为真，putResp.Succeeded就是true，否则为false
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="nx">putResp</span><span class="p">.</span><span class="nx">Succeeded</span><span class="p">,</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>可以看到，这部分代码除了转账的业务逻辑外，大部分都是实现乐观锁的样板代码，包括两次事务操作、冲突检测、冲突发生时的重试等，写起来比较繁琐。幸好 stm.go 把这部分逻辑进行了封装，抽象出了一个公共的事务处理框架，我们只需把业务相关的代码传给 stm，它会做事务管理，并适时调用我们的业务代码。现在来看看用 stm 重构后的代码：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -490,30 +487,30 @@ Change: 2019-08-29 09:07:46.461380645 +0800
 </span><span class="lnt">16
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">txnXfer</span><span class="p">(</span><span class="nx">cli</span> <span class="o">*</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Client</span><span class="p">,</span> <span class="nx">from</span><span class="p">,</span> <span class="nx">to</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">uint</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
-    <span class="c1">// NewSTM创建了一个原子事务的上下文，并把我们的业务代码作为一个函数传进去
-</span><span class="c1"></span>    <span class="nx">_</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">concurrency</span><span class="p">.</span><span class="nf">NewSTM</span><span class="p">(</span><span class="nx">cli</span><span class="p">,</span> <span class="kd">func</span><span class="p">(</span><span class="nx">stm</span> <span class="nx">concurrency</span><span class="p">.</span><span class="nx">STM</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
-        <span class="c1">// stm.Get封装好了事务的读操作
-</span><span class="c1"></span>        <span class="nx">fromV</span> <span class="o">:=</span> <span class="nf">toUInt64</span><span class="p">(</span><span class="nx">stm</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="nx">from</span><span class="p">)</span><span class="p">)</span>
-        <span class="nx">toV</span> <span class="o">:=</span> <span class="nf">toUInt64</span><span class="p">(</span><span class="nx">stm</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="nx">to</span><span class="p">)</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nx">fromV</span> <span class="p">&lt;</span> <span class="nx">amount</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="err">“</span><span class="nx">insufficient</span> <span class="nx">value</span><span class="err">”</span><span class="p">)</span>
-        <span class="p">}</span>
-        <span class="c1">// stm.Put封装好了事务的写操作
-</span><span class="c1"></span>        <span class="nx">stm</span><span class="p">.</span><span class="nf">Put</span><span class="p">(</span><span class="nx">to</span><span class="p">,</span> <span class="nf">fromUInt64</span><span class="p">(</span><span class="nx">toV</span> <span class="o">+</span> <span class="nx">amount</span><span class="p">)</span><span class="p">)</span>
-        <span class="nx">stm</span><span class="p">.</span><span class="nf">Put</span><span class="p">(</span><span class="nx">from</span><span class="p">,</span> <span class="nf">fromUInt64</span><span class="p">(</span><span class="nx">fromV</span> <span class="o">-</span> <span class="nx">amount</span><span class="p">)</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">nil</span>
-    <span class="p">}</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nx">err</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">txnXfer</span><span class="p">(</span><span class="nx">cli</span> <span class="o">*</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Client</span><span class="p">,</span> <span class="nx">from</span><span class="p">,</span> <span class="nx">to</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">amount</span> <span class="kt">uint</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// NewSTM创建了一个原子事务的上下文，并把我们的业务代码作为一个函数传进去
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">_</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">concurrency</span><span class="p">.</span><span class="nf">NewSTM</span><span class="p">(</span><span class="nx">cli</span><span class="p">,</span> <span class="kd">func</span><span class="p">(</span><span class="nx">stm</span> <span class="nx">concurrency</span><span class="p">.</span><span class="nx">STM</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// stm.Get封装好了事务的读操作
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nx">fromV</span> <span class="o">:=</span> <span class="nf">toUInt64</span><span class="p">(</span><span class="nx">stm</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="nx">from</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">toV</span> <span class="o">:=</span> <span class="nf">toUInt64</span><span class="p">(</span><span class="nx">stm</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="nx">to</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nx">fromV</span> <span class="p">&lt;</span> <span class="nx">amount</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="err">“</span><span class="nx">insufficient</span> <span class="nx">value</span><span class="err">”</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// stm.Put封装好了事务的写操作
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nx">stm</span><span class="p">.</span><span class="nf">Put</span><span class="p">(</span><span class="nx">to</span><span class="p">,</span> <span class="nf">fromUInt64</span><span class="p">(</span><span class="nx">toV</span> <span class="o">+</span> <span class="nx">amount</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">stm</span><span class="p">.</span><span class="nf">Put</span><span class="p">(</span><span class="nx">from</span><span class="p">,</span> <span class="nf">fromUInt64</span><span class="p">(</span><span class="nx">fromV</span> <span class="o">-</span> <span class="nx">amount</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">    <span class="p">})</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">err</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>眼花缭乱的<code>ModRevision</code>不见了，事务处理也不见了，整段代码变得清晰明了了很多。所以 stm 的使用特别简单——我们只需把业务相关的代码封装成可重入的函数传给 stm，然后 stm 会处理好其余所有的细节，cool~</p>
 <h2 id="内部实现">内部实现</h2>
 <p>先来看看传给业务程序的<code>concurrency.STM</code>长什么样：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -530,27 +527,27 @@ Change: 2019-08-29 09:07:46.461380645 +0800
 </span><span class="lnt">15
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// STM is an interface for software transactional memory.
-</span><span class="c1"></span><span class="kd">type</span> <span class="nx">STM</span> <span class="kd">interface</span> <span class="p">{</span>
-    <span class="c1">// Get returns the value for a key and inserts the key in the txn&#39;s read set.
-</span><span class="c1"></span>    <span class="nf">Get</span><span class="p">(</span><span class="nx">key</span> <span class="o">...</span><span class="kt">string</span><span class="p">)</span> <span class="kt">string</span>
-    <span class="c1">// Put adds a value for a key to the write set.
-</span><span class="c1"></span>    <span class="nf">Put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">val</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">opts</span> <span class="o">...</span><span class="nx">v3</span><span class="p">.</span><span class="nx">OpOption</span><span class="p">)</span>
-    <span class="c1">// Rev returns the revision of a key in the read set.
-</span><span class="c1"></span>    <span class="nf">Rev</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">int64</span>
-    <span class="c1">// Del deletes a key.
-</span><span class="c1"></span>    <span class="nf">Del</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">)</span>
-
-    <span class="c1">// commit attempts to apply the txn&#39;s changes to the server.
-</span><span class="c1"></span>    <span class="nf">commit</span><span class="p">(</span><span class="p">)</span> <span class="o">*</span><span class="nx">v3</span><span class="p">.</span><span class="nx">TxnResponse</span>
-    <span class="nf">reset</span><span class="p">(</span><span class="p">)</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// STM is an interface for software transactional memory.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">STM</span> <span class="kd">interface</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Get returns the value for a key and inserts the key in the txn&#39;s read set.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">Get</span><span class="p">(</span><span class="nx">key</span> <span class="o">...</span><span class="kt">string</span><span class="p">)</span> <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Put adds a value for a key to the write set.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">Put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">val</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">opts</span> <span class="o">...</span><span class="nx">v3</span><span class="p">.</span><span class="nx">OpOption</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Rev returns the revision of a key in the read set.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">Rev</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">int64</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// Del deletes a key.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">Del</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// commit attempts to apply the txn&#39;s changes to the server.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">commit</span><span class="p">()</span> <span class="o">*</span><span class="nx">v3</span><span class="p">.</span><span class="nx">TxnResponse</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">reset</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>原来它是一个接口，提供了对某个 key 的 <a href="https://en.wikipedia.org/wiki/Create,_read,_update_and_delete">CURD</a> 操作。而实现了 STM 接口的总共有两个类：<a href="https://github.com/etcd-io/etcd/blob/v3.3.10/clientv3/concurrency/stm.go#L170">stm</a> 和 <a href="https://github.com/etcd-io/etcd/blob/v3.3.10/clientv3/concurrency/stm.go#L300">stmSerializable</a>。具体选择哪个实现，则是由我们指定的隔离级别决定的：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -572,34 +569,34 @@ Change: 2019-08-29 09:07:46.461380645 +0800
 </span><span class="lnt">20
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="nf">mkSTM</span><span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Client</span><span class="p">,</span> <span class="nx">opts</span> <span class="o">*</span><span class="nx">stmOptions</span><span class="p">)</span> <span class="nx">STM</span> <span class="p">{</span>
-    <span class="k">switch</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">iso</span> <span class="p">{</span>
-    <span class="k">case</span> <span class="nx">SerializableSnapshot</span><span class="p">:</span>
-        <span class="nx">s</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">stmSerializable</span><span class="p">{</span><span class="o">...</span><span class="p">}</span>
-        <span class="nx">s</span><span class="p">.</span><span class="nx">conflicts</span> <span class="p">=</span> <span class="kd">func</span><span class="p">(</span><span class="p">)</span> <span class="p">[</span><span class="p">]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span><span class="k">return</span> <span class="nb">append</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">.</span><span class="nf">cmps</span><span class="p">(</span><span class="p">)</span><span class="p">,</span> <span class="nx">s</span><span class="p">.</span><span class="nx">wset</span><span class="p">.</span><span class="nf">cmps</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">.</span><span class="nf">first</span><span class="p">(</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">...</span><span class="p">)</span><span class="p">}</span>
-        <span class="k">return</span> <span class="nx">s</span>
-    <span class="k">case</span> <span class="nx">Serializable</span><span class="p">:</span>
-        <span class="nx">s</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">stmSerializable</span><span class="p">{</span><span class="o">...</span><span class="p">}</span>
-        <span class="nx">s</span><span class="p">.</span><span class="nx">conflicts</span> <span class="p">=</span> <span class="kd">func</span><span class="p">(</span><span class="p">)</span> <span class="p">[</span><span class="p">]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">.</span><span class="nf">cmps</span><span class="p">(</span><span class="p">)</span> <span class="p">}</span>
-        <span class="k">return</span> <span class="nx">s</span>
-    <span class="k">case</span> <span class="nx">RepeatableReads</span><span class="p">:</span>
-        <span class="nx">s</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">stm</span><span class="p">{</span><span class="o">...</span><span class="p">}</span>
-        <span class="nx">s</span><span class="p">.</span><span class="nx">conflicts</span> <span class="p">=</span> <span class="kd">func</span><span class="p">(</span><span class="p">)</span> <span class="p">[</span><span class="p">]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">.</span><span class="nf">cmps</span><span class="p">(</span><span class="p">)</span> <span class="p">}</span>
-        <span class="k">return</span> <span class="nx">s</span>
-    <span class="k">case</span> <span class="nx">ReadCommitted</span><span class="p">:</span>
-        <span class="nx">s</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">stm</span><span class="p">{</span><span class="o">...</span><span class="p">}</span>
-        <span class="nx">s</span><span class="p">.</span><span class="nx">conflicts</span> <span class="p">=</span> <span class="kd">func</span><span class="p">(</span><span class="p">)</span> <span class="p">[</span><span class="p">]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span> <span class="k">return</span> <span class="kc">nil</span> <span class="p">}</span>
-        <span class="k">return</span> <span class="nx">s</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">mkSTM</span><span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Client</span><span class="p">,</span> <span class="nx">opts</span> <span class="o">*</span><span class="nx">stmOptions</span><span class="p">)</span> <span class="nx">STM</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">switch</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">iso</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nx">SerializableSnapshot</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">s</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">stmSerializable</span><span class="p">{</span><span class="o">...</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">s</span><span class="p">.</span><span class="nx">conflicts</span> <span class="p">=</span> <span class="kd">func</span><span class="p">()</span> <span class="p">[]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span><span class="k">return</span> <span class="nb">append</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">.</span><span class="nf">cmps</span><span class="p">(),</span> <span class="nx">s</span><span class="p">.</span><span class="nx">wset</span><span class="p">.</span><span class="nf">cmps</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">.</span><span class="nf">first</span><span class="p">()</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">...</span><span class="p">)}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">s</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nx">Serializable</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">s</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">stmSerializable</span><span class="p">{</span><span class="o">...</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">s</span><span class="p">.</span><span class="nx">conflicts</span> <span class="p">=</span> <span class="kd">func</span><span class="p">()</span> <span class="p">[]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">.</span><span class="nf">cmps</span><span class="p">()</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">s</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nx">RepeatableReads</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">s</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">stm</span><span class="p">{</span><span class="o">...</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">s</span><span class="p">.</span><span class="nx">conflicts</span> <span class="p">=</span> <span class="kd">func</span><span class="p">()</span> <span class="p">[]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">.</span><span class="nf">cmps</span><span class="p">()</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">s</span>
+</span></span><span class="line"><span class="cl">    <span class="k">case</span> <span class="nx">ReadCommitted</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">s</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">stm</span><span class="p">{</span><span class="o">...</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">s</span><span class="p">.</span><span class="nx">conflicts</span> <span class="p">=</span> <span class="kd">func</span><span class="p">()</span> <span class="p">[]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span> <span class="k">return</span> <span class="kc">nil</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">s</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>可以看到目前共支持了4种隔离级别，并且不同的隔离级别除了使用不同的 STM 实现外，他们的<code>conflicts</code>函数也不一样，这个我们待会再讲。先挑一个典型的<code>RepeatableReads</code>来看看它的实现：</p>
 <h3 id="repeatablereads">RepeatableReads</h3>
 <p>内部的状态：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -613,26 +610,26 @@ Change: 2019-08-29 09:07:46.461380645 +0800
 </span><span class="lnt">12
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// stm implements repeatable-read software transactional memory over etcd
-</span><span class="c1"></span><span class="kd">type</span> <span class="nx">stm</span> <span class="kd">struct</span> <span class="p">{</span>
-    <span class="o">...</span>
-    <span class="c1">// rset holds read key values and revisions
-</span><span class="c1"></span>    <span class="nx">rset</span> <span class="nx">readSet</span>
-    <span class="c1">// wset holds overwritten keys and their values
-</span><span class="c1"></span>    <span class="nx">wset</span> <span class="nx">writeSet</span>
-    <span class="c1">// getOpts are the opts used for gets
-</span><span class="c1"></span>    <span class="nx">getOpts</span> <span class="p">[</span><span class="p">]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">OpOption</span>
-    <span class="c1">// conflicts computes the current conflicts on the txn
-</span><span class="c1"></span>    <span class="nx">conflicts</span> <span class="kd">func</span><span class="p">(</span><span class="p">)</span> <span class="p">[</span><span class="p">]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// stm implements repeatable-read software transactional memory over etcd
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">stm</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="o">...</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// rset holds read key values and revisions
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">rset</span> <span class="nx">readSet</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// wset holds overwritten keys and their values
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">wset</span> <span class="nx">writeSet</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// getOpts are the opts used for gets
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">getOpts</span> <span class="p">[]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">OpOption</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// conflicts computes the current conflicts on the txn
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">conflicts</span> <span class="kd">func</span><span class="p">()</span> <span class="p">[]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>这里的两个字段<code>readSet</code>和<code>writeSet</code>，底层类型是一个<code>map</code>，用来缓存在当前事务中进行过的读写操作。<code>conflicts</code>是在上面的工厂函数<code>mkSTM</code>中赋值的，用来在事务提交的时候做冲突检测。</p>
 <h4 id="读写">读写</h4>
 <p>事务中的读写调用的是<code>stm.Get</code>和<code>stm.Put</code>函数。简化后的逻辑大概是这样的：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -652,58 +649,58 @@ Change: 2019-08-29 09:07:46.461380645 +0800
 </span><span class="lnt">18
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">stm</span><span class="p">)</span> <span class="nf">Get</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
-    <span class="c1">// 先看看之前有没有写过这个值
-</span><span class="c1"></span>    <span class="k">if</span> <span class="nx">wv</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">wset</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span><span class="p">;</span> <span class="nx">ok</span> <span class="p">{</span>
-       <span class="k">return</span> <span class="nx">wv</span>
-    <span class="p">}</span>
-    <span class="c1">// 再看看有没有读过
-</span><span class="c1"></span>    <span class="k">if</span> <span class="nx">rv</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span><span class="p">;</span> <span class="nx">ok</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="nb">string</span><span class="p">(</span><span class="nx">rv</span><span class="p">.</span><span class="nx">Kvs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="p">.</span><span class="nx">Value</span><span class="p">)</span>
-    <span class="p">}</span>
-    <span class="c1">// 如果都没有，则向etcd发起一次查询请求
-</span><span class="c1"></span>    <span class="nx">rk</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">c</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">ctx</span><span class="p">,</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">s</span><span class="p">.</span><span class="nx">getOpts</span><span class="o">...</span><span class="p">)</span>
-    <span class="c1">// 查询后再缓存进read set
-</span><span class="c1"></span>    <span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="p">=</span> <span class="nx">rk</span>
-    <span class="k">return</span> <span class="nb">string</span><span class="p">(</span><span class="nx">rk</span><span class="p">.</span><span class="nx">Kvs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="p">.</span><span class="nx">Value</span><span class="p">)</span>
-<span class="p">}</span>
-
-<span class="c1">// 写操作都是先写进本地缓存里
-</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">stm</span><span class="p">)</span> <span class="nf">Put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">val</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span> <span class="nx">s</span><span class="p">.</span><span class="nx">wset</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="p">=</span> <span class="nx">val</span> <span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">stm</span><span class="p">)</span> <span class="nf">Get</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 先看看之前有没有写过这个值
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="nx">wv</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">wset</span><span class="p">[</span><span class="nx">key</span><span class="p">];</span> <span class="nx">ok</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">       <span class="k">return</span> <span class="nx">wv</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 再看看有没有读过
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="nx">rv</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">[</span><span class="nx">key</span><span class="p">];</span> <span class="nx">ok</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nb">string</span><span class="p">(</span><span class="nx">rv</span><span class="p">.</span><span class="nx">Kvs</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">Value</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 如果都没有，则向etcd发起一次查询请求
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">rk</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">c</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">ctx</span><span class="p">,</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">s</span><span class="p">.</span><span class="nx">getOpts</span><span class="o">...</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 查询后再缓存进read set
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="p">=</span> <span class="nx">rk</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">string</span><span class="p">(</span><span class="nx">rk</span><span class="p">.</span><span class="nx">Kvs</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">Value</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// 写操作都是先写进本地缓存里
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">stm</span><span class="p">)</span> <span class="nf">Put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">val</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span> <span class="nx">s</span><span class="p">.</span><span class="nx">wset</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="p">=</span> <span class="nx">val</span> <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>对于读请求，先以本地最新的更新为准，如果之前从没处理过这个 key ，则到 etcd 中查询，并缓存下来，这样就可以做到<em>可重复读</em> （RepeatableReads）。对于写操作，都是先写进本地缓存，直到事务提交时才真正写到 etcd 里。</p>
 <h4 id="提交">提交</h4>
 <p>当我们的业务代码调用结束后，stm 就来尝试提交事务了：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
 </span><span class="lnt">5
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">stm</span><span class="p">)</span> <span class="nf">commit</span><span class="p">(</span><span class="p">)</span> <span class="o">*</span><span class="nx">v3</span><span class="p">.</span><span class="nx">TxnResponse</span> <span class="p">{</span>
-    <span class="nx">txnresp</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">client</span><span class="p">.</span><span class="nf">Txn</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">ctx</span><span class="p">)</span><span class="p">.</span><span class="nf">If</span><span class="p">(</span>
-      <span class="nx">s</span><span class="p">.</span><span class="nf">conflicts</span><span class="p">(</span><span class="p">)</span><span class="o">...</span><span class="p">)</span><span class="p">.</span><span class="nf">Then</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">wset</span><span class="p">.</span><span class="nf">puts</span><span class="p">(</span><span class="p">)</span><span class="o">...</span><span class="p">)</span><span class="p">.</span><span class="nf">Commit</span><span class="p">(</span><span class="p">)</span>
-    <span class="o">...</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">stm</span><span class="p">)</span> <span class="nf">commit</span><span class="p">()</span> <span class="o">*</span><span class="nx">v3</span><span class="p">.</span><span class="nx">TxnResponse</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">txnresp</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">client</span><span class="p">.</span><span class="nf">Txn</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">ctx</span><span class="p">).</span><span class="nf">If</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">      <span class="nx">s</span><span class="p">.</span><span class="nf">conflicts</span><span class="p">()</span><span class="o">...</span><span class="p">).</span><span class="nf">Then</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">wset</span><span class="p">.</span><span class="nf">puts</span><span class="p">()</span><span class="o">...</span><span class="p">).</span><span class="nf">Commit</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>提交事务就是利用 etcd 的<code>Txn</code>，把<code>writeSet</code>中的数据写出去，这里要注意的是<code>If</code>中的冲突检测，就是我们在构建的时候指定的<code>conflicts</code>函数：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">s</span><span class="p">.</span><span class="nx">conflicts</span> <span class="p">=</span> <span class="kd">func</span><span class="p">(</span><span class="p">)</span> <span class="p">[</span><span class="p">]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">.</span><span class="nf">cmps</span><span class="p">(</span><span class="p">)</span> <span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">s</span><span class="p">.</span><span class="nx">conflicts</span> <span class="p">=</span> <span class="kd">func</span><span class="p">()</span> <span class="p">[]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">.</span><span class="nf">cmps</span><span class="p">()</span> <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>看来<code>conflicts</code>函数中真正干活的是<code>readSet.cmps()</code>：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span><span class="lnt">3
 </span><span class="lnt">4
@@ -714,16 +711,16 @@ Change: 2019-08-29 09:07:46.461380645 +0800
 </span><span class="lnt">9
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// cmps guards the txn from updates to read set
-</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">rs</span> <span class="nx">readSet</span><span class="p">)</span> <span class="nf">cmps</span><span class="p">(</span><span class="p">)</span> <span class="p">[</span><span class="p">]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span>
-    <span class="nx">cmps</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="p">[</span><span class="p">]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">rs</span><span class="p">)</span><span class="p">)</span>
-    <span class="k">for</span> <span class="nx">k</span><span class="p">,</span> <span class="nx">rk</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">rs</span> <span class="p">{</span>
-        <span class="nx">cmps</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">cmps</span><span class="p">,</span> 
-                 <span class="nx">v3</span><span class="p">.</span><span class="nf">Compare</span><span class="p">(</span><span class="nx">v3</span><span class="p">.</span><span class="nf">ModRevision</span><span class="p">(</span><span class="nx">k</span><span class="p">)</span><span class="p">,</span> <span class="s">&#34;=&#34;</span><span class="p">,</span> <span class="nx">rk</span><span class="p">.</span><span class="nx">Kvs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="p">.</span><span class="nx">ModRevision</span><span class="p">)</span><span class="p">)</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nx">cmps</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// cmps guards the txn from updates to read set
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">rs</span> <span class="nx">readSet</span><span class="p">)</span> <span class="nf">cmps</span><span class="p">()</span> <span class="p">[]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">cmps</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">rs</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="nx">k</span><span class="p">,</span> <span class="nx">rk</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">rs</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">cmps</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">cmps</span><span class="p">,</span> 
+</span></span><span class="line"><span class="cl">                 <span class="nx">v3</span><span class="p">.</span><span class="nf">Compare</span><span class="p">(</span><span class="nx">v3</span><span class="p">.</span><span class="nf">ModRevision</span><span class="p">(</span><span class="nx">k</span><span class="p">),</span> <span class="s">&#34;=&#34;</span><span class="p">,</span> <span class="nx">rk</span><span class="p">.</span><span class="nx">Kvs</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">ModRevision</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">cmps</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>它的逻辑就是构造一堆比较操作符，确保<code>readSet</code>中的数据，在读取进缓存之后再也没有被更改过，即 ModRevision 没有变。</p>
 <p>所以梳理一下，<code>RepeatableReads</code>实现的两个关键点：</p>
@@ -735,18 +732,18 @@ Change: 2019-08-29 09:07:46.461380645 +0800
 <p><code>ReadCommitted</code>跟<code>RepeatableReads</code>的实现类似，唯一不同的是它的冲突检测函数：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt">1
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">s</span><span class="p">.</span><span class="nx">conflicts</span> <span class="p">=</span> <span class="kd">func</span><span class="p">(</span><span class="p">)</span> <span class="p">[</span><span class="p">]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span> <span class="k">return</span> <span class="kc">nil</span> <span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">s</span><span class="p">.</span><span class="nx">conflicts</span> <span class="p">=</span> <span class="kd">func</span><span class="p">()</span> <span class="p">[]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span> <span class="k">return</span> <span class="kc">nil</span> <span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>可以看到，其实<code>ReadCommitted</code>啥冲突也不检测，它只是确保自己读到的是别人已经提交的数据，其他什么保障也没有啊？！</p>
 <h3 id="serializable">Serializable</h3>
 <p><code>Serializable</code>使用的是<code>stmSerializable</code>类，它与上面两个使用的<code>stm</code>一个主要不同点在于，它第一次读完了会把当时的版本号给记录下来，下次再向 etcd 发出读请求的时候会带上这个版本号，表示我就要当时那个版本的数据，这确保了该事务所有的读操作读到的都是<strong>同一时刻</strong>的内容。这就相当于在事务开始时，对 etcd 做了一个快照，这样它读取到的数据就不会受到其他事务的影响，从而达到事务串行化（Serializable）执行的效果。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -761,27 +758,27 @@ Change: 2019-08-29 09:07:46.461380645 +0800
 </span><span class="lnt">13
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">stmSerializable</span><span class="p">)</span> <span class="nf">Get</span><span class="p">(</span><span class="nx">keys</span> <span class="o">...</span><span class="kt">string</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
-    <span class="c1">// ...
-</span><span class="c1"></span>    <span class="nx">firstRead</span> <span class="o">:=</span> <span class="nb">len</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="c1">// 是不是第一次读操作
-</span><span class="c1"></span>    <span class="nx">resp</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">stm</span><span class="p">.</span><span class="nf">fetch</span><span class="p">(</span><span class="nx">keys</span><span class="o">...</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nx">firstRead</span> <span class="p">{</span>
-        <span class="c1">// 记录下first read的版本号，作为后续Get操作的Option参数传进去
-</span><span class="c1"></span>        <span class="nx">s</span><span class="p">.</span><span class="nx">getOpts</span> <span class="p">=</span> <span class="p">[</span><span class="p">]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">OpOption</span><span class="p">{</span>
-            <span class="nx">v3</span><span class="p">.</span><span class="nf">WithRev</span><span class="p">(</span><span class="nx">resp</span><span class="p">.</span><span class="nx">Header</span><span class="p">.</span><span class="nx">Revision</span><span class="p">)</span><span class="p">,</span>
-            <span class="nx">v3</span><span class="p">.</span><span class="nf">WithSerializable</span><span class="p">(</span><span class="p">)</span><span class="p">,</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nf">respToValue</span><span class="p">(</span><span class="nx">resp</span><span class="p">)</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">stmSerializable</span><span class="p">)</span> <span class="nf">Get</span><span class="p">(</span><span class="nx">keys</span> <span class="o">...</span><span class="kt">string</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">firstRead</span> <span class="o">:=</span> <span class="nb">len</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="c1">// 是不是第一次读操作
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">resp</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">stm</span><span class="p">.</span><span class="nf">fetch</span><span class="p">(</span><span class="nx">keys</span><span class="o">...</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">firstRead</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 记录下first read的版本号，作为后续Get操作的Option参数传进去
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nx">s</span><span class="p">.</span><span class="nx">getOpts</span> <span class="p">=</span> <span class="p">[]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">OpOption</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">v3</span><span class="p">.</span><span class="nf">WithRev</span><span class="p">(</span><span class="nx">resp</span><span class="p">.</span><span class="nx">Header</span><span class="p">.</span><span class="nx">Revision</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">v3</span><span class="p">.</span><span class="nf">WithSerializable</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nf">respToValue</span><span class="p">(</span><span class="nx">resp</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>可以看到，在第一个读操作完成后，我们就设置了两个<code>OpOption</code>给后续的读操作使用。第一个 Option 指定了要读的版本号，第二个 Option 是告诉 etcd server 直接把它当前所知道的结果返回，而不需要通过 raft 协议跟别人确认一下它目前的结果是不是最新的，这提升了读取时的性能同时也能满足该场景下的需求（默认不加这个参数时是线性 linearizable 一致性的读取策略，可靠但是慢）。</p>
 <h3 id="serializablesnapshot">SerializableSnapshot</h3>
 <p><code>SerializableSnapshot</code>和<code>Serializable</code>也是类似，不同的是它的隔离级别更严格些：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
-<pre class="chroma"><code><span class="lnt"> 1
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
 </span><span class="lnt"> 3
 </span><span class="lnt"> 4
@@ -795,19 +792,19 @@ Change: 2019-08-29 09:07:46.461380645 +0800
 </span><span class="lnt">12
 </span></code></pre></td>
 <td class="lntd">
-<pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">s</span><span class="p">.</span><span class="nx">conflicts</span> <span class="p">=</span> <span class="kd">func</span><span class="p">(</span><span class="p">)</span> <span class="p">[</span><span class="p">]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nb">append</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">.</span><span class="nf">cmps</span><span class="p">(</span><span class="p">)</span><span class="p">,</span> <span class="nx">s</span><span class="p">.</span><span class="nx">wset</span><span class="p">.</span><span class="nf">cmps</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">.</span><span class="nf">first</span><span class="p">(</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">...</span><span class="p">)</span>
-<span class="p">}</span>
-
-<span class="c1">// cmps returns a cmp list testing no writes have happened past rev
-</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">ws</span> <span class="nx">writeSet</span><span class="p">)</span> <span class="nf">cmps</span><span class="p">(</span><span class="nx">rev</span> <span class="kt">int64</span><span class="p">)</span> <span class="p">[</span><span class="p">]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span>
-    <span class="nx">cmps</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="p">[</span><span class="p">]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">ws</span><span class="p">)</span><span class="p">)</span>
-    <span class="k">for</span> <span class="nx">key</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">ws</span> <span class="p">{</span>
-        <span class="nx">cmps</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">cmps</span><span class="p">,</span> <span class="nx">v3</span><span class="p">.</span><span class="nf">Compare</span><span class="p">(</span><span class="nx">v3</span><span class="p">.</span><span class="nf">ModRevision</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span><span class="p">,</span> <span class="s">&#34;&lt;&#34;</span><span class="p">,</span> <span class="nx">rev</span><span class="p">)</span><span class="p">)</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="nx">cmps</span>
-<span class="p">}</span>
-</code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">s</span><span class="p">.</span><span class="nx">conflicts</span> <span class="p">=</span> <span class="kd">func</span><span class="p">()</span> <span class="p">[]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">append</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">.</span><span class="nf">cmps</span><span class="p">(),</span> <span class="nx">s</span><span class="p">.</span><span class="nx">wset</span><span class="p">.</span><span class="nf">cmps</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">rset</span><span class="p">.</span><span class="nf">first</span><span class="p">()</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">...</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// cmps returns a cmp list testing no writes have happened past rev
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">ws</span> <span class="nx">writeSet</span><span class="p">)</span> <span class="nf">cmps</span><span class="p">(</span><span class="nx">rev</span> <span class="kt">int64</span><span class="p">)</span> <span class="p">[]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">cmps</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="nx">v3</span><span class="p">.</span><span class="nx">Cmp</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">ws</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="nx">key</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">ws</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">cmps</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">cmps</span><span class="p">,</span> <span class="nx">v3</span><span class="p">.</span><span class="nf">Compare</span><span class="p">(</span><span class="nx">v3</span><span class="p">.</span><span class="nf">ModRevision</span><span class="p">(</span><span class="nx">key</span><span class="p">),</span> <span class="s">&#34;&lt;&#34;</span><span class="p">,</span> <span class="nx">rev</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">cmps</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><p>即，它不仅要确保我读取过的数据是最新的，也要确保我要写入的数据也没有被别人更改过，这是最高的隔离级别，也是 stm 的默认隔离级别。在传统数据库中，要实现这样一个隔离级别，一般通过读写锁来限制竞态冲突，而这里则是通过极其严格的冲突检测，稍微有点不一样的地方它就认为发生冲突了，需要 stm 去重试。</p>
 <h3 id="区别汇总">区别汇总</h3>
@@ -848,17 +845,17 @@ Change: 2019-08-29 09:07:46.461380645 +0800
 <h2 id="总结">总结</h2>
 <p>本文以 etcd 为例，介绍了事务隔离机制的实现。当然，这里的实现跟传统关系型数据库（MySQL、PostgreSQL）的实现还是有一定区别的。关系型数据库一般通过给一个 row 增加两个字段（transaction-created, transaction-deleted）来做数据可见性的隔离，再辅以悲观锁来做并发控制，而 etcd 里的实现类似于事务型内存，在一个事务的上下文里先缓存业务代码的所有读、写请求，在真正提交的时候根据不同的隔离级别做冲突检测，从而决定是否重试。可以看到，底层暴露出来的 MVCC 原语具有极强的表达能力，我们在客户端就可以做到原本在服务端才能做到的事情。</p>
 <p>另外，就 etcd 常见的使用场景官方的 SDK 中都有现成的实现（参见 <a href="https://github.com/etcd-io/etcd/tree/v3.3.10/clientv3/concurrency">concurrency</a>, <a href="https://github.com/etcd-io/etcd/tree/v3.3.10/contrib/recipes">contrib/recipes</a>），希望大家不要再重复造轮子了，官方的轮子又大又圆，而自己造的轮子往往都是 ctrl+c、ctrl+v 来的代码，到处是坑。多读读源代码，能让你少趟很多坑。</p>
-<section class="footnotes" role="doc-endnotes">
+<div class="footnotes" role="doc-endnotes">
 <hr>
 <ol>
-<li id="fn:1" role="doc-endnote">
-<p><a href="https://github.com/etcd-io/etcd/tree/v3.3.10">etcd v3.3.10</a> <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<li id="fn:1">
+<p><a href="https://github.com/etcd-io/etcd/tree/v3.3.10">etcd v3.3.10</a>&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
-<li id="fn:2" role="doc-endnote">
-<p><a href="https://github.com/etcd-io/etcd/issues/6518">What is different between Revision, ModRevision and Version?</a> <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<li id="fn:2">
+<p><a href="https://github.com/etcd-io/etcd/issues/6518">What is different between Revision, ModRevision and Version?</a>&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 </ol>
-</section>
+</div>
 
     </div>
 
@@ -867,7 +864,7 @@ Change: 2019-08-29 09:07:46.461380645 +0800
 <div class="post-copyright">
   <p class="copyright-item">
     <span class="item-title">文章作者</span>
-    <span class="item-content"><a href="//blog.betacat.io">喵叔</a></span>
+    <span class="item-content"><a href="https://blog.betacat.io">喵叔</a></span>
   </p>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
@@ -1008,7 +1005,7 @@ Change: 2019-08-29 09:07:46.461380645 +0800
     </a>
 
 
-<a href="//blog.betacat.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
+<a href="https://blog.betacat.io/index.xml" rel="noopener alternate" type="application/rss&#43;xml"
     class="iconfont" title="rss" target="_blank">
     <svg class="icon" viewBox="0 0 1024 1024" version="1.1"
   xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -1033,7 +1030,7 @@ Change: 2019-08-29 09:07:46.461380645 +0800
     &copy;
     
       2018 -
-    2022
+    2023
     <span class="heart">
       
       <i class="iconfont">
@@ -1046,7 +1043,7 @@ Change: 2019-08-29 09:07:46.461380645 +0800
 
       </i>
     </span><span class="author">
-        <a href="//blog.betacat.io">喵叔</a>
+        <a href="https://blog.betacat.io">喵叔</a>
         
       </span></span>
 
