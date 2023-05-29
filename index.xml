@@ -6,7 +6,7 @@
     <description>Recent content on 喵叔没话说</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 10 Feb 2023 22:14:47 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 20 May 2023 21:21:03 +0800</lastBuildDate>
     
         <atom:link href="https://blog.betacat.io/index.xml" rel="self" type="application/rss+xml" />
     
@@ -29,6 +29,251 @@
 &lt;p&gt;随着年纪的增长，越来越多的小朋友开始叫我叔叔，再加上我姓&lt;code&gt;缪(miào)&lt;/code&gt;，因此得名&lt;code&gt;喵叔&lt;/code&gt;。&lt;/p&gt;
 &lt;p&gt;生命不止，折腾不息。对计算机各个领域都怀有强烈的好奇心，先后全职做过 Eclipse 插件、全栈开发、K8S YAML 工程师、Service Mesher，现在沉淀在了底层存储方向（啥时候能自己设计 CPU ？）。&lt;/p&gt;
 &lt;p&gt;你可以通过页面下的社交媒体联系到我。&lt;/p&gt;
+</description>
+      
+    </item>
+    
+    <item>
+      <title>用排队论解释延时与利用率的关系</title>
+      <link>https://blog.betacat.io/post/2023/05/explain-latency-and-utilization-using-queueing-theory/</link>
+      <pubDate>Sat, 20 May 2023 21:21:03 +0800</pubDate>
+      
+      <guid>https://blog.betacat.io/post/2023/05/explain-latency-and-utilization-using-queueing-theory/</guid>
+      
+        <description>&lt;p&gt;从直觉上来看，大家都知道延时与利用率是一个正比关系，但这个关系是线性的，还是指数的？可能就没多少人能说的清楚了。这篇文章，我们只从理论分析入手，试图一步步推导出他俩的关系公式。&lt;/p&gt;
+&lt;h2 id=&#34;1-预备知识&#34;&gt;1. 预备知识&lt;/h2&gt;
+&lt;p&gt;专门研究这个领域的理论叫排队论，它是一种数学和概率论的分支。这次的理论推导，我们并不需要成为数学博士才能掌握，只需要了解其中的两个基本定理，就能得出一个简易可用的模型（感谢&lt;a href=&#34;https://openai.com/product/gpt-4&#34;&gt;GPT4&lt;/a&gt;不厌其烦的答疑，感谢我们生活的时代，技术让知识触手可及）。&lt;/p&gt;
+&lt;h3 id=&#34;11-littles-law&#34;&gt;1.1. Little&amp;rsquo;s Law&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Little%27s_law&#34;&gt;Little&amp;rsquo;s Law&lt;/a&gt; 是排队论中的一个基本定理，这里的 Little 完全是字面意思，取自于作者 John D.C. Little ，跟逻辑意义上的大小无关。它用于描述一个处于&lt;strong&gt;稳定状态&lt;/strong&gt;下的排队系统中请求数、到达率以及平均逗留时间之间的关系：&lt;/p&gt;
+&lt;p&gt;$$L = λW$$&lt;/p&gt;
+&lt;p&gt;其中：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;L：系统中的平均请求数（同时包括正在接受服务的请求和等待服务的请求）。&lt;/li&gt;
+&lt;li&gt;λ：单位时间内到达系统的请求数量，即到达率。&lt;/li&gt;
+&lt;li&gt;W：请求在系统中的平均逗留时间（包括逗留时间和服务时间），即我们感知到的延迟。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;而&lt;em&gt;稳定状态&lt;/em&gt;是指，从长期来看，到达率和服务率之间达到了动态平衡，否则就会出现队列无限增长或者长期排空的现象。从这个前提条件也可以看出，&lt;code&gt;Little&#39;s Law&lt;/code&gt;是一个基于统计平均值的定理，它可能无法反映某些特定个体、或者特定时间点的情况。&lt;/p&gt;
+&lt;h3 id=&#34;12-mm1-模型&#34;&gt;1.2. M/M/1 模型&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&#34;https://zh.wikipedia.org/zh-cn/M/M/1&#34;&gt;M/M/1 模型&lt;/a&gt;是最基本的排队模型，其中的第一个&lt;code&gt;M&lt;/code&gt;（Markovian）表示到达率服从泊松分布（Poisson Distribution），第二个&lt;code&gt;M&lt;/code&gt;表示服务速率也服从泊松分布，而数字&lt;code&gt;1&lt;/code&gt;表示系统只有一个服务器。在这个模型中，平均逗留时间&lt;code&gt;W&lt;/code&gt;可以通过以下公式计算：&lt;/p&gt;
+&lt;p&gt;$$W = \frac{λ} {μ * (μ - λ)}$$&lt;/p&gt;
+&lt;p&gt;这里新出现的参数&lt;code&gt;µ&lt;/code&gt;表示请求完成的速度。&lt;/p&gt;
+&lt;h4 id=&#34;121-推导过程&#34;&gt;1.2.1 推导过程&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;M/M/1 模型&lt;/code&gt;的公式可以用归纳法推导出来：&lt;/p&gt;
+&lt;p&gt;设 X(t) 表示在时间 t 时，系统中的请求数量（包括正在接受服务的请求和正在等待服务的请求）。这是一个连续时间马尔可夫链（CTMC），其中每个状态变换（请求到达或请求离开）都是一个泊松过程。&lt;/p&gt;
+&lt;p&gt;考虑平稳状态下的情形，系统的到达请求数等于离开请求数。对于状态 i（即系统中的请求数量为 i）和 j(= i±1)，平稳状态下的&lt;strong&gt;平衡方程&lt;/strong&gt;如下：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-latex&#34; data-lang=&#34;latex&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;λ * P(X=i) = μ * P(X=j)
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;其中&lt;code&gt;P(X=i)&lt;/code&gt;和&lt;code&gt;P(X=j)&lt;/code&gt;分别代表状态 i 和 j 的概率。这个方程的含义是，系统中达到某个状态的速率（即到达速率 λ 乘以该状态的概率 P(i)）应该等于离开该状态的速率（即离开速率 μ 乘以下一个状态的概率 P(j)）。&lt;/p&gt;
+&lt;p&gt;从不含请求的状态（空闲状态）开始，设空闲状态的概率为 P0，可以递归出如下关系：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-latex&#34; data-lang=&#34;latex&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;λ * P0 = μ * P1
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;μ * P1 = λ * P2
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;λ * P2 = μ * P3
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;以概率 P0 为基准，将上述公式翻转一下，就可以得出每个状态 i 的概率（记为 Pi）：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-latex&#34; data-lang=&#34;latex&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;P1 = (λ/μ) * P0
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;P2 = (λ/μ)&lt;span class=&#34;nb&#34;&gt;^&lt;/span&gt;2 * P0
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;P3 = (λ/μ)&lt;span class=&#34;nb&#34;&gt;^&lt;/span&gt;3 * P0
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;Pi = (λ/μ)&lt;span class=&#34;nb&#34;&gt;^&lt;/span&gt;i * P0
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;由于所有状态的概率之和应该等于 1，即&lt;code&gt;ΣP(X=i) = 1&lt;/code&gt;，我们可以得到：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-latex&#34; data-lang=&#34;latex&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;P0 + (λ/μ) * P0 + (λ/μ)&lt;span class=&#34;nb&#34;&gt;^&lt;/span&gt;2 * P0 + ... = 1
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;上式是一个等比数列求和公式。已知 λ &amp;lt; μ（否则系统将不稳定），所以求和结果为：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-latex&#34; data-lang=&#34;latex&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;P0 × (1 + (λ/μ) + (λ/μ)&lt;span class=&#34;nb&#34;&gt;^&lt;/span&gt;2 + ...) = P0 × (1 / (1 - λ/μ)) = 1
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;上式中&lt;code&gt;1 / (1 - λ/μ)&lt;/code&gt;是等比数列求和的结果，通过求解与 P0 相关的这个等式，我们可以得到：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-latex&#34; data-lang=&#34;latex&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;P0 = 1 - λ/μ = (μ - λ) / μ
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;现在我们已经找到了空闲状态（状态 0）的概率 P0，算是完成了第一个 Milestone。由于我们感兴趣的是系统中的平均请求数&lt;code&gt;L&lt;/code&gt;，而它可以按如下方式计算出来：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-latex&#34; data-lang=&#34;latex&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;L = Σ i * P(X=i) = Σ i * (λ/μ) &lt;span class=&#34;nb&#34;&gt;^&lt;/span&gt; i * P0
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;对于&lt;code&gt;i = 1, 2, 3, ...&lt;/code&gt;求和，得出：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-latex&#34; data-lang=&#34;latex&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;L = P0 * (λ/μ) * (1 + 2*(λ/μ) + 3*(λ/μ)&lt;span class=&#34;nb&#34;&gt;^&lt;/span&gt;2 + ...)
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;上式中括号内是另一个等比数列，求和结果为：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-latex&#34; data-lang=&#34;latex&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;(1 + 2*(λ/μ) + 3*(λ/μ)&lt;span class=&#34;nb&#34;&gt;^&lt;/span&gt;2 + ...) = 1 / (1 - λ/μ)&lt;span class=&#34;nb&#34;&gt;^&lt;/span&gt;2
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;代入 P0 和以上等比数列求和结果，计算 L：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-latex&#34; data-lang=&#34;latex&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;L = P0 * (λ/μ) * (1 / (1 - λ/μ)&lt;span class=&#34;nb&#34;&gt;^&lt;/span&gt;2)
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;已知&lt;code&gt;P0 = (μ - λ) / μ&lt;/code&gt;，代入 L 的表达式：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-latex&#34; data-lang=&#34;latex&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;L = ((μ - λ) / μ) * (λ/μ) * (1 / (1 - λ/μ)&lt;span class=&#34;nb&#34;&gt;^&lt;/span&gt;2)
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;我们可以继续简化 L 的表达式，得到：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-latex&#34; data-lang=&#34;latex&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;L = λ&lt;span class=&#34;nb&#34;&gt;^&lt;/span&gt;2 / (μ * (μ - λ))
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;再结合上面的&lt;code&gt;Little&#39;s Law&lt;/code&gt;（&lt;code&gt;L = λ * W&lt;/code&gt;），我们就可以消掉参数&lt;code&gt;L&lt;/code&gt;：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-latex&#34; data-lang=&#34;latex&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;W = L / λ = λ / (μ * (μ - λ))
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;从而得到&lt;code&gt;W&lt;/code&gt;与到达和离开速率之间的关系，这就是上面的&lt;code&gt;M/M/1 模型&lt;/code&gt;的计算公式。&lt;/p&gt;
+&lt;h3 id=&#34;13-系统利用率&#34;&gt;1.3. 系统利用率&lt;/h3&gt;
+&lt;p&gt;利用率&lt;code&gt;ρ&lt;/code&gt;是一个描述服务器负载情况的指标，比如我们常用 CPU 利用率、网卡利用率来描述服务器某一维度的负载情况。从更广义的角度来说，利用率可以表示为服务器处于繁忙状态的时间与总时间的比例，因此我们得到了平均意义上的利用率的计算公式：&lt;/p&gt;
+&lt;p&gt;$$ρ = \frac{λ} {μ}$$&lt;/p&gt;
+&lt;h2 id=&#34;2-串联起来&#34;&gt;2. 串联起来&lt;/h2&gt;
+&lt;p&gt;铺垫了这么久，终于可以切入正题了 —— 我们感兴趣的是延时与利用率的关系，在&lt;code&gt;M/M/1 模型&lt;/code&gt;中，我们计算出的平均逗留时间&lt;code&gt;W&lt;/code&gt;可以看做平均延时，再将上面的&lt;code&gt;ρ&lt;/code&gt;的表达式代入其中就得到这两者的关系：&lt;/p&gt;
+&lt;p&gt;$$W = \frac{ρ} {μ * (1 - ρ)}$$&lt;/p&gt;
+&lt;p&gt;从这个公式中，我们可以分析到，在给定的处理能力(&lt;code&gt;μ&lt;/code&gt;)下，延时&lt;code&gt;W&lt;/code&gt;确实与利用率&lt;code&gt;ρ&lt;/code&gt;成正比，但这不是一个简单的线性关系，而是分式关系。当利用率&lt;code&gt;ρ&lt;/code&gt;接近 1 时，系统处于饱和状态，延时&lt;code&gt;W&lt;/code&gt;会急速增加。这是因为服务器正在达到其处理能力的极限，任何新到达的请求都可能导致更长的等待时间。&lt;/p&gt;
+&lt;h3 id=&#34;21-感性认识&#34;&gt;2.1. 感性认识&lt;/h3&gt;
+&lt;p&gt;有图有真相，在系统处理能力&lt;code&gt;μ=100&lt;/code&gt;的情况下，我们画出了&lt;code&gt;ρ&lt;/code&gt;和&lt;code&gt;W&lt;/code&gt;的关系图：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.betacat.io/image/2023/05/queue-theory/latency-and-utilization.excel.png&#34; alt=&#34;latency-and-utilization&#34;&gt;&lt;/p&gt;
+&lt;p&gt;并且采样了几个典型的点位：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;利用率&lt;/th&gt;
+&lt;th&gt;延时&lt;/th&gt;
+&lt;th&gt;增长&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;0.2&lt;/td&gt;
+&lt;td&gt;0.0025&lt;/td&gt;
+&lt;td&gt;-&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;0.3&lt;/td&gt;
+&lt;td&gt;0.0042&lt;/td&gt;
+&lt;td&gt;68%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;0.4&lt;/td&gt;
+&lt;td&gt;0.006&lt;/td&gt;
+&lt;td&gt;42%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;0.5&lt;/td&gt;
+&lt;td&gt;0.010&lt;/td&gt;
+&lt;td&gt;66%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;0.6&lt;/td&gt;
+&lt;td&gt;0.015&lt;/td&gt;
+&lt;td&gt;50%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;0.7&lt;/td&gt;
+&lt;td&gt;0.023&lt;/td&gt;
+&lt;td&gt;53%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;0.8&lt;/td&gt;
+&lt;td&gt;0.040&lt;/td&gt;
+&lt;td&gt;73%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;0.9&lt;/td&gt;
+&lt;td&gt;0.090&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;125%&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;0.99&lt;/td&gt;
+&lt;td&gt;0.99&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;1000%&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;可以看到，在&lt;code&gt;0.8&lt;/code&gt;之前，利用率每提升 10 个百分点，延时就会增加 60% 左右，但利用率一旦超过&lt;code&gt;0.8&lt;/code&gt;，延时急剧上升，且增速越来越快。在 0.9~0.99 这个区间内，延时甚至增加了 11 倍。&lt;/p&gt;
+&lt;p&gt;这就是为什么，我们会有个不成文的惯例 —— &lt;strong&gt;系统的各项指标使用率都不要超过 80%&lt;/strong&gt;。&lt;/p&gt;
+&lt;h2 id=&#34;3-总结&#34;&gt;3. 总结&lt;/h2&gt;
+&lt;p&gt;这里虽然我们用了简化版的模型，但实际数据绘制出来的图形跟这个模型是非常接近，大家有兴趣可以自己压测对比一下，&lt;a href=&#34;https://www.youtube.com/watch?v=Hda5tMrLJqc&#34;&gt;油管上有个视频&lt;/a&gt;也得出了相同的结论。&lt;/p&gt;
+&lt;p&gt;另外，从上面推导出来的理论公式，我们也可以扩展出几个与直觉相符的结论：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;系统处理能力（&lt;code&gt;μ&lt;/code&gt;）与延迟（&lt;code&gt;W&lt;/code&gt;）成反比，提升处理能力后，也能线性的减少访问延迟。&lt;/li&gt;
+&lt;li&gt;吞吐与延迟成正比，所以有人认为，&lt;a href=&#34;https://blog.danslimmon.com/2019/02/26/the-latency-throughput-tradeoff-why-fast-services-are-slow-and-vice-versa/&#34;&gt;同一个系统不可能同时满足低延迟和高吞吐的需求&lt;/a&gt;，具体解释如下：
+&lt;ul&gt;
+&lt;li&gt;低延迟意味着低利用率，即希望系统没有排队现象，请求来了就能处理，无需等待。&lt;/li&gt;
+&lt;li&gt;高吞吐意味着高使用率，即希望系统始终有请求排队，这样 CPU 等资源才不会有空闲的时间，始终处于忙碌状态。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
 </description>
       
     </item>
@@ -416,7 +661,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;n&#34;&gt;len&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;-=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;increment&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;c1&#34;&gt;// ...
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;    &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;__pwrite&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;fd&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;offset&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;!=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;    &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nf&#34;&gt;__pwrite&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;fd&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;offset&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;!=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;        &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;errno&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;

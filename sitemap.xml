@@ -9,21 +9,28 @@
   </url>
   
   <url>
-    <loc>https://blog.betacat.io/post/2023/02/how-boltdb-saves-data/</loc>
-    <lastmod>2023-02-27T22:14:47+08:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
     <loc>https://blog.betacat.io/post/</loc>
-    <lastmod>2023-02-27T22:14:47+08:00</lastmod>
+    <lastmod>2023-05-20T21:21:03+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://blog.betacat.io/</loc>
+    <lastmod>2023-05-20T21:21:03+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.betacat.io/post/2023/05/explain-latency-and-utilization-using-queueing-theory/</loc>
+    <lastmod>2023-05-20T21:21:03+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.betacat.io/post/2023/02/how-boltdb-saves-data/</loc>
     <lastmod>2023-02-27T22:14:47+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
