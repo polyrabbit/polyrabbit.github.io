@@ -543,7 +543,7 @@ if (!doNotTrack) {
 <p>另外，从上面推导出来的理论公式，我们也可以扩展出几个与直觉相符的结论：</p>
 <ul>
 <li>系统处理能力（<code>μ</code>）与延迟（<code>W</code>）成反比，提升处理能力后，也能线性的减少访问延迟。</li>
-<li>吞吐与延迟成正比，所以有人认为，<a href="https://blog.danslimmon.com/2019/02/26/the-latency-throughput-tradeoff-why-fast-services-are-slow-and-vice-versa/">同一个系统不可能同时满足低延迟和高吞吐的需求</a>，只能做取舍，具体解释如下：
+<li>吞吐与延迟成正比，所以有人认为，<a href="https://blog.danslimmon.com/2019/02/26/the-latency-throughput-tradeoff-why-fast-services-are-slow-and-vice-versa/">同一个集群不可能同时满足低延迟和高吞吐的需求</a>，只能做取舍，具体解释如下：
 <ul>
 <li>低延迟意味着低利用率，即希望系统没有排队现象，请求来了立即就得到处理，无需等待。</li>
 <li>高吞吐意味着高使用率，即希望系统队列中始终有可用请求，这样各种资源才不会有空闲的时间，系统始终处于忙碌状态。</li>
