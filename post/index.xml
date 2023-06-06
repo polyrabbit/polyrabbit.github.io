@@ -6,7 +6,16 @@
     <description>Recent content in Posts on 喵叔没话说</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 20 May 2023 21:21:03 +0800</lastBuildDate><atom:link href="https://blog.betacat.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 06 Jun 2023 12:17:35 +0800</lastBuildDate><atom:link href="https://blog.betacat.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>让 ChatGPT 帮我们总结 Hacker News</title>
+      <link>https://blog.betacat.io/post/2023/06/summarize-hacker-news-by-chatgpt/</link>
+      <pubDate>Tue, 06 Jun 2023 12:17:35 +0800</pubDate>
+      
+      <guid>https://blog.betacat.io/post/2023/06/summarize-hacker-news-by-chatgpt/</guid>
+      <description>Hacker News 是一个面向全球的技术类新闻聚合社区，由硅谷创业孵化器 Y Combinator 运营。它允许用户自由的提交新闻链接，并通过一定的算法来给新闻排序。可以说，在科技</description>
+    </item>
+    
     <item>
       <title>用排队论解释延时与利用率的关系</title>
       <link>https://blog.betacat.io/post/2023/05/explain-latency-and-utilization-using-queueing-theory/</link>
