@@ -68,7 +68,7 @@
 <meta itemprop="name" content="让 ChatGPT 帮我们总结 Hacker News">
 <meta itemprop="description" content="Hacker News 是一个面向全球的技术类新闻聚合社区，由硅谷创业孵化器 Y Combinator 运营。它允许用户自由的提交新闻链接，并通过一定的算法来给新闻排序。可以说，在科技"><meta itemprop="datePublished" content="2023-06-06T12:17:35+08:00" />
 <meta itemprop="dateModified" content="2023-06-06T12:17:35+08:00" />
-<meta itemprop="wordCount" content="1924">
+<meta itemprop="wordCount" content="1969">
 <meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="让 ChatGPT 帮我们总结 Hacker News"/>
 <meta name="twitter:description" content="Hacker News 是一个面向全球的技术类新闻聚合社区，由硅谷创业孵化器 Y Combinator 运营。它允许用户自由的提交新闻链接，并通过一定的算法来给新闻排序。可以说，在科技"/>
@@ -278,7 +278,7 @@ if (!doNotTrack) {
           2023-06-06
         </time>
         
-        <span class="more-meta"> 约 1924 字 </span>
+        <span class="more-meta"> 约 1969 字 </span>
           <span class="more-meta"> 预计阅读 4 分钟 </span>
 
         
@@ -324,7 +324,7 @@ if (!doNotTrack) {
 <li>❤️：来自 Hacker News 社区的点赞数</li>
 <li>👤：提交此帖子的 Hacker News 用户</li>
 <li>🕘：帖子的提交时间</li>
-<li>💬：帖子的评论数</li>
+<li>💬：帖子的评论数，点击可跳转到对应的评论页</li>
 <li>🔗：新闻来源网站</li>
 <li>📰：生成摘要的模型，目前支持<code>OpenAI</code>, <code>GoogleT5</code> 和 <code>Prefix</code></li>
 </ul>
@@ -414,6 +414,9 @@ if (!doNotTrack) {
 </div><p>可以看到，OpenAI 的<code>temperature</code>参数源自于这里，但其他参数他们的 API 应该都帮我们填了默认值。</p>
 <p>不过遗憾的是，由于模型训练参数不足，摘要效果并不理想，有时甚至无法生成流畅的语句，看来机器学习确实是个大力出奇迹的领域。</p>
 <p>受限于免费的 GitHub Action Runner，其他更多参数的模型要么跑不动，要么每次的推理都是分钟级别，因此 T5-Large 算是一个性能和速度折中的结果，真希望哪天我也能实现 GPU 推理自由。</p>
+<blockquote>
+<p>⭐ Hacker News Digest 完全开源在 GitHub 上，包括代码、运行环境、运行日志等，欢迎 Star: <a href="https://github.com/polyrabbit/hacker-news-digest/">https://github.com/polyrabbit/hacker-news-digest/</a></p>
+</blockquote>
 
     </div>
 

@@ -53,7 +53,7 @@
 &lt;li&gt;❤️：来自 Hacker News 社区的点赞数&lt;/li&gt;
 &lt;li&gt;👤：提交此帖子的 Hacker News 用户&lt;/li&gt;
 &lt;li&gt;🕘：帖子的提交时间&lt;/li&gt;
-&lt;li&gt;💬：帖子的评论数&lt;/li&gt;
+&lt;li&gt;💬：帖子的评论数，点击可跳转到对应的评论页&lt;/li&gt;
 &lt;li&gt;🔗：新闻来源网站&lt;/li&gt;
 &lt;li&gt;📰：生成摘要的模型，目前支持&lt;code&gt;OpenAI&lt;/code&gt;, &lt;code&gt;GoogleT5&lt;/code&gt; 和 &lt;code&gt;Prefix&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
@@ -143,6 +143,9 @@
 &lt;/div&gt;&lt;p&gt;可以看到，OpenAI 的&lt;code&gt;temperature&lt;/code&gt;参数源自于这里，但其他参数他们的 API 应该都帮我们填了默认值。&lt;/p&gt;
 &lt;p&gt;不过遗憾的是，由于模型训练参数不足，摘要效果并不理想，有时甚至无法生成流畅的语句，看来机器学习确实是个大力出奇迹的领域。&lt;/p&gt;
 &lt;p&gt;受限于免费的 GitHub Action Runner，其他更多参数的模型要么跑不动，要么每次的推理都是分钟级别，因此 T5-Large 算是一个性能和速度折中的结果，真希望哪天我也能实现 GPU 推理自由。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;⭐ Hacker News Digest 完全开源在 GitHub 上，包括代码、运行环境、运行日志等，欢迎 Star: &lt;a href=&#34;https://github.com/polyrabbit/hacker-news-digest/&#34;&gt;https://github.com/polyrabbit/hacker-news-digest/&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
 </description>
       
     </item>
