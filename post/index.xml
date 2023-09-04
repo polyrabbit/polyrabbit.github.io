@@ -35,6 +35,15 @@
     </item>
     
     <item>
+      <title>LevelDB 中的花式迭代器们</title>
+      <link>https://blog.betacat.io/post/2022/05/leveldb-iterators/</link>
+      <pubDate>Sat, 21 May 2022 19:08:40 +0800</pubDate>
+      
+      <guid>https://blog.betacat.io/post/2022/05/leveldb-iterators/</guid>
+      <description>迭代器（iterator）是一种常见的设计模式，它屏蔽了复杂的底层结构，给上层抽象出了一个简单的遍历接口。在 LevelDB 中几乎所有的读操作都是通过迭代</description>
+    </item>
+    
+    <item>
       <title>NFS 协议 Mount 过程揭秘</title>
       <link>https://blog.betacat.io/post/2021/10/nfs-mount-protocol/</link>
       <pubDate>Wed, 27 Oct 2021 12:03:16 +0800</pubDate>
