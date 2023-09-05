@@ -68,7 +68,7 @@
 <meta itemprop="name" content="LevelDB 中的花式迭代器们">
 <meta itemprop="description" content="迭代器（iterator）是一种常见的设计模式，它屏蔽了复杂的底层结构，给上层抽象出了一个简单的遍历接口。在 LevelDB 中几乎所有的读操作都是通过迭代"><meta itemprop="datePublished" content="2022-05-21T19:08:40+08:00" />
 <meta itemprop="dateModified" content="2023-09-03T21:32:23+08:00" />
-<meta itemprop="wordCount" content="2548">
+<meta itemprop="wordCount" content="2878">
 <meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="LevelDB 中的花式迭代器们"/>
 <meta name="twitter:description" content="迭代器（iterator）是一种常见的设计模式，它屏蔽了复杂的底层结构，给上层抽象出了一个简单的遍历接口。在 LevelDB 中几乎所有的读操作都是通过迭代"/>
@@ -278,7 +278,7 @@ if (!doNotTrack) {
           2022-05-21
         </time>
         
-        <span class="more-meta"> 约 2548 字 </span>
+        <span class="more-meta"> 约 2878 字 </span>
           <span class="more-meta"> 预计阅读 6 分钟 </span>
 
         
@@ -360,7 +360,7 @@ if (!doNotTrack) {
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><p>用户只需要知道如何使用这个接口就可以了，底层的数据结构会适配这个接口，将内部内容暴露出来。在 LevelDB 中，大概有 9 个类实现了这个接口。</p>
+</div><p>用户只需要知道如何使用这个接口就可以了，底层的数据结构会适配这个接口，将内部内容暴露出来。在 LevelDB 中，大概有 7 个类实现了这个接口。</p>
 <p><img src="/image/2022/05/leveldb-iterator-implementations.png" alt="leveldb-iterator-implementations"></p>
 <h2 id="2-具体实现">2. 具体实现</h2>
 <p>目前的实现中，可以大致分为原子类和组合类：</p>
@@ -373,9 +373,9 @@ if (!doNotTrack) {
 <p><img src="/image/2022/05/leveldb-block-layout.jpg" alt="leveldb-block-layout"></p>
 <p>无论是 Data Block 还是 Index Block，他们的物理布局都是一样的：</p>
 <ul>
-<li>最后的 4 字节记录了这个 Block 中的 Restart Point 个数</li>
-<li>再往上则是一个<strong>有序</strong>的 Restart Point 列表，列表的每一项代表一个 4 字节的 offset，指向具体的 Record</li>
-<li>最上面一层是一堆变长的 key/value 对，其中的 key 采用了前缀压缩法保存。对于 Data Block，value 保存的是用户传入的 value。而 Index Block 的 value 保存的是该 key 对应的 data 的位置，也就是<code>BlockHandle</code></li>
+<li>最后的 4 字节记录了这个 Block 中的 Restart Point 个数。</li>
+<li>再往上则是一个<strong>有序</strong>的 Restart Point 列表，列表的每一项代表一个 4 字节的 offset，指向具体的 Record。</li>
+<li>最上面一层是一堆变长的 key/value 对，其中的 key 采用了前缀压缩法保存。对于 Data Block，value 保存的是用户传入的 value。而 Index Block 的 value 保存的是该 key 对应的 data 的位置，也就是<code>BlockHandle</code>。</li>
 </ul>
 <p>了解了布局，我们重点关注这个迭代器的<a href="https://github.com/google/leveldb/blob/a53934a3ae1244679f812d998a4f16f2c7f309a6/table/block.cc#L165">寻址代码</a>：</p>
 <div class="highlight"><div class="chroma">
@@ -410,10 +410,10 @@ if (!doNotTrack) {
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><p><code>Seek</code>流程分成了两阶段搜索，首先在有序的 Restart Points 数组里面二分搜索找到最后一个小于 <code>target</code> 的 Restart Point，这一阶段的步长单位至少是 4KiB，能快速定位到一个粗略的位置；然后再从该位置线性搜索找到第一个大于等于 <code>target</code> 的 key，这一阶段的步进单位是 key/value 对，因为这里的 key 是前缀压缩保存的，所以线性搜索反而反而更快？</p>
+</div><p><code>Seek</code>流程分成了两阶段搜索，首先在有序的 Restart Points 数组里面二分搜索找到最后一个小于 <code>target</code> 的 Restart Point，这一阶段的步长单位至少是 4KiB，能快速定位到一个粗略的位置；然后再从该位置线性搜索找到第一个大于等于 <code>target</code> 的 key，这一阶段的步进单位是 key/value 对，因为这里的 key 是前缀压缩保存的，所以它只能从前向后边解压缩边搜索？</p>
 <p>其他接口的实现不再赘述。</p>
 <h4 id="213-levelfilenumiterator">2.1.3 LevelFileNumIterator</h4>
-<p>LevelDB 中的大于等于 1 层的文件都是有序且互相不重叠的，所以<code>Version::files_[level]</code>其实是个有序数组。在这个数组之上，LevelDB 封装出了另外一个原子迭代器——LevelFileNumIterator，用来负责对高层文件的迭代。</p>
+<p>LevelDB 中 0 层以上的文件都是有序且互相不重叠的，所以<code>Version::files_[1..6]</code>其实是个有序数组。在这个数组之上，LevelDB 封装出了另外一个原子迭代器——<code>LevelFileNumIterator</code>，用来负责对高层文件之间的迭代。</p>
 <p>它的<code>Seek</code> 方法就是一个常规的二分搜索过程，细节可以<a href="https://github.com/google/leveldb/blob/a53934a3ae1244679f812d998a4f16f2c7f309a6/db/version_set.cc#L86">参考代码</a>。</p>
 <h3 id="22-组合迭代器">2.2 组合迭代器</h3>
 <p>现在，我们具有了读取内存和磁盘文件的能力，就可以将它们花式的组合起来，以适应不同场景下的读取需求。</p>
@@ -453,14 +453,13 @@ if (!doNotTrack) {
 </ol>
 <p>这里用到的两个迭代器都是原子迭代器，即上面的<code>Block::Iter</code>。</p>
 <h5 id="2212-concatenating-iterator">2.2.1.2 Concatenating Iterator</h5>
-<p>而针对每层文件的迭代器<code>ConcatenatingIterator</code>则将<code>index_iter_</code>初始化为了原子迭代器<code>LevelFileNumIterator</code>。由它驱动，按需加载对应的文件，将<code>data_iter_</code>设置为对应的文件迭代器<code>Table Iterator</code>，再按上面的流程递归寻址。</p>
-<p>这里就形成了一个嵌套的迭代器链：</p>
+<p>而针对每层文件的迭代器<code>ConcatenatingIterator</code>则将<code>index_iter_</code>初始化为了原子迭代器<code>LevelFileNumIterator</code>。由它驱动，将多个文件串联起来，按需加载对应的文件，将<code>data_iter_</code>设置为对应的文件迭代器<code>Table Iterator</code>，再按上面的流程递归寻址。这里就形成了一个嵌套的迭代器链：</p>
 <p><img src="/image/2022/05/leveldb-ConcatenatingIterator.drawio.png" alt="leveldb-concatenating-iterator"></p>
 <h4 id="222-merging-iterator">2.2.2 Merging Iterator</h4>
-<p>MergingIterator 顾名思义就是一个将多组局部有序的迭代器合并成一个全局有序的迭代器。它的主要用途：</p>
+<p>MergingIterator 顾名思义就是一个将多组局部有序、且可能重叠的迭代器合并成一个全局有序的迭代器。它的主要用途：</p>
 <ol>
 <li>Compaction——对上下两层文件进行合并，输出一个有序的新文件</li>
-<li>DBIter——对全局所有 key/value 存储点进行合并，包括 MemTable/Immutable MemTable/Level 0/Level 1~7 SST，对用户输出一个全局有序的迭代器</li>
+<li>DBIter——对全局所有 key/value 存储点进行合并，数据源包括 MemTable/Immutable MemTable/Level 0/Level 1~7 SST，对用户输出一个全局有序的迭代器</li>
 </ol>
 <p>有点算法基础的同学都知道，MergingIterator 的实现就是一个归并排序，只不过这里是个多路归并——每次从迭代器列表里去最小值对外输出即可：</p>
 <div class="highlight"><div class="chroma">
@@ -513,10 +512,10 @@ if (!doNotTrack) {
 </div>
 </div><p>目前的<code>FindSmallest</code>使用了暴力的遍历法，但 RocksDB 里面已经改成了最小堆来降低时间复杂度。</p>
 <h4 id="223-dbiter">2.2.3 DBIter</h4>
-<p>DBIter 是个集大成者，用户可以调用通过它来遍历整个数据库的 key/value 对，本质上它是对底层<code>MergingIterator</code>输出的过滤：</p>
+<p>DBIter 是个集大成者，直面用户。用户可以调用通过它来遍历整个数据库的 key/value 对，本质上它是对底层<code>MergingIterator</code>输出的过滤：</p>
 <ul>
-<li><code>sequence_</code>字段保证了它不会读到这次事务开始后的变更，实现了一个 Snapshot Read</li>
-<li><code>FindNextUserEntry/FindPrevUserEntry</code>方法用来跳过当前 iter 所指向的删除记录，或者被新值覆盖过的旧记录</li>
+<li><code>sequence_</code>字段保证了它不会读到这次事务开始后的变更，实现了一个 Snapshot Read。</li>
+<li><code>FindNextUserEntry/FindPrevUserEntry</code>方法用来跳过当前 iter 所指向的删除记录，或者被新值覆盖过的旧记录。</li>
 </ul>
 <h5 id="2231-internalkey">2.2.3.1 InternalKey</h5>
 <p>LevelDB 中物理存放的 key(<code>InternalKey</code>) 并不是用户指定的 key(<code>UserKey</code>)，它在 UserKey 后面添加了 9 字节内容，用来标识这次变更的逻辑时间戳（Sequence Number）和类型（值类型或者标记删除的墓碑），结构布局如下：</p>
@@ -558,9 +557,16 @@ if (!doNotTrack) {
 </div>
 </div><p>当初始化一个 sequence 为<code>3</code>的 DBIter 后，我们只会遍历到(<code>key_c:4:0</code>)这条记录，因为：</p>
 <ul>
-<li>对<code>key_a</code>来说，它的两次操作 sequence 5/6 比 DBIter 初始化时的 3 更新，因此他们对本次遍历不可见</li>
-<li>对<code>key_b</code>来说，它的两次操作（1/2）虽然早于 DBIter 开始的时间，但它的最后一次操作是删除，因此也应该对用户不可见</li>
-<li>对<code>key_c</code>来说，取最新的变更<code>key_c:4:0</code>对应的值返回用户</li>
+<li>对<code>key_a</code>来说，它的两次操作 sequence 5/6 比 DBIter 初始化时的 3 更新，因此他们对本次遍历不可见。</li>
+<li>对<code>key_b</code>来说，它的两次操作（1/2）虽然早于 DBIter 开始的时间，但它的最后一次操作是删除，因此也应该对用户不可见。</li>
+<li>对<code>key_c</code>来说，取最新的变更<code>key_c:4:0</code>对应的值返回用户。</li>
+</ul>
+<p>这样过滤后，就将 LevelDB 内部的实现细节屏蔽了，而给用户返回了一个最新且一致的结果。</p>
+<h4 id="224-其他迭代器">2.2.4 其他迭代器</h4>
+<p>除了上面几个比较重要的迭代器外，LevelDB 还封装了几个辅助迭代器：</p>
+<ul>
+<li><code>EmptyIterator</code>: 一个携带错误状态的空迭代器。作者估计是为了统一上层的错误处理的逻辑，但我觉得更清晰的错误处理方法，是在迭代器的工厂方法里直接将错误返回出来，而不是等到在使用的时候，才发现这个迭代器在一开始创建的时候就失败了。</li>
+<li><code>IteratorWrapper</code>: 更好的名字似乎应该叫 CachedIterator？因为它将底层迭代器的 key() 和 valid() 方法的结果缓存了下来，这样既能减少对虚函数的调用（底层迭代器是个接口），同时又增加了 cache 的局部性（不需要在实例和虚表之间跳来跳去）。</li>
 </ul>
 <h2 id="总结">总结</h2>
 <p>本文自底向上的简要介绍了 LevelDB 中的各种迭代器，并由此引出了相关的数据结构，尽可能的覆盖了 LevelDB 中的各种概念，希望能让读者对 LevelDB 有个更全面的了解。</p>
