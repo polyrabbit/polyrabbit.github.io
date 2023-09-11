@@ -2909,10 +2909,10 @@
 &lt;p&gt;好了，说了这么多的原子操作，我们先来看看什么样的操作能被叫做&lt;em&gt;原子操作&lt;/em&gt; 。&lt;/p&gt;
 &lt;h3 id=&#34;原子性&#34;&gt;原子性&lt;/h3&gt;
 &lt;p&gt;一个或者多个操作在 CPU 执行的过程中不被中断的特性，称为&lt;em&gt;原子性（atomicity）&lt;/em&gt; 。这些操作对外表现成一个不可分割的整体，他们要么都执行，要么都不执行，外界不会看到他们只执行到一半的状态。而在现实世界中，CPU 不可能不中断的执行一系列操作，但如果我们在执行多个操作时，能让他们的&lt;strong&gt;中间状态对外不可见&lt;/strong&gt;，那我们就可以宣称他们拥有了&amp;quot;不可分割”的原子性。&lt;/p&gt;
-&lt;p&gt;有些朋友可能不知道，在 Go（甚至是大部分语言）中，一条普通的赋值语句其实不是一个原子操作。例如，在32位机器上写&lt;code&gt;int64&lt;/code&gt;类型的变量就会有中间状态，因为它会被拆成两次写操作（&lt;code&gt;MOV&lt;/code&gt;）——写低 32 位和写高 32 位，如下图所示：&lt;/p&gt;
+&lt;p&gt;有些同学可能不知道，在 Go（甚至是大部分语言）中，一条普通的赋值语句其实不是一个原子操作。例如，在32位机器上写&lt;code&gt;int64&lt;/code&gt;类型的变量就会有中间状态，因为它会被拆成两次写操作（&lt;code&gt;MOV&lt;/code&gt;）——写低 32 位和写高 32 位，如下图所示：&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://blog.betacat.io/image/golang-atomic-value/64-bit-write.drawio.png&#34; alt=&#34;64位变量的赋值操作&#34;&gt;&lt;/p&gt;
 &lt;p&gt;如果一个线程刚写完低32位，还没来得及写高32位时，另一个线程读取了这个变量，那它得到的就是一个毫无逻辑的中间变量，这很有可能使我们的程序出现诡异的 Bug。&lt;/p&gt;
-&lt;p&gt;这还只是一个基础类型，如果我们对一个结构体进行赋值，那它出现并发问题的概率就更高了。很可能写线程刚写完一小半的字段，读线程就来读取这个变量，那么就只能读到仅修改了一部分的值。这显然破坏了变量的完整性，读出来的值也是完全错误的。&lt;/p&gt;
+&lt;p&gt;这还只是一个基础类型，如果我们对一个大小超过 &lt;a href=&#34;https://lemire.me/blog/2022/06/06/data-structure-size-and-cache-line-accesses/&#34;&gt;Cache Line&lt;/a&gt; 的结构体进行赋值，那它出现并发问题的概率就更高了。很可能写线程刚写完一小半的字段，读线程就来读取这个变量，那么就只能读到仅修改了一部分的值。这显然破坏了变量的完整性，读出来的值也是完全错误的。&lt;/p&gt;
 &lt;p&gt;面对这种多线程下变量的读写问题，我们的主角——&lt;code&gt;atomic.Value&lt;/code&gt;登场了，它使得我们可以不依赖于不保证兼容性的&lt;code&gt;unsafe.Pointer&lt;/code&gt;类型，同时又能将任意数据类型的读写操作封装成原子性操作（让中间状态对外不可见）。&lt;/p&gt;
 &lt;h2 id=&#34;使用姿势&#34;&gt;使用姿势&lt;/h2&gt;
 &lt;p&gt;&lt;code&gt;atomic.Value&lt;/code&gt;类型对外暴露的方法就两个：&lt;/p&gt;
