@@ -10,14 +10,21 @@
   
   <url>
     <loc>https://blog.betacat.io/post/</loc>
-    <lastmod>2023-09-11T21:32:23+08:00</lastmod>
+    <lastmod>2023-09-23T23:48:20+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://blog.betacat.io/</loc>
-    <lastmod>2023-09-11T21:32:23+08:00</lastmod>
+    <lastmod>2023-09-23T23:48:20+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.betacat.io/post/2023/09/group-gdb-backtrace/</loc>
+    <lastmod>2023-09-23T23:48:20+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>

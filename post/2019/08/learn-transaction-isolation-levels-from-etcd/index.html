@@ -68,7 +68,7 @@
 <meta itemprop="name" content="跟 etcd 学习数据库中事务隔离的实现">
 <meta itemprop="description" content="众所周知，etcd 的数据模型是建立在 MVCC 基础上的（如果你不知，那一定是没看过我的这篇博客🙃）。在当前的实现中1，etcd 不仅提供了原子性的事务"><meta itemprop="datePublished" content="2019-08-29T10:17:24+08:00" />
 <meta itemprop="dateModified" content="2020-01-03T22:56:24+08:00" />
-<meta itemprop="wordCount" content="5248">
+<meta itemprop="wordCount" content="5249">
 <meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="跟 etcd 学习数据库中事务隔离的实现"/>
 <meta name="twitter:description" content="众所周知，etcd 的数据模型是建立在 MVCC 基础上的（如果你不知，那一定是没看过我的这篇博客🙃）。在当前的实现中1，etcd 不仅提供了原子性的事务"/>
@@ -278,7 +278,7 @@ if (!doNotTrack) {
           2019-08-29
         </time>
         
-        <span class="more-meta"> 约 5248 字 </span>
+        <span class="more-meta"> 约 5249 字 </span>
           <span class="more-meta"> 预计阅读 11 分钟 </span>
 
         
@@ -837,7 +837,7 @@ if (!doNotTrack) {
 <tr>
 <td>SerializableSnapshot</td>
 <td>FIRST_REV</td>
-<td>readSet: MOD_REV == FIRST_REV<!-- raw HTML omitted -->writeSet: MOD_REV &lt; FIRST_REV</td>
+<td>readSet: MOD_REV == FIRST_REV<br />writeSet: MOD_REV &lt; FIRST_REV</td>
 </tr>
 </tbody>
 </table>

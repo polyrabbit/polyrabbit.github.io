@@ -320,7 +320,7 @@ if (!doNotTrack) {
     
     <div class="post-content">
       <p><a href="https://en.wikipedia.org/wiki/Raft_(computer_science)">Raft</a>是近年来比较流行的一个一致性算法。它的原理比较容易理解，网上也有很多相关的介绍，因此这里我就不再啰嗦原理了，而是打算以raft在etcd中的实现<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>为例，从工程的角度来讲讲这个算法的一个具体实现，毕竟了解原理只算是“纸上谈兵”，离真正能把它应用起来还有很长一段距离。</p>
-<!-- raw HTML omitted -->
+<!-- The authors claim it is the most widely used Raft library in production. -->
 <p>如果你还不熟悉raft，这个经典的<a href="http://thesecretlivesofdata.com/raft/">动画演示</a>、<a href="https://raft.github.io/raft.pdf">它的论文</a>以及<a href="https://www.youtube.com/watch?v=YbZ3zDzDnrw">这个lecture</a>可能会对你有帮助。或者你也可以直接观看<strong>下面的视频</strong>，这是我作的一次技术分享，讲的是<a href="https://reading.developerlearning.cn/reading/32-2019-03-02-etcd-raft/">etcd中raft模块的源码解析</a>。说句题外话，很多Conference和Meetup都会把视频录像上传到YouTube上，YouTube简直就是程序员的衣柜，每逛一次都有新收获。
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">

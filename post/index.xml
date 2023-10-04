@@ -6,7 +6,16 @@
     <description>Recent content in Posts on 喵叔没话说</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 06 Jun 2023 12:17:35 +0800</lastBuildDate><atom:link href="https://blog.betacat.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 23 Sep 2023 23:48:20 +0800</lastBuildDate><atom:link href="https://blog.betacat.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>怎样查看一千个线程的 Stack</title>
+      <link>https://blog.betacat.io/post/2023/09/group-gdb-backtrace/</link>
+      <pubDate>Sat, 23 Sep 2023 23:48:20 +0800</pubDate>
+      
+      <guid>https://blog.betacat.io/post/2023/09/group-gdb-backtrace/</guid>
+      <description>注意看，这个男人叫小帅，他正在排查一个偶发的 coredump 问题。只见他熟练的 gdb -c core elf 打开 core 文件，bt 了一下，发现 core 在了 absl::btree::find 方法中。按理说，Abseil 库久</description>
+    </item>
+    
     <item>
       <title>让 ChatGPT 帮我们总结 Hacker News</title>
       <link>https://blog.betacat.io/post/2023/06/summarize-hacker-news-by-chatgpt/</link>

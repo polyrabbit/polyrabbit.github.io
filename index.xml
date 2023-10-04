@@ -6,7 +6,7 @@
     <description>Recent content on 喵叔没话说</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 06 Jun 2023 12:17:35 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 23 Sep 2023 23:48:20 +0800</lastBuildDate>
     
         <atom:link href="https://blog.betacat.io/index.xml" rel="self" type="application/rss+xml" />
     
@@ -22,13 +22,84 @@
 &lt;p&gt;&lt;img src=&#34;https://blog.betacat.io/image/information-is-power.jpg&#34; alt=&#34;Information is power&#34;&gt;&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;Information is power. But like all power, there are those who want to keep it for themselves.&lt;/p&gt;
-&lt;p&gt;—&lt;!-- raw HTML omitted --&gt;Aaron Swartz&lt;!-- raw HTML omitted --&gt;&lt;/p&gt;
+&lt;p&gt;—&lt;cite&gt;Aaron Swartz&lt;/cite&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;计算机行业更新换代太快，新技术层出不穷。在追逐热点的过程中，我们都会有一些茅塞顿开的时候（&lt;a href=&#34;https://en.wikipedia.org/wiki/Eureka_effect&#34;&gt;Aha! moment&lt;/a&gt;）。这个博客的目的就是将我的这些时刻分享出来，希望能帮助大家快速理解某一个概念。因此，这里的文章都将以浅显易懂为目标，从初学者角度考虑，尽量做到让人看了就有种&lt;em&gt;原来是这样&lt;/em&gt;的感觉 🎉。&lt;/p&gt;
 &lt;h1 id=&#34;关于我&#34;&gt;关于我&lt;/h1&gt;
 &lt;p&gt;随着年纪的增长，越来越多的小朋友开始叫我叔叔，再加上我姓&lt;code&gt;缪(miào)&lt;/code&gt;，因此得名&lt;code&gt;喵叔&lt;/code&gt;。&lt;/p&gt;
 &lt;p&gt;生命不止，折腾不息。对计算机各个领域都怀有强烈的好奇心，先后全职做过 Eclipse 插件、全栈开发、K8S YAML 工程师、Service Mesher，现在沉淀在了底层存储方向（啥时候能自己设计 CPU ？）。&lt;/p&gt;
 &lt;p&gt;你可以通过页面下的社交媒体联系到我。&lt;/p&gt;
+</description>
+      
+    </item>
+    
+    <item>
+      <title>怎样查看一千个线程的 Stack</title>
+      <link>https://blog.betacat.io/post/2023/09/group-gdb-backtrace/</link>
+      <pubDate>Sat, 23 Sep 2023 23:48:20 +0800</pubDate>
+      
+      <guid>https://blog.betacat.io/post/2023/09/group-gdb-backtrace/</guid>
+      
+        <description>&lt;p&gt;注意看，这个男人叫小帅，他正在排查一个偶发的 coredump 问题。只见他熟练的 &lt;code&gt;gdb -c core elf&lt;/code&gt; 打开 core 文件，&lt;code&gt;bt&lt;/code&gt; 了一下，发现 core 在了 &lt;code&gt;absl::btree::find&lt;/code&gt; 方法中。按理说，&lt;a href=&#34;https://github.com/abseil/abseil-cpp&#34;&gt;Abseil&lt;/a&gt; 库久经考验，core 在了他们代码里面，大概率是上层的业务代码出现了并发行为。&lt;/p&gt;
+&lt;p&gt;带着这个猜想，小帅便想看看其他线程的栈，希望能找到一个活跃在事故代码附近的堆栈。于是，他 &lt;code&gt;thread all apply bt&lt;/code&gt; 了一下，但发现输出足足有一万多行，其中包含了 1076 个线程的堆栈。想要靠肉眼找出可疑的栈，小帅的眼睛怕是要瞎&amp;hellip;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;不要问为什么一个服务会开一千多个线程，代码复杂度把控不住，每个模块都往越来越臃肿的方向演进，最终合力形成一座屎山。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;1-上工具&#34;&gt;1. 上工具&lt;/h2&gt;
+&lt;p&gt;简单的扫描后发现，这一千多个堆栈中包含大量的重复内容：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-prolog&#34; data-lang=&#34;prolog&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;nv&#34;&gt;Thread&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;64&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;Thread&lt;/span&gt; &lt;span class=&#34;mh&#34;&gt;0x7f64219ac700&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;LWP&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;172&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;s&#34;&gt;#&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;  &lt;span class=&#34;s&#34;&gt;pthread_cond_wait@@&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;GLIBC_2&lt;/span&gt;&lt;span class=&#34;mf&#34;&gt;.3.2&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;at&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;..&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;/&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;sysdeps&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;/&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;unix&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;/&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;sysv&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;/&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;linux&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;/&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;x86_64&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;/&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;pthread_cond_wait&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;S&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;185&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;s&#34;&gt;#&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;  &lt;span class=&#34;mh&#34;&gt;0x00005629f8ef64d8&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;in&lt;/span&gt; &lt;span class=&#34;nv&#34;&gt;ConditionVariable&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;Wait&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;this&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;this@entry&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;mh&#34;&gt;0x7f644cc05170&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;at&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;cond&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nn&#34;&gt;cc&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;40&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;s&#34;&gt;#&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;  &lt;span class=&#34;mh&#34;&gt;0x00005629f8f57105&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;in&lt;/span&gt; &lt;span class=&#34;nv&#34;&gt;BaseThreadPool&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;GetPendingTask&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;this&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;this@entry&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;mh&#34;&gt;0x7f644cc05140&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;tasks&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;tasks@entry&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;mh&#34;&gt;0x7f64219a7d30&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;at&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;base_thread_pool&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nn&#34;&gt;cc&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;48&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;也就是说，大部分线程处于非活跃状态，在等待唤醒，他们的堆栈都是类似的。如果能把这些重复堆栈 group 到一起，折叠成一个，那就能去除不少干扰信息了。但这些重复的堆栈由于入参的不同，他们字面上的字符串并不相等，所以简单的 &lt;code&gt;sort | uniq -c&lt;/code&gt; 组合已经解决不了这个需求了，这个时候，只能自己动手写 python 了。&lt;/p&gt;
+&lt;p&gt;在 GPT &lt;del&gt;这个废物&lt;/del&gt;的帮助下，小帅很快写出了&lt;a href=&#34;https://gist.github.com/polyrabbit/f8c92346650d753115472b28c30b1cd5&#34;&gt;gdb_bt_group.py&lt;/a&gt;工具：&lt;/p&gt;
+&lt;div style=&#39;max-height: 20rem; overflow: auto;&#39;&gt;
+&lt;script src=&#34;https://gist.github.com/polyrabbit/f8c92346650d753115472b28c30b1cd5.js&#34;&gt;&lt;/script&gt;
+&lt;/div&gt;
+&lt;p&gt;它的工作原理很简单——将堆栈的第二列，即所有栈帧 PC 寄存器的组合作为栈的唯一标识字段。有了这个抽象的标识之后，工具就可以将相似的堆栈聚合到一起，并输出统计信息了：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-prolog&#34; data-lang=&#34;prolog&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;nv&#34;&gt;Thread&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;64&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;Thread&lt;/span&gt; &lt;span class=&#34;mh&#34;&gt;0x7f64219ac700&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;LWP&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;172&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;:&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;Total&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;320&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;s&#34;&gt;#&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;  &lt;span class=&#34;s&#34;&gt;pthread_cond_wait@@&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;GLIBC_2&lt;/span&gt;&lt;span class=&#34;mf&#34;&gt;.3.2&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;at&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;..&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;/&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;sysdeps&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;/&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;unix&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;/&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;sysv&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;/&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;linux&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;/&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;x86_64&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;/&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;pthread_cond_wait&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;S&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;185&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;s&#34;&gt;#&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;1&lt;/span&gt;  &lt;span class=&#34;mh&#34;&gt;0x00005629f8ef64d8&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;in&lt;/span&gt; &lt;span class=&#34;nv&#34;&gt;ConditionVariable&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;Wait&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;this&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;this@entry&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;mh&#34;&gt;0x7f644cc05170&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;at&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;cond&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nn&#34;&gt;cc&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;40&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;s&#34;&gt;#&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;2&lt;/span&gt;  &lt;span class=&#34;mh&#34;&gt;0x00005629f8f57105&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;in&lt;/span&gt; &lt;span class=&#34;nv&#34;&gt;BaseThreadPool&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;GetPendingTask&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;this&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;this@entry&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;mh&#34;&gt;0x7f644cc05140&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;tasks&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s&#34;&gt;tasks@entry&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;mh&#34;&gt;0x7f64219a7d30&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;at&lt;/span&gt; &lt;span class=&#34;s&#34;&gt;base_thread_pool&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nn&#34;&gt;cc&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;mi&#34;&gt;48&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;这里的 &lt;code&gt;[Total 320]&lt;/code&gt; 代表当前堆栈聚合了 320 个线程，他们都有相同的堆栈，只需要看一个就够了。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;11-用法&#34;&gt;1.1 用法&lt;/h3&gt;
+&lt;p&gt;将 gdb 的 bt 信息导出到文本后，用工具读取这个文本，它就能输出聚合后的堆栈信息了：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;gdb -c core elf -batch -ex &lt;span class=&#34;s1&#34;&gt;&amp;#39;thread apply all bt&amp;#39;&lt;/span&gt; &amp;gt; back_trace.txt
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;gdb_bt_group.py back_trace.txt &amp;gt; grouped_back_tract.txt&lt;span class=&#34;sb&#34;&gt;`&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;h2 id=&#34;2-结论&#34;&gt;2. 结论&lt;/h2&gt;
+&lt;p&gt;经过工具聚合后，原来的 1076 个堆栈压缩成了 28 个堆栈。小帅仔细的检查了下其余堆栈，果然发现了一个可疑线程，它正在执行同一个 &lt;code&gt;btree&lt;/code&gt; 容器的 &lt;code&gt;emplace&lt;/code&gt; 方法，但外部只加了个读锁（估计代码抄错了？）。&lt;/p&gt;
+&lt;p&gt;在这个工具的帮助下，小帅后续又成功的帮同事排查了几个多线程并发造成的 coredump 问题。所以，如果你也遇到了类似的问题，可以试试这个工具——多看几个堆栈，运气好的话，说不定就能找到可以线程呢~&lt;/p&gt;
+&lt;p&gt;另外，小帅计划，等有空了可以把这段 python 脚本封装成一个 &lt;a href=&#34;https://sourceware.org/gdb/onlinedocs/gdb/CLI-Commands-In-Python.html&#34;&gt;gdb.Command&lt;/a&gt;，比如叫 &lt;code&gt;grouped_bt&lt;/code&gt;？这样就可以直接在 gdb 里面调用，而不需要执行额外的导出再读取的操作了。&lt;/p&gt;
 </description>
       
     </item>
@@ -2665,7 +2736,7 @@
 &lt;tr&gt;
 &lt;td&gt;SerializableSnapshot&lt;/td&gt;
 &lt;td&gt;FIRST_REV&lt;/td&gt;
-&lt;td&gt;readSet: MOD_REV == FIRST_REV&lt;!-- raw HTML omitted --&gt;writeSet: MOD_REV &amp;lt; FIRST_REV&lt;/td&gt;
+&lt;td&gt;readSet: MOD_REV == FIRST_REV&lt;br /&gt;writeSet: MOD_REV &amp;lt; FIRST_REV&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
@@ -3240,7 +3311,7 @@
 &lt;p&gt;举个栗子，某些ARM Cortex-M处理器（多用于嵌入式系统）具有&lt;a href=&#34;https://developer.arm.com/docs/ddi0337/e/memory-protection-unit/about-the-mpu&#34;&gt;内存保护单元&lt;/a&gt;（MPU），它允许你定义少量具有不同访问权限（例如无访问、只读、读写）的内存区域。在每次发生内存访问的时候，MPU都会确保该地址所在的区域具有合法的访问权限，否则将触发异常。同时在发生进程切换的时候，操作系统也会及时的更新相应区域及其访问权限，这样就确保了每个进程只能访问自己的地址空间，从而达到隔离进程的作用。&lt;/p&gt;
 &lt;p&gt;另一方面，在x86平台上，硬件支持两种不同的内存保护方式：&lt;a href=&#34;https://en.wikipedia.org/wiki/X86_memory_segmentation&#34;&gt;分段&lt;/a&gt;（segmentation）和&lt;a href=&#34;https://en.wikipedia.org/wiki/Virtual_memory#Paged_virtual_memory&#34;&gt;分页&lt;/a&gt;（paging）。&lt;/p&gt;
 &lt;h1 id=&#34;分段&#34;&gt;分段&lt;/h1&gt;
-&lt;p&gt;分段技术早在1978年就已经出现，起初是为了增加CPU的寻址空间。当时的情况是CPU只使用16位地址，这将可寻址空间限制为64KiB（2&lt;!-- raw HTML omitted --&gt;16&lt;!-- raw HTML omitted --&gt;）。为了访问到更高的内存，一些段寄存器被引入进来，每个段寄存器都包含一个偏移地址。CPU将这些偏移地址作为基地址，加到应用程序要访问的内存地址上，这样它就可以使用到高达1MiB的内存空间了。&lt;/p&gt;
+&lt;p&gt;分段技术早在1978年就已经出现，起初是为了增加CPU的寻址空间。当时的情况是CPU只使用16位地址，这将可寻址空间限制为64KiB（2&lt;sup&gt;16&lt;/sup&gt;）。为了访问到更高的内存，一些段寄存器被引入进来，每个段寄存器都包含一个偏移地址。CPU将这些偏移地址作为基地址，加到应用程序要访问的内存地址上，这样它就可以使用到高达1MiB的内存空间了。&lt;/p&gt;
 &lt;p&gt;段寄存器有好几种，CPU会根据不同的内存访问请求而选择不同的段寄存器：对于取指令请求，代码段寄存器&lt;code&gt;CS&lt;/code&gt;会被使用；堆栈操作（push/pop）会用到堆栈段寄存器&lt;code&gt;SS&lt;/code&gt;；其他操作则使用数据段&lt;code&gt;DS&lt;/code&gt;或额外的段&lt;code&gt;ES&lt;/code&gt;，后来又添加了两个可以自由使用的段寄存器&lt;code&gt;FS&lt;/code&gt;和&lt;code&gt;GS&lt;/code&gt;。&lt;/p&gt;
 &lt;p&gt;在分段技术的第一版实现中，段寄存器直接存放了段偏移量，并且没有访问控制的检查。后来，随着&lt;a href=&#34;https://en.wikipedia.org/wiki/X86_memory_segmentation#Protected_mode&#34;&gt;保护模式&lt;/a&gt;的引入，这种情况发生了改变。当CPU以这种模式运行时，段寄存器中包含了一个局部或全局&lt;a href=&#34;https://en.wikipedia.org/wiki/Global_Descriptor_Table&#34;&gt;描述符表&lt;/a&gt;中的索引，该表除了包含偏移地址外，还包含段大小和访问权限。通过为每个进程加载单独的描述符表，操作系统就能将进程的内存访问限制到它自己的地址空间内，从而达到隔离进程的作用。&lt;/p&gt;
 &lt;p&gt;通过在实际访问发生之前修改要访问的目标地址，分段技术实际上已经在使用一种现在广为使用的技术：虚拟内存。&lt;/p&gt;
@@ -4104,7 +4175,7 @@
       <guid>https://blog.betacat.io/post/raft-implementation-in-etcd/</guid>
       
         <description>&lt;p&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Raft_(computer_science)&#34;&gt;Raft&lt;/a&gt;是近年来比较流行的一个一致性算法。它的原理比较容易理解，网上也有很多相关的介绍，因此这里我就不再啰嗦原理了，而是打算以raft在etcd中的实现&lt;sup id=&#34;fnref:1&#34;&gt;&lt;a href=&#34;#fn:1&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;1&lt;/a&gt;&lt;/sup&gt;为例，从工程的角度来讲讲这个算法的一个具体实现，毕竟了解原理只算是“纸上谈兵”，离真正能把它应用起来还有很长一段距离。&lt;/p&gt;
-&lt;!-- raw HTML omitted --&gt;
+&lt;!-- The authors claim it is the most widely used Raft library in production. --&gt;
 &lt;p&gt;如果你还不熟悉raft，这个经典的&lt;a href=&#34;http://thesecretlivesofdata.com/raft/&#34;&gt;动画演示&lt;/a&gt;、&lt;a href=&#34;https://raft.github.io/raft.pdf&#34;&gt;它的论文&lt;/a&gt;以及&lt;a href=&#34;https://www.youtube.com/watch?v=YbZ3zDzDnrw&#34;&gt;这个lecture&lt;/a&gt;可能会对你有帮助。或者你也可以直接观看&lt;strong&gt;下面的视频&lt;/strong&gt;，这是我作的一次技术分享，讲的是&lt;a href=&#34;https://reading.developerlearning.cn/reading/32-2019-03-02-etcd-raft/&#34;&gt;etcd中raft模块的源码解析&lt;/a&gt;。说句题外话，很多Conference和Meetup都会把视频录像上传到YouTube上，YouTube简直就是程序员的衣柜，每逛一次都有新收获。
 
 &lt;div style=&#34;position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;&#34;&gt;
@@ -4991,7 +5062,7 @@
 我打算用这篇博客来介绍一下我所了解的主机，也顺带整理一下这些零零碎碎的知识。当然由于我并没有接受过系统的主机培训，掌握的技能都是由同事传授，外加查资料摸索出来的，所以这里如有疏漏或者描述不当的地方，欢迎指正。&lt;/p&gt;
 &lt;h2 id=&#34;历史及现状&#34;&gt;历史及现状&lt;/h2&gt;
 &lt;p&gt;IBM主机又称大型机（Mainframe），最早可以追溯到上世纪60年代IBM研发的&lt;a href=&#34;https://zh.wikipedia.org/wiki/IBM_System/360&#34;&gt;S/360系统&lt;/a&gt;，经过半个多世纪的不断更新，IBM的主机产品线已经从当初的S/360、S/370、S/390，发展到后来的z9、z10系列，现在（2018）已经GA的最新版本是&lt;a href=&#34;https://www.ibm.com/us-en/marketplace/z14&#34;&gt;z14&lt;/a&gt;：&lt;/p&gt;
-&lt;!-- raw HTML omitted --&gt;
+&lt;!-- ![z14(zMidas)](/ibm-mainframe/ibm_z14-large.jpg) --&gt;
 
 &lt;link rel=&#34;stylesheet&#34; href=&#34;https://blog.betacat.io/css/hugo-easy-gallery.css&#34; /&gt;
 &lt;div class=&#34;box&#34;&gt;

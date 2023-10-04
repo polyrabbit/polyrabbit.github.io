@@ -335,7 +335,7 @@ if (!doNotTrack) {
 <p>举个栗子，某些ARM Cortex-M处理器（多用于嵌入式系统）具有<a href="https://developer.arm.com/docs/ddi0337/e/memory-protection-unit/about-the-mpu">内存保护单元</a>（MPU），它允许你定义少量具有不同访问权限（例如无访问、只读、读写）的内存区域。在每次发生内存访问的时候，MPU都会确保该地址所在的区域具有合法的访问权限，否则将触发异常。同时在发生进程切换的时候，操作系统也会及时的更新相应区域及其访问权限，这样就确保了每个进程只能访问自己的地址空间，从而达到隔离进程的作用。</p>
 <p>另一方面，在x86平台上，硬件支持两种不同的内存保护方式：<a href="https://en.wikipedia.org/wiki/X86_memory_segmentation">分段</a>（segmentation）和<a href="https://en.wikipedia.org/wiki/Virtual_memory#Paged_virtual_memory">分页</a>（paging）。</p>
 <h1 id="分段">分段</h1>
-<p>分段技术早在1978年就已经出现，起初是为了增加CPU的寻址空间。当时的情况是CPU只使用16位地址，这将可寻址空间限制为64KiB（2<!-- raw HTML omitted -->16<!-- raw HTML omitted -->）。为了访问到更高的内存，一些段寄存器被引入进来，每个段寄存器都包含一个偏移地址。CPU将这些偏移地址作为基地址，加到应用程序要访问的内存地址上，这样它就可以使用到高达1MiB的内存空间了。</p>
+<p>分段技术早在1978年就已经出现，起初是为了增加CPU的寻址空间。当时的情况是CPU只使用16位地址，这将可寻址空间限制为64KiB（2<sup>16</sup>）。为了访问到更高的内存，一些段寄存器被引入进来，每个段寄存器都包含一个偏移地址。CPU将这些偏移地址作为基地址，加到应用程序要访问的内存地址上，这样它就可以使用到高达1MiB的内存空间了。</p>
 <p>段寄存器有好几种，CPU会根据不同的内存访问请求而选择不同的段寄存器：对于取指令请求，代码段寄存器<code>CS</code>会被使用；堆栈操作（push/pop）会用到堆栈段寄存器<code>SS</code>；其他操作则使用数据段<code>DS</code>或额外的段<code>ES</code>，后来又添加了两个可以自由使用的段寄存器<code>FS</code>和<code>GS</code>。</p>
 <p>在分段技术的第一版实现中，段寄存器直接存放了段偏移量，并且没有访问控制的检查。后来，随着<a href="https://en.wikipedia.org/wiki/X86_memory_segmentation#Protected_mode">保护模式</a>的引入，这种情况发生了改变。当CPU以这种模式运行时，段寄存器中包含了一个局部或全局<a href="https://en.wikipedia.org/wiki/Global_Descriptor_Table">描述符表</a>中的索引，该表除了包含偏移地址外，还包含段大小和访问权限。通过为每个进程加载单独的描述符表，操作系统就能将进程的内存访问限制到它自己的地址空间内，从而达到隔离进程的作用。</p>
 <p>通过在实际访问发生之前修改要访问的目标地址，分段技术实际上已经在使用一种现在广为使用的技术：虚拟内存。</p>
