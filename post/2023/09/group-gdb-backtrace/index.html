@@ -332,9 +332,11 @@ if (!doNotTrack) {
 </div>
 </div><p>也就是说，大部分线程处于非活跃状态，在等待唤醒，他们的堆栈都是类似的。如果能把这些重复堆栈 group 到一起，折叠成一个，那就能去除不少干扰信息了。但这些重复的堆栈由于入参的不同，他们字面上的字符串并不相等，所以简单的 <code>sort | uniq -c</code> 组合已经解决不了这个需求了，这个时候，只能自己动手写 python 了。</p>
 <p>在 GPT <del>这个废物</del>的帮助下，小帅很快写出了<a href="https://gist.github.com/polyrabbit/f8c92346650d753115472b28c30b1cd5">gdb_bt_group.py</a>工具：</p>
-<div style='max-height: 20rem; overflow: auto;'>
-<script src="https://gist.github.com/polyrabbit/f8c92346650d753115472b28c30b1cd5.js"></script>
-</div>
+<iframe
+  src="https://gist.github.com/polyrabbit/f8c92346650d753115472b28c30b1cd5.pibb"
+  style="width: 100%; height: 15rem; overflow: auto; border: 0;"
+>
+</iframe>
 <p>它的工作原理很简单——将堆栈的第二列，即所有栈帧 PC 寄存器的组合作为栈的唯一标识字段。有了这个抽象的标识之后，工具就可以将相似的堆栈聚合到一起，并输出统计信息了：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
