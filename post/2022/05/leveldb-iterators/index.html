@@ -64,11 +64,11 @@
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://blog.betacat.io/post/2022/05/leveldb-iterators/" /><meta property="article:section" content="post" />
 <meta property="article:published_time" content="2022-05-21T19:08:40+08:00" />
-<meta property="article:modified_time" content="2023-10-20T21:32:23+08:00" />
+<meta property="article:modified_time" content="2023-10-24T21:32:23+08:00" />
 <meta itemprop="name" content="LevelDB 中的花式迭代器们">
 <meta itemprop="description" content="迭代器（iterator）是一种常见的设计模式，它屏蔽了复杂的底层结构，给上层抽象出了一个简单的遍历接口。在 LevelDB 中几乎所有的读操作都是通过迭代"><meta itemprop="datePublished" content="2022-05-21T19:08:40+08:00" />
-<meta itemprop="dateModified" content="2023-10-20T21:32:23+08:00" />
-<meta itemprop="wordCount" content="2898">
+<meta itemprop="dateModified" content="2023-10-24T21:32:23+08:00" />
+<meta itemprop="wordCount" content="3014">
 <meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="LevelDB 中的花式迭代器们"/>
 <meta name="twitter:description" content="迭代器（iterator）是一种常见的设计模式，它屏蔽了复杂的底层结构，给上层抽象出了一个简单的遍历接口。在 LevelDB 中几乎所有的读操作都是通过迭代"/>
@@ -278,8 +278,8 @@ if (!doNotTrack) {
           2022-05-21
         </time>
         
-        <span class="more-meta"> 约 2898 字 </span>
-          <span class="more-meta"> 预计阅读 6 分钟 </span>
+        <span class="more-meta"> 约 3014 字 </span>
+          <span class="more-meta"> 预计阅读 7 分钟 </span>
 
         
         
@@ -410,7 +410,11 @@ if (!doNotTrack) {
 </span></span><span class="line"><span class="cl"><span class="p">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><p><code>Seek</code>流程分成了两阶段搜索，首先在有序的 Restart Points 数组里面二分搜索找到最后一个小于 <code>target</code> 的 Restart Point，这一阶段的步长单位至少是 4KiB，能快速定位到一个粗略的位置；然后再从该位置线性搜索找到第一个大于等于 <code>target</code> 的 key，这一阶段的步进单位是 key/value 对（因为每段区间里的 key 是前缀压缩保存的，所以它只能从前向后边解压边搜索？）。这算是个典型的<strong>稀疏索引</strong>搜索流程。</p>
+</div><p><code>Seek</code>流程分成了两阶段搜索，首先在有序的 Restart Points 数组里面二分搜索找到最后一个小于 <code>target</code> 的 Restart Point，这一阶段的步长单位至少是 4KiB，能快速定位到一个粗略的位置；然后再从该位置线性搜索找到第一个大于等于 <code>target</code> 的 key，这一阶段的步进单位是 key/value 对（因为每段区间里的 key 是前缀压缩保存的，所以它只能从头开始解压边搜索），这算是个典型的<strong>稀疏索引</strong>搜索流程。Restart Point 的步长取值需要权衡一下：</p>
+<ul>
+<li>较大的步长会带来更高的存储压缩比，但相应的读取开销会变大，因为它需要从压缩的起点开始挨个解码，才能搜索到想要的 key。</li>
+<li>较小的步长有助于 <code>Seek</code> 请求，但会导致索引变大，影响 <code>BlockCache</code> 的命中率，从而触发更多的 IO。</li>
+</ul>
 <p>其他接口的实现不再赘述。</p>
 <h4 id="213-levelfilenumiterator">2.1.3 LevelFileNumIterator</h4>
 <p>LevelDB 中 0 层以上的文件都是有序且互相不重叠的，所以<code>Version::files_[1..6]</code>其实是个有序数组。在这个数组之上，LevelDB 封装出了另外一个原子迭代器——<code>LevelFileNumIterator</code>，用来负责对高层文件之间的迭代。</p>
@@ -583,7 +587,7 @@ if (!doNotTrack) {
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
     <span class="item-content">
-      2023-10-20
+      2023-10-24
       
     </span>
   </p>

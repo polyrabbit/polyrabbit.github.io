@@ -736,7 +736,11 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
-&lt;/div&gt;&lt;p&gt;&lt;code&gt;Seek&lt;/code&gt;流程分成了两阶段搜索，首先在有序的 Restart Points 数组里面二分搜索找到最后一个小于 &lt;code&gt;target&lt;/code&gt; 的 Restart Point，这一阶段的步长单位至少是 4KiB，能快速定位到一个粗略的位置；然后再从该位置线性搜索找到第一个大于等于 &lt;code&gt;target&lt;/code&gt; 的 key，这一阶段的步进单位是 key/value 对（因为每段区间里的 key 是前缀压缩保存的，所以它只能从前向后边解压边搜索？）。这算是个典型的&lt;strong&gt;稀疏索引&lt;/strong&gt;搜索流程。&lt;/p&gt;
+&lt;/div&gt;&lt;p&gt;&lt;code&gt;Seek&lt;/code&gt;流程分成了两阶段搜索，首先在有序的 Restart Points 数组里面二分搜索找到最后一个小于 &lt;code&gt;target&lt;/code&gt; 的 Restart Point，这一阶段的步长单位至少是 4KiB，能快速定位到一个粗略的位置；然后再从该位置线性搜索找到第一个大于等于 &lt;code&gt;target&lt;/code&gt; 的 key，这一阶段的步进单位是 key/value 对（因为每段区间里的 key 是前缀压缩保存的，所以它只能从头开始解压边搜索），这算是个典型的&lt;strong&gt;稀疏索引&lt;/strong&gt;搜索流程。Restart Point 的步长取值需要权衡一下：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;较大的步长会带来更高的存储压缩比，但相应的读取开销会变大，因为它需要从压缩的起点开始挨个解码，才能搜索到想要的 key。&lt;/li&gt;
+&lt;li&gt;较小的步长有助于 &lt;code&gt;Seek&lt;/code&gt; 请求，但会导致索引变大，影响 &lt;code&gt;BlockCache&lt;/code&gt; 的命中率，从而触发更多的 IO。&lt;/li&gt;
+&lt;/ul&gt;
 &lt;p&gt;其他接口的实现不再赘述。&lt;/p&gt;
 &lt;h4 id=&#34;213-levelfilenumiterator&#34;&gt;2.1.3 LevelFileNumIterator&lt;/h4&gt;
 &lt;p&gt;LevelDB 中 0 层以上的文件都是有序且互相不重叠的，所以&lt;code&gt;Version::files_[1..6]&lt;/code&gt;其实是个有序数组。在这个数组之上，LevelDB 封装出了另外一个原子迭代器——&lt;code&gt;LevelFileNumIterator&lt;/code&gt;，用来负责对高层文件之间的迭代。&lt;/p&gt;
