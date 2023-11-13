@@ -773,7 +773,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
-&lt;/div&gt;&lt;p&gt;它的使用场景主要有两个： 针对 SST table 文件的迭代器和针对每一层文件的迭代器。&lt;/p&gt;
+&lt;/div&gt;&lt;p&gt;它的使用场景主要有两个——针对 SST 文件内的迭代器和针对每一层文件间的迭代器：&lt;/p&gt;
 &lt;h5 id=&#34;2211-sst-table-iterator&#34;&gt;2.2.1.1 SST Table Iterator&lt;/h5&gt;
 &lt;p&gt;上面的 Seek 代码以&lt;code&gt;Table::NewIterator&lt;/code&gt;的实现为例：&lt;/p&gt;
 &lt;ol&gt;
@@ -791,7 +791,7 @@
 &lt;li&gt;Compaction——对上下两层文件进行合并，输出一个有序的新文件&lt;/li&gt;
 &lt;li&gt;DBIter——对全局所有 key/value 存储点进行合并，数据源包括 MemTable/Immutable MemTable/Level 0/Level 1~7 SST，对用户输出一个全局有序的迭代器&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;有点算法基础的同学都知道，MergingIterator 的实现就是一个归并排序，只不过这里是个多路归并——每次从迭代器列表里去最小值对外输出即可：&lt;/p&gt;
+&lt;p&gt;有点算法基础的同学都知道，MergingIterator 的实现就是一个归并排序，只不过这里是个多路归并——每次从迭代器列表里取最小值对外输出即可：&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
 &lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
 &lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt; 1
@@ -840,8 +840,26 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
-&lt;/div&gt;&lt;p&gt;目前的&lt;code&gt;FindSmallest&lt;/code&gt;使用了暴力的遍历法，但 RocksDB 里面已经改成了最小堆来降低时间复杂度。&lt;/p&gt;
-&lt;h4 id=&#34;223-dbiter&#34;&gt;2.2.3 DBIter&lt;/h4&gt;
+&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;目前的&lt;code&gt;FindSmallest&lt;/code&gt;使用了暴力的遍历法，但 RocksDB 里面已经改成了最小堆来降低时间复杂度。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h5 id=&#34;2221-range-scan-的实现&#34;&gt;2.2.2.1 Range Scan 的实现&lt;/h5&gt;
+&lt;p&gt;这里引申出一个话题，我们可以利用这个归并排序来实现一个&lt;a href=&#34;https://github.com/facebook/rocksdb/issues/204&#34;&gt;范围查询（Range Scan）&lt;/a&gt;。LevelDB 只暴露了点查相关的 api，范围查询则需要通过不断调用迭代器的&lt;code&gt;Next&lt;/code&gt;方法，来获取下一个最小值：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;kt&#34;&gt;void&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;Next&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;override&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;  &lt;span class=&#34;n&#34;&gt;current_&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Next&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;  &lt;span class=&#34;n&#34;&gt;FindSmallest&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;h4 id=&#34;223-dbiter&#34;&gt;2.2.3 DBIter&lt;/h4&gt;
 &lt;p&gt;DBIter 是个集大成者，直面用户。用户可以调用通过它来遍历整个数据库的 key/value 对，本质上它是对底层&lt;code&gt;MergingIterator&lt;/code&gt;输出的过滤：&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;sequence_&lt;/code&gt;字段保证了它不会读到这次事务开始后的变更，实现了一个 Snapshot Read。&lt;/li&gt;

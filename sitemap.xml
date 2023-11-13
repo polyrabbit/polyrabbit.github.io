@@ -10,14 +10,14 @@
   
   <url>
     <loc>https://blog.betacat.io/post/</loc>
-    <lastmod>2023-10-24T21:32:23+08:00</lastmod>
+    <lastmod>2023-11-13T21:32:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://blog.betacat.io/</loc>
-    <lastmod>2023-10-24T21:32:23+08:00</lastmod>
+    <lastmod>2023-11-13T21:32:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -52,7 +52,7 @@
   
   <url>
     <loc>https://blog.betacat.io/post/2022/05/leveldb-iterators/</loc>
-    <lastmod>2023-10-24T21:32:23+08:00</lastmod>
+    <lastmod>2023-11-13T21:32:23+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
