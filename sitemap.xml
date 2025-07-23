@@ -10,14 +10,21 @@
   
   <url>
     <loc>https://blog.betacat.io/post/</loc>
-    <lastmod>2023-11-13T21:32:23+08:00</lastmod>
+    <lastmod>2025-07-23T15:51:06+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.betacat.io/post/2025/07/juicefs-practice-at-stepfun/</loc>
+    <lastmod>2025-07-23T15:51:06+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://blog.betacat.io/</loc>
-    <lastmod>2023-11-13T21:32:23+08:00</lastmod>
+    <lastmod>2025-07-23T15:51:06+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
